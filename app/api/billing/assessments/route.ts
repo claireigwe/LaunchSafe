@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/assessment?paid=${assessmentId}`;
+    const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/assessment?paid=${assessmentId}&assessmentId=${assessmentId}`;
 
     if (!PAYSTACK_SECRET_KEY) {
       return NextResponse.json<ApiResponse>(

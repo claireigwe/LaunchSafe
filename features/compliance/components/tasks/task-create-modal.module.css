@@ -1,0 +1,96 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+
+.modal {
+  background: var(--color-role-light-surfaceBright);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 24px 0;
+}
+
+.title {
+  font-family: var(--font-headline-headline-small-fontFamily);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-role-light-onSurface);
+  margin: 0;
+}
+
+.close {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: var(--color-role-light-onSurfaceVariant);
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.form {
+  padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field { flex: 1; }
+
+.label {
+  display: block;
+  font-family: var(--font-label-label-medium-fontFamily);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-role-light-onSurface);
+  margin-bottom: 6px;
+}
+
+.opt { font-weight: 400; color: var(--color-role-light-onSurfaceVariant); }
+
+.input, .select, .textarea {
+  width: 100%;
+  padding: 12px 14px;
+  font-family: var(--font-body-body-medium-fontFamily);
+  font-size: 14px;
+  color: var(--color-role-light-onSurface);
+  background: var(--color-role-light-surfaceContainerLow);
+  border: 1.5px solid var(--color-role-light-outlineVariant);
+  border-radius: 10px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.input:focus, .select:focus, .textarea:focus {
+  border-color: var(--color-role-light-primary);
+  box-shadow: 0 0 0 3px var(--color-role-light-primaryContainer);
+}
+
+.select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5L6 8L9 5' stroke='%23666' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
+
+.textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
+
+.row { display: flex; gap: 16px; }
+
+.error { font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-error); margin: 0 0 4px; }
+
+.actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+
+@media (max-width: 480px) {
+  .row { flex-direction: column; gap: 0; }
+  .modal { max-width: 100%; }
+}

@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { DocumentLibrary } from "@/features/documents/components/document-library";
 
-export const metadata: Metadata = { title: "Documents" };
+export const metadata: Metadata = {
+  title: "Documents | LaunchSafe",
+};
 
 export default function DocumentsPage() {
-  return <div id="documents-page"><h1>Documents</h1></div>;
+  return <DocumentLibrary />;
 }

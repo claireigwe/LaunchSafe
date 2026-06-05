@@ -1,14 +1,10 @@
 import type { Metadata } from "next";
+import { DashboardPage } from "@/features/compliance/components/dashboard/dashboard-page";
 
 export const metadata: Metadata = {
-  title: "Dashboard",
+  title: "Dashboard | LaunchSafe",
 };
 
-/** Compliance dashboard scaffold. */
-export default function DashboardPage() {
-  return (
-    <div id="dashboard-page">
-      <h1>Dashboard</h1>
-    </div>
-  );
+export default function Dashboard() {
+  return <DashboardPage />;
 }

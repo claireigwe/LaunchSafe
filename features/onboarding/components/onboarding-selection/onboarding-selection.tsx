@@ -21,6 +21,17 @@ export function OnboardingSelection() {
         }
       } catch {}
     }
+
+    const intent = localStorage.getItem("launchsafe-intent");
+    if (intent) {
+      try {
+        const parsed = JSON.parse(intent);
+        if (parsed === "existing_business") {
+          router.replace("/business-onboarding");
+          return;
+        }
+      } catch {}
+    }
   }, [router]);
 
   async function handleSignOut() {

@@ -1,0 +1,131 @@
+.card {
+  background: var(--color-role-light-surfaceContainerLowest);
+  border: 1px solid var(--color-role-light-outlineVariant);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.header {
+  padding: 20px 24px 0;
+}
+
+.title {
+  font-family: var(--font-title-title-large-fontFamily);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-role-light-onSurface);
+  margin: 0;
+}
+
+.body {
+  padding: 24px;
+  display: flex;
+  gap: 28px;
+  align-items: center;
+}
+
+.emptyBody {
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.emptyScore {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--color-role-light-outlineVariant);
+  margin-bottom: 12px;
+}
+
+.emptyText {
+  font-family: var(--font-body-body-medium-fontFamily);
+  font-size: 15px;
+  color: var(--color-role-light-onSurfaceVariant);
+  margin: 0;
+}
+
+.scoreCircle {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.healthy {
+  background-color: var(--color-role-light-successContainer);
+  color: var(--color-role-light-onSuccessContainer);
+}
+
+.attention {
+  background-color: var(--color-role-light-warningContainer);
+  color: var(--color-role-light-onWarningContainer);
+}
+
+.risk {
+  background-color: var(--color-role-light-errorContainer);
+  color: var(--color-role-light-onErrorContainer);
+}
+
+.scoreValue {
+  font-family: var(--font-headline-headline-medium-fontFamily);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.scoreLabel {
+  font-family: var(--font-label-label-small-fontFamily);
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.details {
+  flex: 1;
+}
+
+.message {
+  font-family: var(--font-body-body-medium-fontFamily);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-role-light-onSurfaceVariant);
+  margin: 0 0 20px;
+}
+
+.breakdown {
+  display: flex;
+  gap: 24px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.statValue {
+  font-family: var(--font-label-label-large-fontFamily);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-role-light-onSurface);
+}
+
+.statLabel {
+  font-family: var(--font-label-label-small-fontFamily);
+  font-size: 12px;
+  color: var(--color-role-light-onSurfaceVariant);
+}
+
+@media (max-width: 640px) {
+  .body {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .breakdown {
+    justify-content: center;
+  }
+}

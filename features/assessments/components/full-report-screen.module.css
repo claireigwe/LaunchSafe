@@ -1,0 +1,404 @@
+.wrapper {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding-top: 72px;
+  padding-bottom: 60px;
+}
+
+.container {
+  width: 100%;
+  max-width: 680px;
+  padding: 40px 24px;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--color-role-light-surfaceContainer);
+  border-top-color: var(--color-role-light-primary);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  margin: 60px auto 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.verifyingText {
+  text-align: center;
+  font-family: var(--font-body-body-medium-fontFamily);
+  color: var(--color-role-light-onSurfaceVariant);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.successBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background-color: var(--color-role-light-successContainer);
+  color: var(--color-role-light-onSuccessContainer);
+  font-family: var(--font-label-label-small-fontFamily);
+  font-size: var(--font-label-label-small-fontSize);
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-family: var(--font-headline-headline-small-fontFamily);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--color-role-light-onSurface);
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  font-family: var(--font-body-body-medium-fontFamily);
+  font-size: var(--font-body-body-medium-fontSize);
+  color: var(--color-role-light-onSurfaceVariant);
+  margin: 0;
+}
+
+.section {
+  margin-bottom: 36px;
+}
+
+.sectionTitle {
+  font-family: var(--font-title-title-large-fontFamily);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-role-light-onSurface);
+  margin: 0 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-role-light-outlineVariant);
+}
+
+.requirementsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.requirementCard {
+  background-color: var(--color-role-light-surfaceContainerLow);
+  border: 1px solid var(--color-role-light-outlineVariant);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.requirementHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.requirementName {
+  font-family: var(--font-label-label-large-fontFamily);
+  font-size: var(--font-label-label-large-fontSize);
+  font-weight: 600;
+  color: var(--color-role-light-onSurface);
+}
+
+.confidenceBadge {
+  font-family: var(--font-label-label-small-fontFamily);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.confidence_verified {
+  background-color: var(--color-role-light-successContainer);
+  color: var(--color-role-light-onSuccessContainer);
+}
+
+.confidence_estimated {
+  background-color: var(--color-role-light-warningContainer);
+  color: var(--color-role-light-onWarningContainer);
+}
+
+.confidence_community_reported {
+  background-color: var(--color-role-light-surfaceContainer);
+  color: var(--color-role-light-onSurfaceVariant);
+}
+
+.requirementDescription {
+  font-family: var(--font-body-body-medium-fontFamily);
+  font-size: var(--font-body-body-medium-fontSize);
+  color: var(--color-role-light-onSurfaceVariant);
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.requirementMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.metaItem {
+  font-family: var(--font-label-label-small-fontFamily);
+  font-size: var(--font-label-label-small-fontSize);
+  color: var(--color-role-light-onSurfaceVariant);
+}
+
+.metaItem strong {
+  color: var(--color-role-light-onSurface);
+  font-weight: 500;
+}
+
+.costGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.costCard {
+  background-color: var(--color-role-light-surfaceContainerLow);
+  border: 1px solid var(--color-role-light-outlineVariant);
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+}
+
+.costLabel {
+  display: block;
+  font-family: var(--font-label-label-medium-fontFamily);
+  font-size: var(--font-label-label-medium-fontSize);
+  color: var(--color-role-light-onSurfaceVariant);
+  margin-bottom: 8px;
+}
+
+.costValue {
+  font-family: var(--font-headline-headline-small-fontFamily);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-role-light-primary);
+}
+
+.agenciesList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agencyCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background-color: var(--color-role-light-surfaceContainerLow);
+  border: 1px solid var(--color-role-light-outlineVariant);
+  border-radius: 10px;
+}
+
+.agencyName {
+  font-family: var(--font-label-label-medium-fontFamily);
+  font-size: var(--font-label-label-medium-fontSize);
+  font-weight: 500;
+  color: var(--color-role-light-onSurface);
+}
+
+.agencyAcronym {
+  font-weight: 400;
+  color: var(--color-role-light-onSurfaceVariant);
+}
+
+.agencyCount {
+  font-family: var(--font-label-label-small-fontFamily);
+  font-size: var(--font-label-label-small-fontSize);
+  color: var(--color-role-light-onSurfaceVariant);
+}
+
+.riskBadge {
+  display: inline-flex;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: var(--font-label-label-medium-fontFamily);
+  font-size: var(--font-label-label-medium-fontSize);
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.risk_low {
+  background-color: var(--color-role-light-successContainer);
+  color: var(--color-role-light-onSuccessContainer);
+}
+
+.risk_medium {
+  background-color: var(--color-role-light-warningContainer);
+  color: var(--color-role-light-onWarningContainer);
+}
+
+.risk_high {
+  background-color: var(--color-role-light-errorContainer);
+  color: var(--color-role-light-onErrorContainer);
+}
+
+.riskList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.riskFactor {
+  padding: 12px 16px;
+  background-color: var(--color-role-light-surfaceContainerLow);
+  border-radius: 10px;
+  font-family: var(--font-body-body-medium-fontFamily);
+  font-size: var(--font-body-body-medium-fontSize);
+  color: var(--color-role-light-onSurface);
+  line-height: 1.5;
+  padding-left: 36px;
+  position: relative;
+}
+
+.riskFactor::before {
+  content: "⚠";
+  position: absolute;
+  left: 14px;
+  top: 12px;
+}
+
+.roadmap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.phaseCard {
+  background-color: var(--color-role-light-surfaceContainerLow);
+  border: 1px solid var(--color-role-light-outlineVariant);
+  border-radius: 14px;
+  padding: 20px;
+  position: relative;
+  padding-left: 68px;
+}
+
+.phaseNumber {
+  position: absolute;
+  left: 16px;
+  top: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--color-role-light-primary);
+  color: var(--color-role-light-onPrimary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-label-label-medium-fontFamily);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.phaseTitle {
+  font-family: var(--font-label-label-large-fontFamily);
+  font-size: var(--font-label-label-large-fontSize);
+  font-weight: 600;
+  color: var(--color-role-light-onSurface);
+  margin: 0 0 4px;
+}
+
+.phaseDescription {
+  font-family: var(--font-body-body-medium-fontFamily);
+  font-size: var(--font-body-body-medium-fontSize);
+  color: var(--color-role-light-onSurfaceVariant);
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+.phaseDuration {
+  font-family: var(--font-label-label-small-fontFamily);
+  font-size: var(--font-label-label-small-fontSize);
+  color: var(--color-role-light-primary);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.phaseRequirements {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.phaseRequirement {
+  font-family: var(--font-label-label-small-fontFamily);
+  font-size: var(--font-label-label-small-fontSize);
+  color: var(--color-role-light-onSurfaceVariant);
+  padding-left: 16px;
+  position: relative;
+}
+
+.phaseRequirement::before {
+  content: "•";
+  position: absolute;
+  left: 4px;
+  color: var(--color-role-light-primary);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 40px;
+}
+
+.errorCard {
+  text-align: center;
+  padding: 40px 24px;
+}
+
+.errorTitle {
+  font-family: var(--font-headline-headline-small-fontFamily);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--color-role-light-error);
+  margin: 0 0 12px;
+}
+
+.errorText {
+  font-family: var(--font-body-body-medium-fontFamily);
+  font-size: var(--font-body-body-medium-fontSize);
+  color: var(--color-role-light-onSurfaceVariant);
+  margin: 0 0 24px;
+}
+
+@media (max-width: 480px) {
+  .costGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .phaseCard {
+    padding-left: 56px;
+  }
+
+  .phaseNumber {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+    left: 14px;
+    top: 20px;
+  }
+}

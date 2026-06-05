@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { TaskListPage } from "@/features/compliance/components/tasks/task-list-page";
 
-export const metadata: Metadata = { title: "Compliance Tasks" };
+export const metadata: Metadata = {
+  title: "Compliance Tasks | LaunchSafe",
+};
 
 export default function CompliancePage() {
-  return <div id="compliance-page"><h1>Compliance Tasks</h1></div>;
+  return <TaskListPage />;
 }

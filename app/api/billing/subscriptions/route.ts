@@ -2,35 +2,82 @@ import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
 import type { ApiResponse } from "@/types/api.types";
 
-/**
- * POST /api/billing/subscriptions
- *
- * Initiates a Paystack subscription payment.
- *
- * Security rules:
- * - Server selects the plan and creates the transaction
- * - Subscription is ONLY activated via webhook after verified payment
- * - Client must never activate subscriptions directly
- */
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+const PAYSTACK_API = "https://api.paystack.co/transaction/initialize";
+
+const PLANS: Record<string, { monthly: number; annual: number }> = {
+  starter: { monthly: 10000, annual: 102000 },
+  growth: { monthly: 20000, annual: 216000 },
+  enterprise: { monthly: 35000, annual: 384000 },
+};
+
 export async function POST(request: Request) {
   try {
     const user = await getRequiredUser();
-    const body = await request.json();
+    const body = await request.json() as { planId?: string; billingCycle?: string };
+    const { planId, billingCycle } = body;
 
-    // TODO: Validate { planId, billingCycle, callbackUrl }
-    // TODO: BillingService.initiateSubscription(user.id, body)
-    //       — looks up plan price from DB
-    //       — creates Paystack transaction server-side
-    //       — returns { paymentUrl }
+    if (!planId || !PLANS[planId]) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: "Invalid plan" } },
+        { status: 400 }
+      );
+    }
+
+    if (!billingCycle || (billingCycle !== "monthly" && billingCycle !== "annual")) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: "Invalid billing cycle" } },
+        { status: 400 }
+      );
+    }
+
+    if (!PAYSTACK_SECRET_KEY) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: "Payment service not configured" } },
+        { status: 503 }
+      );
+    }
+
+    const amount = PLANS[planId][billingCycle as "monthly" | "annual"];
+    const amountInKobo = amount * 100;
+    const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard?subscription=success&plan=${planId}&billing=${billingCycle}`;
+
+    const paystackRes = await fetch(PAYSTACK_API, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: user.email,
+        amount: amountInKobo,
+        currency: "NGN",
+        channels: ["card"],
+        callback_url: callbackUrl,
+        metadata: {
+          userId: user.id,
+          planId,
+          billingCycle,
+          type: "subscription",
+        },
+      }),
+    });
+
+    const paystackData = await paystackRes.json();
+
+    if (!paystackData.status) {
+      throw new Error(paystackData.message || "Paystack initialization failed");
+    }
 
     return NextResponse.json<ApiResponse>(
-      { success: true, data: { paymentUrl: "" } },
+      { success: true, data: { authorizationUrl: paystackData.data.authorization_url } },
       { status: 201 }
     );
-  } catch {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Payment initiation failed";
     return NextResponse.json<ApiResponse>(
-      { success: false, error: { message: "Unauthorized" } },
-      { status: 401 }
+      { success: false, error: { message } },
+      { status: 500 }
     );
   }
 }

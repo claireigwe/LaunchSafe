@@ -1,0 +1,320 @@
+.wrapper {
+  width: 100%;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.title {
+  font-family: var(--font-display-display-small-fontFamily);
+  font-weight: 600;
+  font-size: 28px;
+  line-height: 1.2;
+  letter-spacing: -1px;
+  color: var(--color-role-light-onSurface);
+  margin: 0 0 12px;
+}
+
+@media (min-width: 768px) {
+  .title { font-size: 32px; }
+}
+
+.subtitle {
+  font-family: var(--font-body-body-large-fontFamily);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-role-light-onSurfaceVariant);
+  margin: 0 0 28px;
+}
+
+.billingToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.toggleLabel {
+  font-family: var(--font-label-label-large-fontFamily);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-role-light-onSurfaceVariant);
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.activeLabel {
+  color: var(--color-role-light-onSurface);
+  font-weight: 600;
+}
+
+.toggleTrack {
+  width: 48px;
+  height: 26px;
+  background-color: var(--color-role-light-outlineVariant);
+  border-radius: 26px;
+  border: none;
+  padding: 3px;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+.toggleTrack:hover {
+  background-color: var(--color-role-light-outline);
+}
+
+.toggleThumb {
+  width: 20px;
+  height: 20px;
+  background-color: var(--color-role-light-onSurface);
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.thumbAnnual {
+  transform: translateX(22px);
+  background-color: var(--color-role-light-primary);
+}
+
+.saveBadge {
+  background-color: var(--color-role-light-tertiaryContainer);
+  color: var(--color-role-light-onTertiaryContainer);
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  align-items: stretch;
+  margin-bottom: 32px;
+}
+
+@media (min-width: 768px) {
+  .grid { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+}
+
+.card {
+  background-color: var(--color-role-light-surfaceContainerLowest);
+  border: 1px solid var(--color-role-light-outlineVariant);
+  border-radius: 24px;
+  padding: 28px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  text-align: left;
+  font-family: inherit;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.cardHighlight {
+  border: 2px solid var(--color-role-light-primary);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+@media (min-width: 1024px) {
+  .cardHighlight { transform: scale(1.04); z-index: 2; }
+}
+
+.cardSelected {
+  box-shadow: 0 0 0 3px var(--color-role-light-primaryContainer);
+}
+
+.badgeWrapper {
+  position: absolute;
+  top: -14px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.badge {
+  background-color: var(--color-key-secondary);
+  color: #fff;
+  padding: 4px 14px;
+  border-radius: 100px;
+  font-family: var(--font-label-label-medium-fontFamily);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.cardHeader {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--color-role-light-outlineVariant);
+}
+
+.planName {
+  font-family: var(--font-headline-headline-medium-fontFamily);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--color-role-light-onSurface);
+  margin: 0 0 14px;
+}
+
+.priceRow {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.priceValue {
+  font-family: var(--font-display-display-medium-fontFamily);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-role-light-onSurface);
+  letter-spacing: -1px;
+}
+
+.pricePeriod {
+  font-family: var(--font-body-body-medium-fontFamily);
+  font-size: 15px;
+  color: var(--color-role-light-onSurfaceVariant);
+}
+
+.billedNote {
+  font-family: var(--font-body-body-small-fontFamily);
+  font-size: 13px;
+  color: var(--color-role-light-onSurfaceVariant);
+  margin-top: 6px;
+}
+
+.bestFor {
+  margin-bottom: 20px;
+}
+
+.label {
+  font-family: var(--font-label-label-large-fontFamily);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-role-light-onSurfaceVariant);
+  margin: 0 0 10px;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.list li {
+  font-family: var(--font-body-body-medium-fontFamily);
+  font-size: 14px;
+  color: var(--color-role-light-onSurface);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.list .muted {
+  opacity: 0.5;
+}
+
+.features {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.features .list {
+  gap: 12px;
+}
+
+.features .list li {
+  font-size: 14px;
+  color: var(--color-role-light-onSurfaceVariant);
+}
+
+.check {
+  color: var(--color-role-light-primary);
+  flex-shrink: 0;
+}
+
+.checkMuted {
+  color: var(--color-role-light-outlineVariant);
+}
+
+.cardAction {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-role-light-outlineVariant);
+}
+
+.cta {
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-family: var(--font-label-label-large-fontFamily);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  text-align: center;
+  display: block;
+}
+
+.ctaPrimary {
+  background-color: var(--color-role-light-primary);
+  color: var(--color-role-light-onPrimary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.ctaPrimary:hover {
+  background-color: var(--color-palette-primary-30);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.ctaOutline {
+  background-color: transparent;
+  color: var(--color-role-light-onSurface);
+  border: 1.5px solid var(--color-role-light-outline);
+}
+
+.ctaOutline:hover {
+  background-color: var(--color-role-light-surfaceContainerLow);
+  border-color: var(--color-role-light-primary);
+}
+
+.backRow {
+  display: flex;
+  justify-content: center;
+}
+
+.backLink {
+  background: none;
+  border: none;
+  font-family: var(--font-label-label-medium-fontFamily);
+  font-size: 14px;
+  color: var(--color-role-light-onSurfaceVariant);
+  cursor: pointer;
+  padding: 10px 20px;
+  transition: color 0.2s;
+}
+
+.backLink:hover {
+  color: var(--color-role-light-onSurface);
+}
+
+@media (max-width: 480px) {
+  .title { font-size: 24px; }
+  .priceValue { font-size: 28px; }
+  .card { padding: 24px 18px 20px; }
+}

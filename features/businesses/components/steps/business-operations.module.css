@@ -1,0 +1,19 @@
+.form { width: 100%; max-width: 560px; margin: 0 auto; }
+.header { margin-bottom: 28px; }
+.title { font-family: var(--font-headline-headline-small-fontFamily); font-size: 22px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0 0 8px; }
+.subtitle { font-family: var(--font-body-body-medium-fontFamily); font-size: var(--font-body-body-medium-fontSize); color: var(--color-role-light-onSurfaceVariant); margin: 0; line-height: 1.5; }
+.field { margin-bottom: 24px; }
+.label { font-family: var(--font-label-label-medium-fontFamily); font-size: var(--font-label-label-medium-fontSize); font-weight: 500; color: var(--color-role-light-onSurface); margin: 0 0 12px; }
+.error { font-family: var(--font-label-label-small-fontFamily); font-size: var(--font-label-label-small-fontSize); color: var(--color-role-light-error); margin: 0 0 8px; }
+.rangeGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.rangeCard { padding: 14px; border-radius: 12px; border: 1.5px solid var(--color-role-light-outlineVariant); background-color: var(--color-role-light-surfaceContainerLow); font-size: var(--font-label-label-medium-fontSize); font-weight: 500; color: var(--color-role-light-onSurface); cursor: pointer; text-align: center; transition: all 0.2s; font-family: inherit; }
+.rangeCard:hover { border-color: var(--color-role-light-primary); background-color: var(--color-role-light-primaryContainer); }
+.rangeCardSelected { border-color: var(--color-role-light-primary); background-color: var(--color-role-light-primaryContainer); box-shadow: 0 0 0 3px var(--color-role-light-primaryContainer); font-weight: 600; }
+.boolField { margin-bottom: 20px; }
+.boolLabel { font-family: var(--font-label-label-medium-fontFamily); font-size: var(--font-label-label-medium-fontSize); font-weight: 500; color: var(--color-role-light-onSurface); margin: 0 0 10px; }
+.boolGroup { display: flex; gap: 12px; }
+.boolBtn { flex: 1; padding: 14px; border-radius: 12px; border: 1.5px solid var(--color-role-light-outlineVariant); background-color: var(--color-role-light-surfaceContainerLow); font-size: var(--font-label-label-medium-fontSize); font-weight: 500; color: var(--color-role-light-onSurface); cursor: pointer; text-align: center; transition: all 0.2s; font-family: inherit; }
+.boolBtn:hover { border-color: var(--color-role-light-primary); background-color: var(--color-role-light-primaryContainer); }
+.boolActive { border-color: var(--color-role-light-primary); background-color: var(--color-role-light-primaryContainer); box-shadow: 0 0 0 3px var(--color-role-light-primaryContainer); font-weight: 600; }
+.actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 32px; }
+@media (max-width: 480px) { .rangeGrid { grid-template-columns: 1fr; } }

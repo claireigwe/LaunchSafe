@@ -1,0 +1,15 @@
+.container { width: 100%; max-width: 440px; margin: 0 auto; text-align: center; padding: 40px 0; }
+.spinner { width: 40px; height: 40px; border: 3px solid var(--color-role-light-surfaceContainer); border-top-color: var(--color-role-light-primary); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 24px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.title { font-family: var(--font-headline-headline-small-fontFamily); font-size: 22px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0 0 8px; }
+.subtitle { font-family: var(--font-body-body-medium-fontFamily); font-size: var(--font-body-body-medium-fontSize); color: var(--color-role-light-onSurfaceVariant); margin: 0 0 24px; }
+.progressTrack { height: 4px; background: var(--color-role-light-surfaceContainer); border-radius: 2px; overflow: hidden; margin-bottom: 28px; }
+.progressBar { height: 100%; background: linear-gradient(90deg, var(--color-role-light-primary), var(--color-key-tertiary)); transition: width .5s; }
+.list { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+.item { display: flex; align-items: center; gap: 10px; opacity: .4; transition: opacity .3s; font-family: var(--font-body-body-medium-fontFamily); font-size: var(--font-body-body-medium-fontSize); color: var(--color-role-light-onSurface); }
+.active { opacity: 1; }
+.done { opacity: .8; }
+.icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-role-light-outlineVariant); }
+.pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--color-role-light-primary); animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(1.4); } }

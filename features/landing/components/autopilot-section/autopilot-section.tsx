@@ -1,9 +1,19 @@
-import Link from "next/link";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { Activity, Calendar, Bell, Shield, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { saveUserIntent } from "@/features/businesses/api/onboarding-api";
 import styles from "./autopilot-section.module.css";
 
 export function AutopilotSection() {
+  const router = useRouter();
+
+  function handleAddExisting() {
+    saveUserIntent("existing_business");
+    router.push("/business-onboarding");
+  }
+
   return (
     <section className={styles.section}>
       <div className={styles.container}>
@@ -13,11 +23,9 @@ export function AutopilotSection() {
             Launch is only the beginning. Track deadlines, manage permits, monitor regulatory updates, store compliance records, and stay ahead of compliance risks from one dashboard.
           </p>
           <div className={styles.actions}>
-            <Link href="/signup" tabIndex={-1}>
-              <Button variant="primary" size="lg">
-                Add Your Existing Business
-              </Button>
-            </Link>
+            <Button variant="primary" size="lg" onClick={handleAddExisting}>
+              Add Your Existing Business
+            </Button>
           </div>
         </div>
 

@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { SettingsPage } from "@/features/settings/components/settings-page";
 
-export const metadata: Metadata = { title: "Settings" };
+export const metadata: Metadata = {
+  title: "Settings | LaunchSafe",
+};
 
-export default function SettingsPage() {
-  return <div id="settings-page"><h1>Settings</h1></div>;
+export default function SettingsRoute() {
+  return <SettingsPage />;
 }

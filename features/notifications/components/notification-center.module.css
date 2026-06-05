@@ -1,0 +1,39 @@
+.page { max-width: 800px; margin: 0 auto; }
+.header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.title { font-family: var(--font-display-display-small-fontFamily); font-size: 26px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0 0 4px; }
+.subtitle { font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurfaceVariant); margin: 0; }
+.headerActions { display: flex; gap: 8px; flex-shrink: 0; }
+.filters { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 20px; }
+.filterBtn { padding: 6px 12px; border-radius: 8px; border: none; background: none; font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 500; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; transition: all .15s; white-space: nowrap; }
+.filterBtn:hover { background: var(--color-role-light-surfaceContainer); }
+.filterActive { background: var(--color-role-light-primaryContainer); color: var(--color-role-light-onPrimaryContainer); font-weight: 600; }
+.list { display: flex; flex-direction: column; gap: 8px; }
+.card { display: flex; border-radius: 14px; border: 1px solid var(--color-role-light-outlineVariant); background: var(--color-role-light-surfaceContainerLowest); overflow: hidden; }
+.unreadCard { border-color: var(--color-role-light-primary); background: var(--color-role-light-primaryContainer); }
+.cardBody { flex: 1; display: flex; gap: 12px; padding: 16px 20px; border: none; background: none; cursor: pointer; text-align: left; font-family: inherit; transition: background .1s; }
+.cardBody:hover { background: rgba(0,0,0,.02); }
+.unreadBody { }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.p_info { background: var(--color-role-light-primary); }
+.p_warning { background: var(--color-key-warning); }
+.p_critical { background: var(--color-role-light-error); }
+.cardContent { flex: 1; min-width: 0; }
+.cardRow { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.cardTitle { font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; font-weight: 600; color: var(--color-role-light-onSurface); flex: 1; }
+.unreadCard .cardTitle { font-weight: 700; }
+.priorityBadge { font-family: var(--font-label-label-small-fontFamily); font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
+.pr_info { background: var(--color-role-light-surfaceContainer); color: var(--color-role-light-onSurfaceVariant); }
+.pr_warning { background: var(--color-role-light-warningContainer); color: var(--color-role-light-onWarningContainer); }
+.pr_critical { background: var(--color-role-light-errorContainer); color: var(--color-role-light-onErrorContainer); }
+.cardMessage { font-family: var(--font-body-body-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onSurfaceVariant); margin: 0 0 6px; line-height: 1.4; }
+.cardMeta { display: flex; align-items: center; gap: 10px; }
+.cardType { font-family: var(--font-label-label-small-fontFamily); font-size: 11px; color: var(--color-role-light-onSurfaceVariant); text-transform: capitalize; }
+.cardTime { font-family: var(--font-label-label-small-fontFamily); font-size: 11px; color: var(--color-role-light-onSurfaceVariant); }
+.unreadDot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-role-light-primary); }
+.cardActions { display: flex; flex-direction: column; gap: 4px; padding: 12px 12px 12px 0; }
+.actionBtn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--color-role-light-outlineVariant); background: var(--color-role-light-surfaceContainerLowest); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--color-role-light-onSurfaceVariant); transition: all .15s; }
+.actionBtn:hover { border-color: var(--color-role-light-primary); color: var(--color-role-light-primary); }
+.empty { text-align: center; padding: 80px 24px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.emptyIcon { color: var(--color-role-light-outlineVariant); }
+.emptyText { font-family: var(--font-body-body-medium-fontFamily); font-size: 15px; color: var(--color-role-light-onSurfaceVariant); margin: 0; }
+@media (max-width: 640px) { .header { flex-direction: column; } .filters { gap: 2px; } }

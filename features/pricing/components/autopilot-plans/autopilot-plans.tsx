@@ -14,6 +14,7 @@ export function AutopilotPlans() {
       name: "Starter",
       monthlyPrice: "₦10,000",
       annualPrice: "₦8,500",
+      annualTotal: "₦102,000",
       bestFor: [
         "Small businesses",
         "Solo founders",
@@ -37,6 +38,7 @@ export function AutopilotPlans() {
       name: "Growth",
       monthlyPrice: "₦20,000",
       annualPrice: "₦18,000",
+      annualTotal: "₦216,000",
       bestFor: [
         "Growing businesses",
         "Agencies",
@@ -57,13 +59,14 @@ export function AutopilotPlans() {
       name: "Enterprise",
       monthlyPrice: "₦35,000",
       annualPrice: "₦32,000",
+      annualTotal: "₦384,000",
       bestFor: [
         "Larger organizations",
         "Compliance teams",
         "Business groups"
       ],
       features: [
-        "Advanced Business Limits",
+        "Up to 20 Businesses",
         "Team Collaboration",
         "Advanced Reporting",
         "Priority Support",
@@ -118,7 +121,7 @@ export function AutopilotPlans() {
                 </div>
                 {isAnnual && (
                   <div className={styles.billedAnnually}>
-                    Billed annually
+                    {plan.annualTotal} billed annually
                   </div>
                 )}
               </div>

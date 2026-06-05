@@ -1,0 +1,19 @@
+.tableRow { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 80px; align-items: center; padding: 12px 20px; gap: 12px; border-bottom: 1px solid var(--color-role-light-outlineVariant); transition: background .1s; }
+.tableRow:hover { background: var(--color-role-light-surfaceContainerLow); }
+.tableTitle { display: flex; align-items: center; gap: 10px; border: none; background: none; cursor: pointer; font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; font-weight: 500; color: var(--color-role-light-onSurface); text-align: left; padding: 0; }
+.tableTitle:hover { color: var(--color-role-light-primary); }
+.icon { color: var(--color-role-light-primary); flex-shrink: 0; }
+.tableCell { font-family: var(--font-label-label-small-fontFamily); font-size: 13px; color: var(--color-role-light-onSurfaceVariant); }
+.tableActions { display: flex; gap: 4px; justify-content: flex-end; }
+.actionBtn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--color-role-light-outlineVariant); background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--color-role-light-onSurfaceVariant); transition: all .15s; }
+.actionBtn:hover { border-color: var(--color-role-light-primary); color: var(--color-role-light-primary); }
+.card { display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: 14px; border: 1px solid var(--color-role-light-outlineVariant); background: var(--color-role-light-surfaceContainerLowest); cursor: pointer; text-align: left; font-family: inherit; width: 100%; transition: all .15s; }
+.card:hover { border-color: var(--color-role-light-primary); box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+.cardIcon { width: 44px; height: 44px; border-radius: 12px; background: var(--color-role-light-primaryContainer); display: flex; align-items: center; justify-content: center; color: var(--color-role-light-primary); flex-shrink: 0; }
+.cardBody { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cardTitle { font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; font-weight: 500; color: var(--color-role-light-onSurface); }
+.cardType { font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); }
+.cardMeta { font-family: var(--font-label-label-small-fontFamily); font-size: 11px; color: var(--color-role-light-onSurfaceVariant); }
+.cardDownload { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--color-role-light-outlineVariant); background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--color-role-light-onSurfaceVariant); flex-shrink: 0; transition: all .15s; }
+.cardDownload:hover { border-color: var(--color-role-light-primary); color: var(--color-role-light-primary); }
+@media (max-width: 768px) { .tableRow { grid-template-columns: 1fr 80px; } .tableRow .tableCell:nth-child(2), .tableRow .tableCell:nth-child(3), .tableRow .tableCell:nth-child(4) { display: none; } }

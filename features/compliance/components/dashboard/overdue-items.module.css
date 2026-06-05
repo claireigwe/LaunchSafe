@@ -1,0 +1,89 @@
+.card {
+  background: var(--color-role-light-errorContainer);
+  border: 1px solid var(--color-palette-error-60);
+  border-radius: 20px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--color-palette-error-60);
+}
+
+.icon {
+  color: var(--color-role-light-onErrorContainer);
+}
+
+.title {
+  font-family: var(--font-title-title-large-fontFamily);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-role-light-onErrorContainer);
+  margin: 0;
+  flex: 1;
+}
+
+.count {
+  font-family: var(--font-label-label-medium-fontFamily);
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--color-role-light-error);
+  color: var(--color-role-light-onError);
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.item + .item {
+  border-top: 1px solid var(--color-palette-error-60);
+}
+
+.link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.link:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.taskName {
+  font-family: var(--font-label-label-medium-fontFamily);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-role-light-onErrorContainer);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.due {
+  font-family: var(--font-label-label-small-fontFamily);
+  font-size: 12px;
+  color: var(--color-role-light-onErrorContainer);
+  opacity: 0.8;
+}
+
+.overdue {
+  font-family: var(--font-label-label-small-fontFamily);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--color-role-light-error);
+  color: var(--color-role-light-onError);
+}

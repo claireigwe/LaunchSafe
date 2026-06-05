@@ -1,0 +1,18 @@
+.page { max-width: 900px; margin: 0 auto; }
+.header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+.title { font-family: var(--font-display-display-small-fontFamily); font-size: 26px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0 0 4px; }
+.subtitle { font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurfaceVariant); margin: 0; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 20px; }
+.searchWrap { position: relative; flex: 1; min-width: 200px; }
+.searchIcon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-role-light-onSurfaceVariant); pointer-events: none; }
+.search { width: 100%; padding: 10px 12px 10px 36px; border-radius: 10px; border: 1.5px solid var(--color-role-light-outlineVariant); background: var(--color-role-light-surfaceContainerLow); font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurface); outline: none; box-sizing: border-box; }
+.search:focus { border-color: var(--color-role-light-primary); box-shadow: 0 0 0 3px var(--color-role-light-primaryContainer); }
+.filters { display: flex; gap: 4px; }
+.filterBtn { padding: 6px 12px; border-radius: 8px; border: none; background: none; font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 500; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; transition: all .15s; white-space: nowrap; }
+.filterBtn:hover { background: var(--color-role-light-surfaceContainer); }
+.filterActive { background: var(--color-role-light-primaryContainer); color: var(--color-role-light-onPrimaryContainer); font-weight: 600; }
+.sourceSelect { padding: 8px 12px; border-radius: 8px; border: 1.5px solid var(--color-role-light-outlineVariant); background: var(--color-role-light-surfaceContainerLow); font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onSurface); outline: none; cursor: pointer; }
+.list { display: flex; flex-direction: column; gap: 8px; }
+.empty { text-align: center; padding: 60px 24px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.emptyText { font-family: var(--font-body-body-medium-fontFamily); font-size: 15px; color: var(--color-role-light-onSurfaceVariant); margin: 0; }
+@media (max-width: 640px) { .header { flex-direction: column; } .toolbar { flex-direction: column; align-items: stretch; } }

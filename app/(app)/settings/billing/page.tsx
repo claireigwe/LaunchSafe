@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { BillingPage } from "@/features/billing/components/billing-page";
 
-export const metadata: Metadata = { title: "Billing" };
+export const metadata: Metadata = {
+  title: "Billing | LaunchSafe",
+};
 
-export default function BillingPage() {
-  return <div id="billing-page"><h1>Billing</h1></div>;
+export default function BillingSettingsPage() {
+  return <BillingPage />;
 }

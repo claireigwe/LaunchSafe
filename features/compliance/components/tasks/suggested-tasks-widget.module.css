@@ -1,0 +1,19 @@
+.card { background: var(--color-role-light-surfaceContainerLowest); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 20px; }
+.header { display: flex; align-items: center; gap: 10px; padding: 20px 24px; border-bottom: 1px solid var(--color-role-light-outlineVariant); }
+.icon { color: var(--color-key-warning); }
+.title { font-family: var(--font-title-title-large-fontFamily); font-size: 16px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0; }
+.info { padding: 12px 24px 0; font-family: var(--font-body-body-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onSurfaceVariant); margin: 0; }
+.list { padding: 12px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+.item { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: 12px; background: var(--color-role-light-surfaceContainerLow); border: 1px solid var(--color-role-light-outlineVariant); }
+.itemBody { flex: 1; }
+.itemTitleRow { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.itemTitle { font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; font-weight: 500; color: var(--color-role-light-onSurface); }
+.priorityBadge { font-family: var(--font-label-label-small-fontFamily); font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; }
+.pr_low { background: var(--color-role-light-surfaceContainer); color: var(--color-role-light-onSurfaceVariant); }
+.pr_medium { background: var(--color-role-light-warningContainer); color: var(--color-role-light-onWarningContainer); }
+.pr_high { background: var(--color-palette-error-80); color: var(--color-palette-error-10); }
+.pr_critical { background: var(--color-role-light-errorContainer); color: var(--color-role-light-onErrorContainer); }
+.itemReason { font-family: var(--font-body-body-medium-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); margin: 0; line-height: 1.4; }
+.itemActions { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+.actionBtn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--color-role-light-outlineVariant); background: var(--color-role-light-surfaceContainerLowest); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--color-role-light-onSurfaceVariant); transition: all .15s; }
+.actionBtn:hover { border-color: var(--color-role-light-primary); color: var(--color-role-light-primary); }

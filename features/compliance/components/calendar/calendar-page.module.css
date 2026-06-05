@@ -1,0 +1,37 @@
+.page { max-width: 1000px; margin: 0 auto; }
+.header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
+.title { font-family: var(--font-display-display-small-fontFamily); font-size: 26px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0 0 4px; }
+.subtitle { font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurfaceVariant); margin: 0; }
+.controls { display: flex; gap: 4px; margin-bottom: 20px; }
+.viewBtn { padding: 6px 14px; border-radius: 8px; border: none; background: var(--color-role-light-surfaceContainer); font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 500; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; transition: all .15s; }
+.viewBtn:first-child { background: var(--color-role-light-primaryContainer); color: var(--color-role-light-onPrimaryContainer); font-weight: 600; }
+.calendar { background: var(--color-role-light-surfaceContainerLowest); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 20px; overflow: hidden; }
+.nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--color-role-light-outlineVariant); }
+.navBtn { background: none; border: none; cursor: pointer; color: var(--color-role-light-onSurfaceVariant); padding: 4px; border-radius: 6px; }
+.navBtn:hover { background: var(--color-role-light-surfaceContainer); }
+.monthLabel { font-family: var(--font-title-title-large-fontFamily); font-size: 16px; font-weight: 600; color: var(--color-role-light-onSurface); }
+.dayHeaders { display: grid; grid-template-columns: repeat(7, 1fr); border-bottom: 1px solid var(--color-role-light-outlineVariant); }
+.dayHeader { padding: 10px 8px; text-align: center; font-family: var(--font-label-label-small-fontFamily); font-size: 12px; font-weight: 600; color: var(--color-role-light-onSurfaceVariant); text-transform: uppercase; }
+.grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+.dayCell { min-height: 100px; padding: 8px; border-right: 1px solid var(--color-role-light-outlineVariant); border-bottom: 1px solid var(--color-role-light-outlineVariant); }
+.dayCell:nth-child(7n) { border-right: none; }
+.today { background: var(--color-role-light-primaryContainer); }
+.dayNum { font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 600; color: var(--color-role-light-onSurface); display: block; margin-bottom: 4px; }
+.dayTasks { display: flex; flex-direction: column; gap: 2px; }
+.dayTask { font-family: var(--font-label-label-small-fontFamily); font-size: 10px; padding: 2px 6px; border-radius: 4px; background: var(--color-role-light-primaryContainer); color: var(--color-role-light-onPrimaryContainer); border: none; cursor: pointer; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dayTaskOverdue { background: var(--color-role-light-errorContainer); color: var(--color-role-light-onErrorContainer); }
+.moreTasks { font-family: var(--font-label-label-small-fontFamily); font-size: 10px; color: var(--color-role-light-onSurfaceVariant); padding: 0 4px; }
+.weekly { display: flex; flex-direction: column; gap: 8px; }
+.weekDay { background: var(--color-role-light-surfaceContainerLowest); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 14px; padding: 14px; }
+.weekToday { background: var(--color-role-light-primaryContainer); border-color: var(--color-role-light-primary); }
+.weekDayHeader { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.weekDayName { font-family: var(--font-label-label-small-fontFamily); font-size: 12px; font-weight: 600; color: var(--color-role-light-onSurfaceVariant); text-transform: uppercase; }
+.weekDayNum { font-family: var(--font-label-label-medium-fontFamily); font-size: 16px; font-weight: 600; color: var(--color-role-light-onSurface); }
+.weekTasks { display: flex; flex-direction: column; gap: 4px; }
+.weekTask { font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; padding: 6px 10px; border-radius: 8px; background: var(--color-role-light-primaryContainer); color: var(--color-role-light-onPrimaryContainer); border: none; cursor: pointer; text-align: left; }
+.weekTaskOverdue { background: var(--color-role-light-errorContainer); color: var(--color-role-light-onErrorContainer); }
+.noTasks { font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); }
+.empty { text-align: center; padding: 40px 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.emptyText { font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurfaceVariant); margin: 0; }
+@media (max-width: 640px) { .header { flex-direction: column; } .dayCell { min-height: 60px; } .grid { grid-template-columns: repeat(7, 1fr); } }
+@media (max-width: 480px) { .dayHeaders { display: none; } .dayCell { min-height: 50px; padding: 4px; } .dayNum { font-size: 11px; } .dayTask { font-size: 9px; padding: 1px 4px; } }

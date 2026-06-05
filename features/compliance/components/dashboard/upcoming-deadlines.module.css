@@ -1,0 +1,107 @@
+.card {
+  background: var(--color-role-light-surfaceContainerLowest);
+  border: 1px solid var(--color-role-light-outlineVariant);
+  border-radius: 20px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--color-role-light-outlineVariant);
+}
+
+.icon {
+  color: var(--color-role-light-primary);
+}
+
+.title {
+  font-family: var(--font-title-title-large-fontFamily);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-role-light-onSurface);
+  margin: 0;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.item + .item {
+  border-top: 1px solid var(--color-role-light-outlineVariant);
+}
+
+.link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.link:hover {
+  background: var(--color-role-light-surfaceContainerLow);
+}
+
+.taskName {
+  font-family: var(--font-label-label-medium-fontFamily);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-role-light-onSurface);
+}
+
+.taskMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.due {
+  font-family: var(--font-label-label-small-fontFamily);
+  font-size: 12px;
+  color: var(--color-role-light-onSurfaceVariant);
+}
+
+.priority {
+  font-family: var(--font-label-label-small-fontFamily);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.p_due_soon {
+  background: var(--color-role-light-warningContainer);
+  color: var(--color-role-light-onWarningContainer);
+}
+
+.p_not_started {
+  background: var(--color-role-light-surfaceContainer);
+  color: var(--color-role-light-onSurfaceVariant);
+}
+
+.p_in_progress {
+  background: var(--color-role-light-primaryContainer);
+  color: var(--color-role-light-onPrimaryContainer);
+}
+
+.p_completed {
+  background: var(--color-role-light-successContainer);
+  color: var(--color-role-light-onSuccessContainer);
+}
+
+.empty {
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.emptyText {
+  font-family: var(--font-body-body-medium-fontFamily);
+  font-size: 14px;
+  color: var(--color-role-light-onSurfaceVariant);
+  margin: 0;
+}
