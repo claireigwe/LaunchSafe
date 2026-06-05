@@ -1,0 +1,29 @@
+.card {
+  background-color: var(--color-role-light-surface);
+  border-radius: 24px; /* From design-system.md for cards */
+  border: 1px solid var(--color-role-light-outlineVariant);
+  overflow: hidden;
+  position: relative;
+}
+
+.elevated {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.05);
+  border: none;
+}
+
+/* Padding variants based on spacing scale (8, 16, 24, 32) */
+.padding-none {
+  padding: 0;
+}
+
+.padding-sm {
+  padding: 16px;
+}
+
+.padding-md {
+  padding: 24px;
+}
+
+.padding-lg {
+  padding: 32px;
+}

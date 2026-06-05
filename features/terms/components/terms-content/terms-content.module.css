@@ -1,0 +1,132 @@
+.section {
+  padding: 64px 24px 120px;
+  background-color: var(--color-role-light-background);
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 48px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--color-role-light-outlineVariant);
+}
+
+.title {
+  font-family: var(--font-display-display-small-fontFamily);
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--color-role-light-onSurface);
+  margin-bottom: 16px;
+  letter-spacing: -1px;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 48px;
+  }
+}
+
+.lastUpdated {
+  font-family: var(--font-body-body-medium-fontFamily);
+  font-size: 16px;
+  color: var(--color-role-light-onSurfaceVariant);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.intro {
+  font-family: var(--font-body-body-large-fontFamily);
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--color-role-light-onSurface);
+  margin: 0;
+}
+
+.contentSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionTitle {
+  font-family: var(--font-headline-headline-medium-fontFamily);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--color-role-light-onSurface);
+  margin: 0 0 8px 0;
+}
+
+.subTitle {
+  font-family: var(--font-title-title-medium-fontFamily);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-role-light-onSurface);
+  margin: 16px 0 8px 0;
+}
+
+.contentSection p {
+  font-family: var(--font-body-body-medium-fontFamily);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-role-light-onSurfaceVariant);
+  margin: 0;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.list li {
+  font-family: var(--font-body-body-medium-fontFamily);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-role-light-onSurfaceVariant);
+  position: relative;
+  padding-left: 20px;
+}
+
+.list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-role-light-primary);
+}
+
+.list li strong {
+  color: var(--color-role-light-onSurface);
+  font-weight: 600;
+}
+
+.closing {
+  margin-top: 48px;
+  padding: 32px;
+  background-color: var(--color-role-light-surfaceContainerLowest);
+  border-radius: 16px;
+  border: 1px solid var(--color-role-light-outlineVariant);
+}
+
+.closing p {
+  font-family: var(--font-body-body-large-fontFamily);
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--color-role-light-onSurface);
+  font-weight: 500;
+  margin: 0;
+  text-align: center;
+}

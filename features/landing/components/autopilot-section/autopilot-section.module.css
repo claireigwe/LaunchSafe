@@ -1,0 +1,208 @@
+.section {
+  padding: 80px 24px;
+  background-color: var(--color-role-light-surfaceContainerLowest);
+  border-top: 1px solid var(--color-role-light-outlineVariant);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+@media (min-width: 1024px) {
+  .container {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.content {
+  flex: 1;
+  text-align: left;
+}
+
+.title {
+  font-family: var(--font-display-display-small-fontFamily);
+  font-weight: 600;
+  font-size: 36px;
+  line-height: 1.2;
+  letter-spacing: -1px;
+  color: var(--color-role-light-onSurface);
+  margin-bottom: 24px;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 48px;
+  }
+}
+
+.subtitle {
+  font-family: var(--font-body-body-large-fontFamily);
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--color-role-light-onSurfaceVariant);
+  max-width: 500px;
+}
+
+.actions {
+  margin-top: 32px;
+}
+
+.visual {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.dashboardMock {
+  width: 100%;
+  max-width: 600px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-role-light-outlineVariant);
+  display: flex;
+  overflow: hidden;
+  height: 340px;
+}
+
+.sidebar {
+  width: 120px;
+  background-color: var(--color-role-light-surfaceContainerLow);
+  border-right: 1px solid var(--color-role-light-outlineVariant);
+  padding: 24px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sidebarItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-label-label-medium-fontFamily);
+  font-size: 12px;
+  color: var(--color-role-light-onSurfaceVariant);
+}
+
+.mainContent {
+  flex: 1;
+  padding: 24px;
+  background-color: var(--color-role-light-surfaceContainerLowest);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.header {
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.scoreCard {
+  background: var(--color-role-light-tertiaryContainer);
+  padding: 16px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.scoreTitle {
+  font-family: var(--font-label-label-medium-fontFamily);
+  font-size: 12px;
+  color: var(--color-role-light-onTertiaryContainer);
+}
+
+.scoreValue {
+  font-family: var(--font-headline-headline-small-fontFamily);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-role-light-onTertiaryContainer);
+}
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  background: white;
+  border: 1px solid var(--color-role-light-outlineVariant);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: var(--color-role-light-surfaceContainerLow);
+  border-bottom: 1px solid var(--color-role-light-outlineVariant);
+  font-family: var(--font-label-label-small-fontFamily);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-role-light-onSurfaceVariant);
+  text-transform: uppercase;
+}
+
+.cardIcon {
+  color: var(--color-role-light-tertiary);
+}
+
+.cardBody {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.task {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.taskName {
+  font-family: var(--font-label-label-medium-fontFamily);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-role-light-onSurface);
+}
+
+.taskDue {
+  font-family: var(--font-label-label-small-fontFamily);
+  font-size: 11px;
+  color: var(--color-role-light-error);
+  background: var(--color-role-light-errorContainer);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.update {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.updateBadge {
+  font-family: var(--font-label-label-small-fontFamily);
+  font-size: 10px;
+  color: var(--color-role-light-onSecondary);
+  background: var(--color-role-light-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.updateText {
+  font-family: var(--font-body-body-small-fontFamily);
+  font-size: 13px;
+  color: var(--color-role-light-onSurface);
+}

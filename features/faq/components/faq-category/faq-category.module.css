@@ -1,0 +1,23 @@
+.categoryContainer {
+  margin-bottom: 64px;
+}
+
+.categoryContainer:last-child {
+  margin-bottom: 0;
+}
+
+.categoryTitle {
+  font-family: var(--font-headline-headline-medium-fontFamily);
+  font-weight: 600;
+  font-size: 28px;
+  color: var(--color-role-light-onSurface);
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--color-role-light-outlineVariant);
+}
+
+.accordionList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}

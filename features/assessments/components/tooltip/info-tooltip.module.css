@@ -1,0 +1,52 @@
+.wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--color-role-light-onSurfaceVariant);
+  border-radius: 50%;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.trigger:hover {
+  color: var(--color-role-light-primary);
+  background-color: var(--color-role-light-primaryContainer);
+}
+
+.tooltip {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  background-color: var(--color-palette-neutral-10);
+  color: var(--color-palette-neutral-95);
+  font-family: var(--font-body-body-medium-fontFamily);
+  font-size: var(--font-body-body-small-fontSize, 13px);
+  line-height: 1.5;
+  padding: 10px 14px;
+  border-radius: 10px;
+  max-width: 280px;
+  width: max-content;
+  z-index: 60;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}
+
+@media (max-width: 480px) {
+  .tooltip {
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 260px;
+  }
+}
