@@ -269,6 +269,11 @@ function getIndustryConfig(industryId: string): {
       label: "Energy & Mining Business",
       categories: ["Business Registration", "Tax Compliance", "Industry Licensing", "Environmental Compliance", "Health & Safety", "Employment Compliance", "Import/Export Regulations"],
     },
+    "fashion-apparel": {
+      baseRequirements: 8, baseAgencies: 4, complexityBase: 22,
+      label: "Fashion & Apparel Business",
+      categories: ["Business Registration", "Tax Compliance", "Industry Licensing", "Trade License", "Employment Compliance"],
+    },
   };
 
   return configs[industryId] || {

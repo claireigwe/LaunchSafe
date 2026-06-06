@@ -54,7 +54,7 @@ export function BusinessInfo({ data, onUpdate, onNext }: BusinessInfoProps) {
         {errors.industry && <p className={styles.error} role="alert">{errors.industry}</p>}
         <select id="ind" className={styles.select} value={data.industry} onChange={(e) => onUpdate({ industry: e.target.value })}>
           <option value="">Select your industry</option>
-          {industries.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
+          {industries.map((i) => <option key={i.id} value={i.slug}>{i.name}</option>)}
         </select>
       </div>
 

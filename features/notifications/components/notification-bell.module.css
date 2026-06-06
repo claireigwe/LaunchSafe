@@ -1,8 +1,10 @@
 .wrapper { position: relative; }
-.bell { position: relative; width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--color-role-light-outlineVariant); background: var(--color-role-light-surfaceBright); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--color-role-light-onSurfaceVariant); transition: all .15s; }
+.bell { position: relative; width: 40px; height: 40px; border-radius: 10px; border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); background: var(--color-role-light-surfaceBright); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--color-role-light-onSurfaceVariant); transition: all .15s; }
 .bell:hover { border-color: var(--color-role-light-primary); color: var(--color-role-light-primary); }
 .count { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; border-radius: 9px; background: var(--color-role-light-error); color: var(--color-role-light-onError); font-family: var(--font-label-label-small-fontFamily); font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
-.dropdown { position: absolute; top: calc(100% + 8px); right: 0; width: 360px; background: var(--color-role-light-surfaceBright); border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,.12); border: 1px solid var(--color-role-light-outlineVariant); z-index: 70; overflow: hidden; }
+.dropdown { position: absolute; top: calc(100% + 8px); right: 0; width: 360px; background: var(--color-role-light-surfaceBright); border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,.12); border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); z-index: 70; overflow: hidden; }
 .dropdownHeader { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--color-role-light-outlineVariant); }
 .dropdownTitle { font-family: var(--font-label-label-large-fontFamily); font-size: 15px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0; }
 .unreadBadge { font-family: var(--font-label-label-small-fontFamily); font-size: 11px; padding: 2px 8px; border-radius: 8px; background: var(--color-role-light-primaryContainer); color: var(--color-role-light-onPrimaryContainer); font-weight: 600; }

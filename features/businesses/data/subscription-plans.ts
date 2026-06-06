@@ -75,6 +75,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
       { text: "Advanced Reporting", included: true },
       { text: "Team Collaboration", included: true },
       { text: "Priority Support", included: true },
+      { text: "AI Compliance Assistant", included: true },
     ],
   },
 ];

@@ -136,7 +136,7 @@ export function clearPendingChange(): void {
 const PLAN_FEATURES: Record<string, string[]> = {
   starter: ["1 Business", "Compliance Dashboard", "Compliance Calendar", "Notifications & Reminders", "Document Management", "Task Management"],
   growth: ["Up to 5 Businesses", "Compliance Dashboard", "Compliance Calendar", "Notifications & Reminders", "Document Management", "Task Management", "Multi-Business Management", "Advanced Reporting"],
-  enterprise: ["Up to 20 Businesses", "Compliance Dashboard", "Compliance Calendar", "Notifications & Reminders", "Document Management", "Task Management", "Multi-Business Management", "Advanced Reporting", "Team Collaboration", "Priority Support"],
+  enterprise: ["Up to 20 Businesses", "Compliance Dashboard", "Compliance Calendar", "Notifications & Reminders", "Document Management", "Task Management", "Multi-Business Management", "Advanced Reporting", "Team Collaboration", "Priority Support", "AI Compliance Assistant"],
 };
 
 export function getPlanFeatures(planId: string): string[] { return PLAN_FEATURES[planId] || PLAN_FEATURES.starter; }

@@ -41,7 +41,8 @@
 
 .profileCard {
   background-color: var(--color-role-light-surfaceContainerLow);
-  border: 1px solid var(--color-role-light-outlineVariant);
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 20px;
@@ -81,7 +82,8 @@
 
 .statCard {
   background-color: var(--color-role-light-surfaceContainerLow);
-  border: 1px solid var(--color-role-light-outlineVariant);
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   border-radius: 16px;
   padding: 20px 12px;
   text-align: center;
@@ -130,7 +132,8 @@
   padding: 10px 14px;
   border-radius: 12px;
   background-color: var(--color-role-light-surfaceContainer);
-  border: 1px solid var(--color-role-light-outlineVariant);
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .categoryIcon {
@@ -147,7 +150,8 @@
 
 .lockedSection {
   background-color: var(--color-role-light-surfaceContainerLow);
-  border: 1px solid var(--color-role-light-outlineVariant);
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   border-radius: 20px;
   padding: 24px;
   margin-bottom: 20px;
@@ -271,7 +275,8 @@
   margin-top: 16px;
   padding: 14px;
   border-radius: 12px;
-  border: 1px solid var(--color-role-light-outlineVariant);
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   background-color: transparent;
   font-family: var(--font-label-label-medium-fontFamily);
   font-size: var(--font-label-label-medium-fontSize);

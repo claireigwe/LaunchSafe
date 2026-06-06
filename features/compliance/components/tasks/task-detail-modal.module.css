@@ -51,7 +51,8 @@
 .confirmDeleteBanner { padding: 12px 14px; border-radius: 10px; background: var(--color-role-light-errorContainer); border: 1px solid var(--color-role-light-error); }
 .confirmDeleteBanner p { font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onErrorContainer); margin: 0 0 8px; }
 .confirmDeleteActions { display: flex; gap: 8px; }
-.confirmDeleteCancel { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--color-role-light-outlineVariant); background: none; font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; }
+.confirmDeleteCancel { padding: 6px 12px; border-radius: 6px; border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); background: none; font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; }
 .confirmDeleteBtn { padding: 6px 12px; border-radius: 6px; border: none; background: var(--color-role-light-error); color: var(--color-role-light-onError); font-family: var(--font-label-label-small-fontFamily); font-size: 12px; font-weight: 600; cursor: pointer; }
 .reason { padding: 14px; background: var(--color-role-light-primaryContainer); border-radius: 12px; font-family: var(--font-body-body-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onPrimaryContainer); line-height: 1.5; }
 .reason strong { display: block; margin-bottom: 4px; }

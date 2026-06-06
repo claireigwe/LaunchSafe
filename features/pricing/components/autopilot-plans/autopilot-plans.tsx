@@ -70,6 +70,7 @@ export function AutopilotPlans() {
         "Team Collaboration",
         "Advanced Reporting",
         "Priority Support",
+        "AI Compliance Assistant",
         "Enterprise Features"
       ],
       ctaText: "Contact Sales",

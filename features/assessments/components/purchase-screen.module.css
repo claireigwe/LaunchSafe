@@ -47,9 +47,12 @@
 }
 
 .profileCard {
-  background-color: var(--color-role-light-surfaceContainerLow);
-  border: 1px solid var(--color-role-light-outlineVariant);
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+  border-radius: 24px;
   padding: 16px 20px;
   margin-bottom: 16px;
   text-align: left;
@@ -87,8 +90,11 @@
 }
 
 .stat {
-  background-color: var(--color-role-light-surfaceContainerLow);
-  border: 1px solid var(--color-role-light-outlineVariant);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
   border-radius: 14px;
   padding: 16px 8px;
   text-align: center;
@@ -112,9 +118,12 @@
 }
 
 .lockedSection {
-  background: linear-gradient(180deg, var(--color-role-light-surfaceContainerLow) 0%, var(--color-role-light-surface) 100%);
-  border: 1px solid var(--color-role-light-outlineVariant);
-  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+  border-radius: 24px;
   padding: 28px 24px;
 }
 

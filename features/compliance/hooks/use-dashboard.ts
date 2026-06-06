@@ -41,7 +41,7 @@ function buildDashboardData(): DashboardData {
 
   let business: Business | null = null;
   if (info?.businessName) {
-    const industryObj = getIndustriesSync().find((i) => i.id === info.industry);
+    const industryObj = getIndustriesSync().find((i) => i.slug === info.industry);
     business = {
       id: "onboarded",
       userId: "",

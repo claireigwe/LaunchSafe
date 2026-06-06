@@ -150,6 +150,11 @@ function getFullIndustryConfig(industryId: string) {
       baseRequirements: 16, baseAgencies: 8, complexityBase: 52,
       categories: ["Business Registration", "Tax Compliance", "Industry Licensing", "Environmental Compliance", "Health & Safety", "Employment Compliance", "Import/Export Regulations"],
     },
+    "fashion-apparel": {
+      label: "Fashion & Apparel Business",
+      baseRequirements: 8, baseAgencies: 4, complexityBase: 22,
+      categories: ["Business Registration", "Tax Compliance", "Industry Licensing", "Trade License", "Employment Compliance"],
+    },
   };
   return configs[industryId] || { label: "Business", baseRequirements: 7, baseAgencies: 3, complexityBase: 20, categories: ["Business Registration", "Tax Compliance"] };
 }

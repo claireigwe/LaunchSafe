@@ -47,8 +47,11 @@
 
 .step {
   width: 100%;
-  background-color: var(--color-role-light-surfaceContainerLowest);
-  border: 1px solid var(--color-role-light-outlineVariant);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
   border-radius: 24px;
   padding: 32px;
   position: relative;
@@ -56,7 +59,9 @@
 
 .stepHighlight {
   width: 100%;
-  background-color: var(--color-role-light-surfaceContainerLow);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 2px solid var(--color-role-light-primary);
   border-radius: 24px;
   padding: 32px;

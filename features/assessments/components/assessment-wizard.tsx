@@ -22,6 +22,7 @@ import {
   saveAssessmentIdToLocalStorage,
   loadAssessmentIdFromLocalStorage,
   savePendingUnlockIntent,
+  initiateAssessmentPayment,
 } from "../api/assessment-api";
 import type { AssessmentSummary } from "@/types/domain/assessment";
 import styles from "./assessment-wizard.module.css";
@@ -91,7 +92,7 @@ export function AssessmentWizard() {
     goToStep("processing");
   }, [data, goToStep]);
 
-  const handleUnlockReport = useCallback(() => {
+  const handleUnlockReport = useCallback(async () => {
     trackEvent("Unlock Report Clicked");
 
     const id = assessmentId || loadAssessmentIdFromLocalStorage();
@@ -107,6 +108,15 @@ export function AssessmentWizard() {
     }
 
     trackEvent("Payment Initiated");
+
+    if (id) {
+      try {
+        const { authorizationUrl } = await initiateAssessmentPayment(id);
+        window.location.href = authorizationUrl;
+        return;
+      } catch {}
+    }
+
     router.push("/assessment/unlock");
   }, [session, assessmentId, summary, router]);
 

@@ -107,7 +107,7 @@ export function BusinessBasics({ data, onUpdate, onNext }: BusinessBasicsProps) 
         >
             <option value="">Select your industry</option>
           {industries.map((ind) => (
-            <option key={ind.id} value={ind.id}>
+            <option key={ind.id} value={ind.slug}>
               {ind.name}
             </option>
           ))}

@@ -1,4 +1,4 @@
-.card { background: var(--color-role-light-surfaceContainerLowest); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 20px; }
+.card { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); border-radius: 24px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04); }
 .header { display: flex; align-items: center; gap: 10px; padding: 20px 24px; border-bottom: 1px solid var(--color-role-light-outlineVariant); }
 .icon { color: var(--color-key-warning); }
 .title { font-family: var(--font-title-title-large-fontFamily); font-size: 16px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0; }

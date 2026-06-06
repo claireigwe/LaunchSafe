@@ -1,4 +1,5 @@
-.section { background: var(--color-role-light-surfaceContainerLowest); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 24px; padding: 28px; }
+.section { background: var(--color-role-light-surfaceContainerLowest); border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 24px; padding: 28px; }
 .header { margin-bottom: 20px; }
 .title { font-family: var(--font-display-display-small-fontFamily); font-size: 20px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0 0 4px; letter-spacing: -0.3px; }
 .subtitle { font-family: var(--font-body-body-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onSurfaceVariant); margin: 0; }

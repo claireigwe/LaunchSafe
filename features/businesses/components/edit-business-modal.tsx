@@ -80,7 +80,7 @@ export function EditBusinessModal({ initial, onSave, onClose }: Props) {
             <label className={styles.label}>Industry</label>
             <select className={styles.select} value={form.industry} onChange={(e) => update({ industry: e.target.value })}>
               <option value="">Select industry</option>
-              {industries.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
+              {industries.map((i) => <option key={i.id} value={i.slug}>{i.name}</option>)}
             </select>
           </div>
 

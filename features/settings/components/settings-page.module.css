@@ -27,7 +27,8 @@
 .actions { display: flex; gap: 12px; margin-top: 8px; }
 .error { font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-error); margin: 0 0 4px; }
 .success { font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-success); margin: 0 0 4px; }
-.emptyCard { background: var(--color-role-light-surfaceContainerLowest); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 14px; padding: 48px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.emptyCard { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04); border-radius: 24px; padding: 48px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; }
 .emptyText { font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurfaceVariant); margin: 0; }
 .subSection { margin-bottom: 28px; padding-bottom: 28px; border-bottom: 1px solid var(--color-role-light-outlineVariant); }
 .subSection:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
@@ -42,10 +43,12 @@
 .toggleThumb { width: 20px; height: 20px; border-radius: 50%; background: white; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
 .toggleOn .toggleThumb { transform: translateX(20px); }
 .deliveryNote { font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); margin: 0; }
-.subCard { background: var(--color-role-light-surfaceContainerLow); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px; max-width: 400px; }
+.subCard { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04); border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 12px; max-width: 400px; }
 .subRow { display: flex; justify-content: space-between; align-items: center; }
 .subLabel { font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurfaceVariant); }
 .subValue { font-family: var(--font-label-label-large-fontFamily); font-size: 14px; font-weight: 600; color: var(--color-role-light-onSurface); }
-.dangerZone { padding: 20px; border-radius: 14px; border: 1px solid var(--color-role-light-outlineVariant); max-width: 480px; }
+.dangerZone { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); padding: 24px; border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04); max-width: 480px; }
 .dangerText { font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurfaceVariant); margin: 0 0 12px; }
 .warningText { font-family: var(--font-body-body-medium-fontFamily); font-size: 13px; color: var(--color-role-light-error); margin: 0 0 12px; line-height: 1.5; }

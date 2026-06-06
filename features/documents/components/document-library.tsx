@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Upload, LayoutGrid, List, Search, FilePlus } from "lucide-react";
+import { Upload, LayoutGrid, List, Search, FilePlus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DocumentCard } from "./document-card";
 import { DocumentUploadModal } from "./document-upload-modal";
@@ -37,6 +37,7 @@ export function DocumentLibrary() {
   const [showUpload, setShowUpload] = useState(false);
   const [showGenerate, setShowGenerate] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<AppDocument | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [generatedDocs, setGeneratedDocs] = useState<ComplianceDocument[]>([]);
 
   useEffect(() => {
@@ -93,11 +94,12 @@ export function DocumentLibrary() {
     setShowUpload(false);
   }
 
-  function handleDelete(id: string) {
-    deleteDocument(id);
+  async function handleDelete(id: string) {
+    await deleteDocument(id);
     trackEvent("Document Deleted", { id });
     refresh();
     setSelectedDoc(null);
+    setDeleteConfirmId(null);
   }
 
   function handleDownload(doc: AppDocument) {
@@ -106,6 +108,15 @@ export function DocumentLibrary() {
       a.href = doc.fileUrl;
       a.download = doc.fileName;
       a.click();
+      trackEvent("Document Downloaded", { id: doc.id });
+    } else {
+      const blob = new Blob([doc.title + "\n\n" + (doc.description || "")], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = doc.fileName.replace(/\.[^.]+$/, "") + ".txt";
+      a.click();
+      URL.revokeObjectURL(url);
       trackEvent("Document Downloaded", { id: doc.id });
     }
   }
@@ -122,10 +133,6 @@ export function DocumentLibrary() {
           <Button variant="primary" size="md" onClick={() => setShowUpload(true)}><Upload size={16} /> Upload</Button>
         </div>
       </div>
-
-      <SuggestedDocumentsWidget onUpload={(title, docType) => {
-        setShowUpload(true);
-      }} />
 
       <div className={styles.toolbar}>
         <div className={styles.searchWrap}>
@@ -156,11 +163,11 @@ export function DocumentLibrary() {
               <span className={styles.th}>Date</span>
               <span className={styles.th} style={{ textAlign: "right" }}>Actions</span>
             </div>
-            {filtered.map((d) => <DocumentCard key={d.id} doc={d} onView={setSelectedDoc} onDownload={handleDownload} viewMode="table" />)}
+            {filtered.map((d) => <DocumentCard key={d.id} doc={d} onView={setSelectedDoc} onDownload={handleDownload} onDelete={handleDelete} viewMode="table" />)}
           </div>
         ) : (
           <div className={styles.grid}>
-            {filtered.map((d) => <DocumentCard key={d.id} doc={d} onView={setSelectedDoc} onDownload={handleDownload} viewMode="card" />)}
+            {filtered.map((d) => <DocumentCard key={d.id} doc={d} onView={setSelectedDoc} onDownload={handleDownload} onDelete={handleDelete} viewMode="card" />)}
           </div>
         )
       ) : (
@@ -177,6 +184,10 @@ export function DocumentLibrary() {
               {allItems.length > 0 && <Button variant="ghost" size="sm" onClick={() => { setFilter("all"); setSearch(""); }}>Clear Filters</Button>}
         </div>
       )}
+
+      <SuggestedDocumentsWidget onUpload={(title, docType) => {
+        setShowUpload(true);
+      }} />
 
       {showUpload && <DocumentUploadModal onSave={handleUpload} onClose={() => setShowUpload(false)} />}
       {showGenerate && <DocumentGeneratorModal onClose={() => setShowGenerate(false)} onComplete={refresh} />}

@@ -6,7 +6,8 @@
 .sectionHeader { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
 .sectionIcon { color: var(--color-role-light-primary); }
 .sectionTitle { font-family: var(--font-title-title-large-fontFamily); font-size: 18px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0; }
-.subCard { background: var(--color-role-light-surfaceContainerLowest); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 16px; padding: 20px; }
+.subCard { background: var(--color-role-light-surfaceContainerLowest); border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 16px; padding: 20px; }
 .subRow { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
 .subRow + .subRow { border-top: 1px solid var(--color-role-light-outlineVariant); }
 .subLabel { font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurfaceVariant); }
@@ -17,14 +18,17 @@
 .statusWarning { background: var(--color-role-light-warningContainer); color: var(--color-role-light-onWarningContainer); }
 .statusMuted { background: var(--color-role-light-surfaceContainer); color: var(--color-role-light-onSurfaceVariant); }
 .statusError { background: var(--color-role-light-errorContainer); color: var(--color-role-light-onErrorContainer); }
-.emptyCard { background: var(--color-role-light-surfaceContainerLowest); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 16px; padding: 40px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.emptyCard { background: var(--color-role-light-surfaceContainerLowest); border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 16px; padding: 40px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; }
 .emptyText { font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurfaceVariant); margin: 0; }
-.featuresList { background: var(--color-role-light-surfaceContainerLowest); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 16px; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.featuresList { background: var(--color-role-light-surfaceContainerLowest); border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 16px; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .featureRow { display: flex; align-items: center; gap: 10px; font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurface); }
 .checkIcon { color: var(--color-role-light-primary); flex-shrink: 0; }
 .plansGrid { display: grid; grid-template-columns: 1fr; gap: 12px; }
 @media (min-width: 768px) { .plansGrid { grid-template-columns: repeat(3, 1fr); } }
-.planCard { position: relative; background: var(--color-role-light-surfaceContainerLowest); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 8px; }
+.planCard { position: relative; background: var(--color-role-light-surfaceContainerLowest); border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 8px; }
 .planCurrent { border-color: var(--color-role-light-primary); box-shadow: 0 0 0 3px var(--color-role-light-primaryContainer); }
 .planBadge { position: absolute; top: -10px; right: 16px; padding: 4px 12px; border-radius: 20px; background: var(--color-role-light-primary); color: var(--color-role-light-onPrimary); font-family: var(--font-label-label-small-fontFamily); font-size: 11px; font-weight: 600; }
 .planName { font-family: var(--font-label-label-large-fontFamily); font-size: 18px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0; }
@@ -36,7 +40,8 @@
 .dangerZone { margin-top: 16px; text-align: center; }
 .cancelBtn { background: none; border: none; font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; color: var(--color-role-light-error); cursor: pointer; padding: 8px 16px; }
 .cancelBtn:hover { text-decoration: underline; }
-.table { background: var(--color-role-light-surfaceContainerLowest); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 14px; overflow: hidden; }
+.table { background: var(--color-role-light-surfaceContainerLowest); border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 14px; overflow: hidden; }
 .tableHeader { display: grid; grid-template-columns: 1fr 2fr 1fr 1fr 1fr; padding: 12px 20px; gap: 12px; background: var(--color-role-light-surfaceContainer); border-bottom: 1px solid var(--color-role-light-outlineVariant); }
 .th { font-family: var(--font-label-label-small-fontFamily); font-size: 11px; font-weight: 600; color: var(--color-role-light-onSurfaceVariant); text-transform: uppercase; }
 .tableRow { display: grid; grid-template-columns: 1fr 2fr 1fr 1fr 1fr; padding: 12px 20px; gap: 12px; border-bottom: 1px solid var(--color-role-light-outlineVariant); }

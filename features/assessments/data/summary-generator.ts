@@ -16,6 +16,7 @@ const BUSINESS_TYPE_MAP: Record<string, string> = {
   "professional-services": "Professional Services Firm",
   "transportation-logistics": "Transportation & Logistics Business",
   "energy-mining": "Energy & Mining Business",
+  "fashion-apparel": "Fashion & Apparel Business",
 };
 
 const STAGE_MULTIPLIER: Record<BusinessStage, number> = {

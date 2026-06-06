@@ -359,7 +359,7 @@ function ToggleRow({ label, description, value, onChange }: { label: string; des
 }
 
 function getIndustryName(id: string): string {
-  return getIndustriesSync().find((i) => i.id === id)?.name || id;
+  return getIndustriesSync().find((i) => i.slug === id)?.name || id;
 }
 
 function getStateLabel(id: string): string {

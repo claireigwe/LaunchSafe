@@ -7,7 +7,8 @@
 @media (max-width: 768px) { .layout { grid-template-columns: 1fr; } }
 
 /* Sidebar list */
-.sidebarList { background: var(--color-role-light-surfaceContainerLowest); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 16px; overflow: hidden; }
+.sidebarList { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04); border-radius: 24px; overflow: hidden; }
 .listTitle { font-family: var(--font-title-title-large-fontFamily); font-size: 14px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0; padding: 16px 16px 8px; }
 .list { display: flex; flex-direction: column; gap: 2px; padding: 4px 8px 8px; }
 .listItem { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; border: none; background: none; cursor: pointer; text-align: left; font-family: inherit; transition: all .1s; width: 100%; }
@@ -26,7 +27,8 @@
 
 /* Detail panel */
 .detail { }
-.detailCard { background: var(--color-role-light-surfaceContainerLowest); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 16px; overflow: hidden; }
+.detailCard { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04); border-radius: 24px; overflow: hidden; }
 .detailHeader { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--color-role-light-outlineVariant); }
 .detailTitle { font-family: var(--font-title-title-large-fontFamily); font-size: 18px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0; }
 .editBtn { display: inline-flex; align-items: center; gap: 4px; background: none; border: none; font-family: var(--font-label-label-medium-fontFamily); font-size: 12px; color: var(--color-role-light-primary); cursor: pointer; padding: 4px 8px; border-radius: 6px; }
@@ -53,7 +55,8 @@
 .confirmTitle { font-family: var(--font-headline-headline-small-fontFamily); font-size: 20px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0 0 8px; }
 .confirmText { font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurfaceVariant); margin: 0 0 24px; line-height: 1.5; }
 .confirmActions { display: flex; gap: 12px; justify-content: center; }
-.confirmCancel { padding: 10px 20px; border-radius: 10px; border: 1px solid var(--color-role-light-outlineVariant); background: none; font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; font-weight: 500; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; }
+.confirmCancel { padding: 10px 20px; border-radius: 10px; border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); background: none; font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; font-weight: 500; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; }
 .confirmCancel:hover { background: var(--color-role-light-surfaceContainer); }
 .confirmDelete { padding: 10px 20px; border-radius: 10px; border: none; background: var(--color-role-light-error); color: var(--color-role-light-onError); font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; font-weight: 600; cursor: pointer; }
 .confirmDelete:hover { background: var(--color-palette-error-30); }

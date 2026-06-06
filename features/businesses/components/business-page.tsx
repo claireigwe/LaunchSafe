@@ -127,7 +127,7 @@ export function BusinessPage() {
                 <div className={styles.listInfo}>
                   <span className={styles.listName}>{b.name}</span>
                   <span className={styles.listMeta}>
-                    {getIndustriesSync().find((i) => i.id === b.industry)?.name || b.industry || "—"} · {stateLabels[b.state] || b.state || "—"}
+                    {getIndustriesSync().find((i) => i.slug === b.industry)?.name || b.industry || "—"} · {stateLabels[b.state] || b.state || "—"}
                   </span>
                 </div>
                 <button
@@ -163,7 +163,7 @@ export function BusinessPage() {
               <div className={styles.detailBody}>
                 {isPrimary ? (
                   <>
-                    <DetailRow label="Industry" value={getIndustriesSync().find((i) => i.id === info?.industry)?.name || info?.industry || "—"} />
+                    <DetailRow label="Industry" value={getIndustriesSync().find((i) => i.slug === info?.industry)?.name || info?.industry || "—"} />
                     <DetailRow label="Type" value={info?.businessType || "—"} />
                     <DetailRow label="State" value={stateLabels[info?.state] || info?.state || "—"} />
                     {info?.website && <DetailRow label="Website" value={info.website} />}
@@ -176,7 +176,7 @@ export function BusinessPage() {
                   </>
                 ) : (
                   <>
-                    <DetailRow label="Industry" value={getIndustriesSync().find((i) => i.id === selected.industry)?.name || selected.industry || "—"} />
+                    <DetailRow label="Industry" value={getIndustriesSync().find((i) => i.slug === selected.industry)?.name || selected.industry || "—"} />
                     <DetailRow label="State" value={stateLabels[selected.state] || selected.state || "—"} />
                     <p className={styles.placeholder}>Select this business to manage its compliance data.</p>
                   </>

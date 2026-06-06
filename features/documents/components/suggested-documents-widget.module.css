@@ -1,13 +1,16 @@
-.card { background: var(--color-role-light-surfaceContainerLowest); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 20px; }
+.card { background: var(--color-role-light-surfaceContainerLowest); border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 20px; margin-top: 28px; }
 .header { display: flex; align-items: center; gap: 10px; padding: 20px 24px; border-bottom: 1px solid var(--color-role-light-outlineVariant); }
 .icon { color: var(--color-role-light-primary); }
 .title { font-family: var(--font-title-title-large-fontFamily); font-size: 16px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0; }
 .list { padding: 12px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
-.item { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: 12px; background: var(--color-role-light-surfaceContainerLow); border: 1px solid var(--color-role-light-outlineVariant); }
+.item { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: 12px; background: var(--color-role-light-surfaceContainerLow); border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 .itemBody { flex: 1; }
 .itemTitle { display: block; font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; font-weight: 500; color: var(--color-role-light-onSurface); }
 .itemType { display: block; font-family: var(--font-label-label-small-fontFamily); font-size: 11px; color: var(--color-role-light-onSurfaceVariant); margin-top: 2px; }
 .itemReason { font-family: var(--font-body-body-medium-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); margin: 4px 0 0; line-height: 1.4; }
 .itemActions { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
-.actionBtn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--color-role-light-outlineVariant); background: var(--color-role-light-surfaceContainerLowest); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--color-role-light-onSurfaceVariant); transition: all .15s; }
+.actionBtn { width: 30px; height: 30px; border-radius: 8px; border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); background: var(--color-role-light-surfaceContainerLowest); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--color-role-light-onSurfaceVariant); transition: all .15s; }
 .actionBtn:hover { border-color: var(--color-role-light-primary); color: var(--color-role-light-primary); }
