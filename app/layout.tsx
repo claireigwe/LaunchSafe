@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { QueryProvider } from "@/lib/providers/query-provider";
 
 export const metadata: Metadata = {
   title: {
@@ -8,6 +9,9 @@ export const metadata: Metadata = {
   },
   description:
     "Discover, understand, and manage regulatory compliance before and after launching your business in Africa.",
+  icons: {
+    icon: "/favicon.svg",
+  },
   keywords: [
     "business compliance Nigeria",
     "regulatory requirements",
@@ -42,7 +46,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body><QueryProvider>{children}</QueryProvider></body>
     </html>
   );
 }

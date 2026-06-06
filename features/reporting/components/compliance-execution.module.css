@@ -1,0 +1,19 @@
+.section { background: var(--color-role-light-surfaceContainerLowest); border: none; border-radius: 24px; padding: 32px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04); }
+.header { margin-bottom: 32px; }
+.title { font-family: var(--font-display-display-small-fontFamily); font-size: 24px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0 0 4px; letter-spacing: -0.3px; }
+.subtitle { font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurfaceVariant); margin: 0; }
+.scoreRow { display: flex; gap: 48px; margin-bottom: 32px; }
+@media (max-width: 640px) { .scoreRow { flex-direction: column; gap: 24px; } }
+.scoreCard { padding: 0; background: transparent; border: none; display: flex; flex-direction: column; }
+.scoreLabel { display: block; font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 500; color: var(--color-role-light-onSurfaceVariant); text-transform: none; letter-spacing: 0; margin-bottom: 4px; }
+.scoreValue { display: block; font-family: var(--font-headline-headline-large-fontFamily); font-size: 32px; font-weight: 700; color: var(--color-role-light-onSurface); line-height: 1.2; }
+.scoreTrend { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onSurfaceVariant); margin-top: 6px; }
+.metricsGrid { display: flex; flex-wrap: wrap; gap: 32px; margin-bottom: 24px; }
+@media (max-width: 640px) { .metricsGrid { gap: 20px; } }
+.metricCard { padding: 0; background: transparent; text-align: left; display: flex; flex-direction: column; gap: 2px; min-width: 80px; }
+.metricValue { font-family: var(--font-headline-headline-medium-fontFamily); font-size: 24px; font-weight: 600; color: var(--color-role-light-onSurface); }
+.metricLabel { font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 500; color: var(--color-role-light-onSurfaceVariant); }
+.progressBar { height: 8px; border-radius: 4px; background: var(--color-role-light-surfaceContainerLow); overflow: hidden; margin-bottom: 4px; width: 100%; }
+.progressFill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--color-role-light-primary), var(--color-key-tertiary)); transition: width .5s; }
+.insightBox { padding: 14px 18px; border-radius: 12px; background: var(--color-role-light-primaryContainer); }
+.insightBox p { font-family: var(--font-body-body-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onPrimaryContainer); margin: 0; line-height: 1.6; }

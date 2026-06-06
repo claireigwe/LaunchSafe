@@ -9,7 +9,7 @@
 .filterActive { background: var(--color-role-light-primaryContainer); color: var(--color-role-light-onPrimaryContainer); font-weight: 600; }
 .list { display: flex; flex-direction: column; gap: 8px; }
 .card { display: flex; border-radius: 14px; border: 1px solid var(--color-role-light-outlineVariant); background: var(--color-role-light-surfaceContainerLowest); overflow: hidden; }
-.unreadCard { border-color: var(--color-role-light-primary); background: var(--color-role-light-primaryContainer); }
+.unreadCard { border-color: var(--color-role-light-primary); background: var(--color-role-light-surfaceContainer); }
 .cardBody { flex: 1; display: flex; gap: 12px; padding: 16px 20px; border: none; background: none; cursor: pointer; text-align: left; font-family: inherit; transition: background .1s; }
 .cardBody:hover { background: rgba(0,0,0,.02); }
 .unreadBody { }
@@ -33,6 +33,9 @@
 .cardActions { display: flex; flex-direction: column; gap: 4px; padding: 12px 12px 12px 0; }
 .actionBtn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--color-role-light-outlineVariant); background: var(--color-role-light-surfaceContainerLowest); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--color-role-light-onSurfaceVariant); transition: all .15s; }
 .actionBtn:hover { border-color: var(--color-role-light-primary); color: var(--color-role-light-primary); }
+.confirmDeleteNotif { display: flex; gap: 4px; }
+.confirmDeleteNotifBtn { padding: 4px 8px; border-radius: 4px; border: none; background: var(--color-role-light-error); color: var(--color-role-light-onError); font-family: var(--font-label-label-small-fontFamily); font-size: 10px; font-weight: 600; cursor: pointer; }
+.confirmDeleteNotifCancel { padding: 4px 8px; border-radius: 4px; border: 1px solid var(--color-role-light-outlineVariant); background: none; font-family: var(--font-label-label-small-fontFamily); font-size: 10px; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; }
 .empty { text-align: center; padding: 80px 24px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
 .emptyIcon { color: var(--color-role-light-outlineVariant); }
 .emptyText { font-family: var(--font-body-body-medium-fontFamily); font-size: 15px; color: var(--color-role-light-onSurfaceVariant); margin: 0; }

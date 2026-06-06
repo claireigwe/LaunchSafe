@@ -1,5 +1,6 @@
 import { getRequiredUser } from "@/lib/auth/get-session";
 import { AppSidebar } from "@/features/compliance/components/app-sidebar";
+import { AIAssistantWrapper } from "@/features/ai/components/ai-assistant-wrapper";
 import "./app-layout.css";
 
 export default async function AppLayout({
@@ -13,6 +14,7 @@ export default async function AppLayout({
     <div className="app-shell">
       <AppSidebar />
       <main className="app-content">{children}</main>
+      <AIAssistantWrapper />
     </div>
   );
 }

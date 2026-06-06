@@ -43,12 +43,14 @@ export async function proxy(request: NextRequest) {
   const protectedPrefixes = [
     "/onboarding",
     "/dashboard",
+    "/business",
     "/businesses",
     "/assessments",
     "/compliance",
     "/documents",
     "/regulatory-updates",
     "/notifications",
+    "/reports",
     "/settings",
   ];
 

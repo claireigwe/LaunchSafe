@@ -1,0 +1,10 @@
+.section { background: var(--color-role-light-surfaceContainerLowest); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 24px; padding: 28px; }
+.header { margin-bottom: 20px; }
+.title { font-family: var(--font-display-display-small-fontFamily); font-size: 20px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0 0 4px; letter-spacing: -0.3px; }
+.subtitle { font-family: var(--font-body-body-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onSurfaceVariant); margin: 0; }
+.reportList { display: flex; flex-direction: column; gap: 8px; }
+.reportRow { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-radius: 12px; background: var(--color-role-light-surfaceContainer); }
+.reportInfo { display: flex; align-items: center; gap: 12px; }
+.reportIcon { color: var(--color-role-light-primary); flex-shrink: 0; }
+.reportName { display: block; font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; font-weight: 500; color: var(--color-role-light-onSurface); }
+.reportMeta { display: block; font-family: var(--font-label-label-small-fontFamily); font-size: 11px; color: var(--color-role-light-onSurfaceVariant); margin-top: 1px; }

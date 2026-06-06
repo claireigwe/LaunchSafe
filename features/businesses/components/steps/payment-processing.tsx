@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { initiateSubscriptionPayment, saveBusinessData } from "../../api/onboarding-api";
+import { initiateSubscriptionPayment, saveBusinessData, addBusiness } from "../../api/onboarding-api";
 import { saveSubscription, addPayment } from "@/features/billing/api/billing-api";
+import { logActivity } from "@/features/activity/api/activity-api";
+import { audit } from "@/features/audit/api/audit-api";
 import styles from "./payment-processing.module.css";
 
 import { getPlanById } from "../../data/subscription-plans";
@@ -34,6 +36,7 @@ export function PaymentProcessing({ planId, isAnnual, onboardingData, isChangePl
     try {
       if (!isChangePlan) {
         saveBusinessData({ ...onboardingData, _savedAt: new Date().toISOString() });
+        await addBusiness({ ...onboardingData, _savedAt: new Date().toISOString() });
       }
       const now = new Date();
       const renewal = new Date(now);
@@ -50,6 +53,8 @@ export function PaymentProcessing({ planId, isAnnual, onboardingData, isChangePl
         pendingPlanName: null,
         pendingBillingCycle: null,
       });
+      logActivity("subscription_activated", "Subscription Activated", `${plan!.name} Plan - ${billingCycle === "annual" ? "Annual" : "Monthly"}`);
+      audit.subscriptionActivated(`${plan!.name} (${billingCycle})`);
       addPayment({
         amount: billingCycle === "annual" ? plan!.annualTotal : plan!.monthlyPrice,
         currency: "NGN",

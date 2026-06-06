@@ -1,0 +1,19 @@
+.card { background: var(--color-role-light-surfaceContainerLowest); border: none; border-radius: 24px; overflow: hidden; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04); }
+.header { display: flex; align-items: center; gap: 10px; padding: 24px 24px 16px; border-bottom: 1px solid var(--color-role-light-outlineVariant); }
+.icon { color: var(--color-role-light-primary); }
+.title { font-family: var(--font-title-title-large-fontFamily); font-size: 20px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0; }
+.table { }
+.tableHeader { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; padding: 12px 24px; gap: 12px; background: transparent; border-bottom: 1px solid var(--color-role-light-outlineVariant); }
+.th { font-family: var(--font-label-label-small-fontFamily); font-size: 11px; font-weight: 600; color: var(--color-role-light-onSurfaceVariant); text-transform: uppercase; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.tableRow { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; padding: 14px 24px; gap: 12px; border-bottom: 1px solid var(--color-role-light-outlineVariant); }
+.tableRow:last-child { border-bottom: none; }
+.td { font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onSurface); display: flex; align-items: center; }
+.scoreBadge { padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.scoreHigh { background: var(--color-palette-success-95); color: var(--color-palette-success-30); }
+.scoreMid { background: var(--color-palette-warning-95); color: var(--color-palette-warning-30); }
+.scoreLow { background: var(--color-palette-error-95); color: var(--color-palette-error-30); }
+.overdueWarning { color: var(--color-role-light-error); font-weight: 600; }
+.riskBadge { padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+.riskLow { background: var(--color-palette-success-95); color: var(--color-palette-success-30); }
+.riskMid { background: var(--color-palette-warning-95); color: var(--color-palette-warning-30); }
+.riskHigh { background: var(--color-palette-error-95); color: var(--color-palette-error-30); }

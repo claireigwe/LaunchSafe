@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { INDUSTRIES } from "@/features/assessments/data/industries";
+import { getIndustries, getIndustriesSync, type IndustryOption } from "@/features/assessments/api/industries-api";
 import { ASSESSMENT_COUNTRIES } from "@/features/assessments/data/countries-data";
 import type { BusinessInfoData } from "../../types/onboarding.types";
 import styles from "./business-info.module.css";
@@ -14,7 +14,12 @@ interface BusinessInfoProps {
 }
 
 export function BusinessInfo({ data, onUpdate, onNext }: BusinessInfoProps) {
+  const [industries, setIndustries] = useState<IndustryOption[]>(() => getIndustriesSync());
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    getIndustries().then(setIndustries).catch(() => {});
+  }, []);
 
   function validate() {
     const e: Record<string, string> = {};
@@ -49,7 +54,7 @@ export function BusinessInfo({ data, onUpdate, onNext }: BusinessInfoProps) {
         {errors.industry && <p className={styles.error} role="alert">{errors.industry}</p>}
         <select id="ind" className={styles.select} value={data.industry} onChange={(e) => onUpdate({ industry: e.target.value })}>
           <option value="">Select your industry</option>
-          {INDUSTRIES.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
+          {industries.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
         </select>
       </div>
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import { getBusinessData } from "@/features/businesses/api/onboarding-api";
 import { loadTasks, reconcileTaskStatuses } from "@/features/compliance/api/tasks-api";
-import { INDUSTRIES } from "@/features/assessments/data/industries";
+import { getIndustriesSync } from "@/features/assessments/api/industries-api";
 import type { DashboardData } from "../types/dashboard.types";
 import type { Business } from "@/types/domain/business";
 import type { ComplianceTaskItem } from "@/features/compliance/types/tasks.types";
@@ -41,7 +41,7 @@ function buildDashboardData(): DashboardData {
 
   let business: Business | null = null;
   if (info?.businessName) {
-    const industryObj = INDUSTRIES.find((i) => i.id === info.industry);
+    const industryObj = getIndustriesSync().find((i) => i.id === info.industry);
     business = {
       id: "onboarded",
       userId: "",

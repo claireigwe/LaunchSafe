@@ -1,0 +1,16 @@
+.card { background: var(--color-role-light-surfaceContainerLowest); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 20px; padding: 24px; }
+.header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.icon { color: var(--color-role-light-primary); }
+.title { font-family: var(--font-title-title-large-fontFamily); font-size: 16px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0; }
+.ratingBadge { display: inline-block; padding: 4px 12px; border-radius: 8px; font-family: var(--font-label-label-small-fontFamily); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 16px; }
+.ratingExcellent { background: var(--color-role-light-successContainer); color: var(--color-role-light-onSuccessContainer); }
+.ratingGood { background: var(--color-role-light-primaryContainer); color: var(--color-role-light-onPrimaryContainer); }
+.ratingAttention { background: var(--color-role-light-errorContainer); color: var(--color-role-light-onErrorContainer); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.stat { text-align: center; }
+.statValue { display: block; font-family: var(--font-headline-headline-small-fontFamily); font-size: 24px; font-weight: 700; color: var(--color-role-light-onSurface); }
+.statLabel { display: block; font-family: var(--font-label-label-small-fontFamily); font-size: 11px; color: var(--color-role-light-onSurfaceVariant); margin-top: 2px; }
+.barRow { display: flex; align-items: center; gap: 10px; }
+.barTrack { flex: 1; height: 8px; border-radius: 4px; background: var(--color-role-light-surfaceContainer); overflow: hidden; }
+.barMet { height: 100%; border-radius: 4px; background: var(--color-key-success); }
+.barLabel { font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); white-space: nowrap; }

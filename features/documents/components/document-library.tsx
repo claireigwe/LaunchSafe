@@ -1,15 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Upload, LayoutGrid, List, Search } from "lucide-react";
+import { Upload, LayoutGrid, List, Search, FilePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DocumentCard } from "./document-card";
 import { DocumentUploadModal } from "./document-upload-modal";
 import { DocumentDetailModal } from "./document-detail-modal";
+import { DocumentGeneratorModal } from "./document-generator-modal";
 import { SuggestedDocumentsWidget } from "./suggested-documents-widget";
 import { getDocuments, searchDocuments, uploadDocument, deleteDocument, type UploadDocumentInput } from "../api/documents-api";
+import { getGeneratedDocuments, DOC_TYPE_LABELS_GEN } from "../api/document-generation";
 import { DOC_TYPE_LABELS, type DocType } from "../types/documents.types";
 import type { AppDocument } from "../types/documents.types";
+import type { ComplianceDocument } from "@/types/domain/document";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import styles from "./document-library.module.css";
 
@@ -32,19 +35,55 @@ export function DocumentLibrary() {
   const [filter, setFilter] = useState<FilterKey>("all");
   const [search, setSearch] = useState("");
   const [showUpload, setShowUpload] = useState(false);
+  const [showGenerate, setShowGenerate] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<AppDocument | null>(null);
+  const [generatedDocs, setGeneratedDocs] = useState<ComplianceDocument[]>([]);
 
   useEffect(() => {
-    refresh();
+    setDocs(getDocuments());
+    setGeneratedDocs(getGeneratedDocuments());
     trackEvent("Document Library Viewed");
   }, []);
 
-  const filtered = filter === "all"
-    ? searchDocuments(search)
-    : searchDocuments(search, filter);
+  const allUploaded = [...docs];
+  const allGenerated = generatedDocs.map(g => ({
+    id: g.id,
+    businessId: g.businessId,
+    userId: g.userId,
+    title: g.title,
+    description: DOC_TYPE_LABELS_GEN[g.documentType] || g.documentType,
+    docType: "other" as DocType,
+    fileUrl: null,
+    fileName: `${g.title}.txt`,
+    fileSize: g.content?.length || 0,
+    fileType: "text/plain",
+    uploadedBy: "System",
+    uploadedAt: g.createdAt,
+    updatedAt: g.updatedAt,
+    expiryDate: null,
+    issuingAgency: null,
+    verificationStatus: null,
+    renewalDate: null,
+    tags: [],
+  }));
+
+  const allItems = [...allUploaded, ...allGenerated];
+
+  const filtered = (() => {
+    let result = allItems;
+    if (filter !== "all") {
+      result = result.filter((d: any) => d.docType === filter);
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter((d: any) => d.title.toLowerCase().includes(q));
+    }
+    return result;
+  })();
 
   function refresh() {
     setDocs(getDocuments());
+    setGeneratedDocs(getGeneratedDocuments());
   }
 
   function handleUpload(input: UploadDocumentInput) {
@@ -78,7 +117,10 @@ export function DocumentLibrary() {
           <h1 className={styles.title}>Documents</h1>
           <p className={styles.subtitle}>Manage your compliance documents and records.</p>
         </div>
-        <Button variant="primary" size="md" onClick={() => setShowUpload(true)}><Upload size={16} /> Upload</Button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Button variant="outline" size="md" onClick={() => setShowGenerate(true)}><FilePlus size={16} /> Generate</Button>
+          <Button variant="primary" size="md" onClick={() => setShowUpload(true)}><Upload size={16} /> Upload</Button>
+        </div>
       </div>
 
       <SuggestedDocumentsWidget onUpload={(title, docType) => {
@@ -124,14 +166,20 @@ export function DocumentLibrary() {
       ) : (
         <div className={styles.empty}>
           <p className={styles.emptyText}>
-            {docs.length === 0 ? "No documents uploaded yet." : "No matching documents found."}
+            {allItems.length === 0 ? "No documents yet. Upload or generate a document to get started." : "No matching documents found."}
           </p>
-          {docs.length === 0 && <Button variant="primary" size="md" onClick={() => setShowUpload(true)}>Upload Your First Document</Button>}
-          {docs.length > 0 && <Button variant="ghost" size="sm" onClick={() => { setFilter("all"); setSearch(""); }}>Clear Filters</Button>}
+          {allItems.length === 0 && (
+            <div style={{ display: "flex", gap: 8 }}>
+              <Button variant="primary" size="md" onClick={() => setShowUpload(true)}>Upload Document</Button>
+              <Button variant="outline" size="md" onClick={() => setShowGenerate(true)}>Generate Document</Button>
+            </div>
+          )}
+              {allItems.length > 0 && <Button variant="ghost" size="sm" onClick={() => { setFilter("all"); setSearch(""); }}>Clear Filters</Button>}
         </div>
       )}
 
       {showUpload && <DocumentUploadModal onSave={handleUpload} onClose={() => setShowUpload(false)} />}
+      {showGenerate && <DocumentGeneratorModal onClose={() => setShowGenerate(false)} onComplete={refresh} />}
       {selectedDoc && <DocumentDetailModal doc={selectedDoc} onUpdate={refresh} onDelete={handleDelete} onClose={() => setSelectedDoc(null)} />}
     </div>
   );

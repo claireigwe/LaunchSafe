@@ -1,32 +1,39 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 import { loadProfile, saveProfile, loadNotificationPrefs, saveNotificationPrefs } from "../api/settings-api";
 import { getBusinessData, clearUserIntent } from "@/features/businesses/api/onboarding-api";
 import { getSubscription } from "@/features/billing/api/billing-api";
-import { INDUSTRIES } from "@/features/assessments/data/industries";
+import { getIndustriesSync } from "@/features/assessments/api/industries-api";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import type { NotificationPrefs } from "../types/settings.types";
 import styles from "./settings-page.module.css";
 
-type Section = "profile" | "business" | "notifications" | "security" | "account";
+type Section = "profile" | "business" | "notifications" | "security" | "team" | "account";
 
-const SECTIONS: { key: Section; label: string }[] = [
+const SECTIONS: { key: Section; label: string; href?: string }[] = [
   { key: "profile", label: "Profile" },
   { key: "business", label: "Business Settings" },
   { key: "notifications", label: "Notification Preferences" },
   { key: "security", label: "Security" },
+  { key: "team", label: "Team", href: "/settings/team" },
   { key: "account", label: "Account Management" },
 ];
 
 export function SettingsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
-  const [section, setSection] = useState<Section>("profile");
+  const [section, setSection] = useState<Section>(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "business") return "business";
+    return "profile";
+  });
 
   useEffect(() => {
     trackEvent("Settings Viewed");
@@ -40,9 +47,15 @@ export function SettingsPage() {
       <div className={styles.layout}>
         <nav className={styles.sidebar} aria-label="Settings sections">
           {SECTIONS.map((s) => (
-            <button key={s.key} type="button" className={cn(styles.sidebarBtn, section === s.key && styles.sidebarActive)} onClick={() => setSection(s.key)}>
-              {s.label}
-            </button>
+            s.href ? (
+              <Link key={s.key} href={s.href} className={cn(styles.sidebarBtn, styles.sidebarLink)}>
+                {s.label}
+              </Link>
+            ) : (
+              <button key={s.key} type="button" className={cn(styles.sidebarBtn, section === s.key && styles.sidebarActive)} onClick={() => setSection(s.key)}>
+                {s.label}
+              </button>
+            )
           ))}
         </nav>
         <div className={styles.content}>
@@ -58,11 +71,23 @@ export function SettingsPage() {
 }
 
 function ProfileSection() {
+  const supabase = createClient();
   const [profile, setProfile] = useState(loadProfile());
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(profile.fullName);
   const [job, setJob] = useState(profile.jobTitle);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!profile.email) {
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user?.email) {
+          const updated = saveProfile({ email: user.email });
+          setProfile(updated);
+        }
+      });
+    }
+  }, []);
 
   function handleSave() {
     if (!name.trim()) { setError("Name is required"); return; }
@@ -237,6 +262,7 @@ function SecuritySection({ supabase }: { supabase: any }) {
 
 function AccountSection({ router, supabase }: { router: any; supabase: any }) {
   const sub = getSubscription();
+  const [error, setError] = useState("");
   const [showDelete, setShowDelete] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
 
@@ -245,17 +271,24 @@ function AccountSection({ router, supabase }: { router: any; supabase: any }) {
     router.push("/");
   }
 
-  function handleDeleteRequest() {
-    // V1: log intent — actual deletion requires backend
+  async function handleDeleteRequest() {
     if (deleteConfirm !== "DELETE") return;
-    trackEvent("Account Deleted");
-    supabase.auth.signOut();
-    localStorage.clear();
-    router.push("/");
+    try {
+      const res = await fetch("/api/account/delete", { method: "POST" });
+      const json = await res.json();
+      if (!json.success) { setError(json.error?.message || "Deletion failed"); return; }
+      trackEvent("Account Deleted");
+      localStorage.clear();
+      await supabase.auth.signOut();
+      router.push("/");
+    } catch {
+      setError("Account deletion failed. Please try again.");
+    }
   }
 
   return (
     <Section title="Account Management" subtitle="Manage your account and subscription.">
+      {error && <p className={styles.error} role="alert">{error}</p>}
       {sub && (
         <div className={styles.subCard}>
           <div className={styles.subRow}>
@@ -326,7 +359,7 @@ function ToggleRow({ label, description, value, onChange }: { label: string; des
 }
 
 function getIndustryName(id: string): string {
-  return INDUSTRIES.find((i) => i.id === id)?.name || id;
+  return getIndustriesSync().find((i) => i.id === id)?.name || id;
 }
 
 function getStateLabel(id: string): string {

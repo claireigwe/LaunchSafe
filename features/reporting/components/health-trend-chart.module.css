@@ -1,0 +1,36 @@
+.card { background: var(--color-role-light-surfaceContainerLowest); border: none; border-radius: 24px; padding: 32px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04); }
+.headerRow { margin-bottom: 24px; }
+.title { font-family: var(--font-display-display-small-fontFamily); font-size: 28px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0 0 4px; letter-spacing: -0.5px; }
+@media (min-width: 768px) { .title { font-size: 32px; } }
+.subtitle { font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurfaceVariant); margin: 0; }
+.timeToggle { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--color-role-light-surfaceContainer); margin-bottom: 24px; }
+.timeBtn { padding: 6px 14px; border-radius: 8px; font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 500; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; transition: all .15s; user-select: none; }
+.timeBtn:hover { color: var(--color-role-light-onSurface); }
+.timeActive { background: var(--color-role-light-surfaceBright); color: var(--color-role-light-onSurface); font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.kpiRow { display: flex; gap: 32px; margin-bottom: 32px; }
+@media (max-width: 640px) { .kpiRow { flex-direction: column; gap: 16px; } }
+.kpiCard { padding: 0; background: transparent; border: none; display: flex; flex-direction: column; gap: 4px; }
+.kpiLabel { font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 500; color: var(--color-role-light-onSurfaceVariant); text-transform: none; letter-spacing: 0; }
+.kpiValue { font-family: var(--font-headline-headline-large-fontFamily); font-size: 36px; font-weight: 700; color: var(--color-role-light-onSurface); display: flex; align-items: baseline; gap: 8px; }
+.kpiEmpty { color: var(--color-role-light-outlineVariant); }
+.kpiUp { color: var(--color-key-success); }
+.kpiDown { color: var(--color-key-error); }
+.riskBadge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 8px; }
+.risk_low { background: var(--color-palette-success-95); color: var(--color-palette-success-30); }
+.risk_medium { background: var(--color-palette-warning-95); color: var(--color-palette-warning-30); }
+.risk_high { background: var(--color-palette-error-95); color: var(--color-palette-error-30); }
+.chartContainer { margin-bottom: 24px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.chartSvg { width: 100%; min-width: 300px; height: auto; display: block; }
+.noData { text-align: center; padding: 48px 24px; margin-bottom: 24px; background: var(--color-role-light-surfaceContainer); border-radius: 14px; }
+.noDataIcon { font-size: 36px; color: var(--color-role-light-outlineVariant); display: block; margin-bottom: 8px; }
+.noDataText { font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurfaceVariant); margin: 0; }
+.insightsPanel { border-top: 1px solid var(--color-role-light-outlineVariant); padding-top: 24px; }
+.insightsTitle { font-family: var(--font-title-title-large-fontFamily); font-size: 16px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0 0 12px; }
+.insight { font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurfaceVariant); margin: 0 0 20px; line-height: 1.6; }
+.contributors { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 640px) { .contributors { grid-template-columns: 1fr; } }
+.contribLabel { font-family: var(--font-label-label-small-fontFamily); font-size: 11px; font-weight: 600; color: var(--color-role-light-onSurfaceVariant); text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 8px; }
+.contribItem { display: flex; align-items: center; gap: 8px; padding: 8px 0; font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onSurface); }
+.posIcon { color: var(--color-key-success); flex-shrink: 0; }
+.negIcon { color: var(--color-key-error); flex-shrink: 0; }
+.neutral { color: var(--color-role-light-onSurfaceVariant); font-style: italic; }

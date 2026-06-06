@@ -23,6 +23,7 @@ export function DocumentDetailModal({ doc, onUpdate, onDelete, onClose }: Props)
   const [title, setTitle] = useState(doc.title);
   const [description, setDescription] = useState(doc.description);
   const [docType, setDocType] = useState(doc.docType);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const isPreviewable = doc.fileType === "application/pdf" || doc.fileType?.startsWith("image/");
 
@@ -104,9 +105,19 @@ export function DocumentDetailModal({ doc, onUpdate, onDelete, onClose }: Props)
               {doc.description && <p className={styles.description}>{doc.description}</p>}
 
               <div className={styles.actions}>
-                <Button type="button" variant="ghost" size="sm" onClick={() => onDelete(doc.id)}>
-                  <Trash2 size={14} /> Delete
-                </Button>
+                {showDeleteConfirm ? (
+                  <div className={styles.confirmDeleteDoc}>
+                    <span>Delete this document?</span>
+                    <div className={styles.confirmDocActions}>
+                      <button type="button" className={styles.confirmDocCancel} onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
+                      <button type="button" className={styles.confirmDocBtn} onClick={() => onDelete(doc.id)}>Delete</button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(true)}>
+                    <Trash2 size={14} /> Delete
+                  </Button>
+                )}
                 <div className={styles.rightActions}>
                   {isPreviewable && <Button type="button" variant="outline" size="sm" onClick={() => setPreviewUrl(doc.fileUrl)}><FileText size={14} /> Preview</Button>}
                   <Button type="button" variant="outline" size="sm" onClick={handleDownload}><Download size={14} /> Download</Button>

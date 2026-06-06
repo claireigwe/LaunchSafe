@@ -10,6 +10,8 @@ import {
   FileText,
   Calendar,
   Bell,
+  Building2,
+  BarChart,
   CreditCard,
   Settings,
   ChevronLeft,
@@ -24,6 +26,8 @@ const NAV_ITEMS = [
   { href: "/compliance", label: "Tasks", icon: ClipboardList },
   { href: "/documents", label: "Documents", icon: FileText },
   { href: "/calendar", label: "Calendar", icon: Calendar },
+  { href: "/business", label: "Business", icon: Building2 },
+  { href: "/reports", label: "Reports", icon: BarChart },
   { href: "/notifications", label: "Notifications", icon: Bell },
   { href: "/settings/billing", label: "Billing", icon: CreditCard },
   { href: "/settings", label: "Settings", icon: Settings },
@@ -51,7 +55,13 @@ export function AppSidebar() {
 
         <nav className={styles.nav} aria-label="Main navigation">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-            const isActive = pathname === href || pathname.startsWith(href + "/");
+            let isActive = false;
+            if (href === "/settings") {
+              isActive = pathname === href || (pathname.startsWith(href + "/") && !pathname.startsWith("/settings/billing"));
+            } else {
+              isActive = pathname === href || pathname.startsWith(href + "/");
+            }
+
             return (
               <Link
                 key={href}
@@ -60,17 +70,18 @@ export function AppSidebar() {
                 tabIndex={collapsed ? -1 : 0}
               >
                 <Icon size={18} className={styles.icon} />
-                {!collapsed && <span>{label}</span>}
+                {!collapsed && (
+                  <span>{label}{href === "/business" && <span className={styles.navPlanTag}>{getCurrentPlanName()}</span>}</span>
+                )}
               </Link>
             );
           })}
         </nav>
 
-        <div className={styles.planBadge}>
-          {getCurrentPlanName()}
-        </div>
-        <div className={styles.bellRow}>
-          <NotificationBell />
+        <div className={cn(styles.footer, collapsed && styles.footerCollapsed)}>
+          <div className={styles.bellRow}>
+            <NotificationBell />
+          </div>
         </div>
 
         <button

@@ -21,4 +21,8 @@
 .description { font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurface); margin: 0; line-height: 1.5; }
 .actions { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .rightActions { display: flex; gap: 8px; flex-wrap: wrap; }
+.confirmDeleteDoc { display: flex; flex-direction: column; gap: 8px; padding: 10px 14px; border-radius: 10px; background: var(--color-role-light-errorContainer); border: 1px solid var(--color-role-light-error); font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onErrorContainer); }
+.confirmDocActions { display: flex; gap: 8px; }
+.confirmDocCancel { padding: 5px 10px; border-radius: 6px; border: 1px solid var(--color-role-light-outlineVariant); background: none; font-family: var(--font-label-label-small-fontFamily); font-size: 11px; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; }
+.confirmDocBtn { padding: 5px 10px; border-radius: 6px; border: none; background: var(--color-role-light-error); color: var(--color-role-light-onError); font-family: var(--font-label-label-small-fontFamily); font-size: 11px; font-weight: 600; cursor: pointer; }
 @media (max-width: 480px) { .metaGrid { grid-template-columns: 1fr; } .modal { max-width: 100%; } }

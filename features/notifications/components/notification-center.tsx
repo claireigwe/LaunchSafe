@@ -40,6 +40,7 @@ function matchesFilter(n: AppNotification, f: FilterValue): boolean {
 export function NotificationCenter() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [filter, setFilter] = useState<FilterValue>("all");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -123,9 +124,16 @@ export function NotificationCenter() {
                     <CheckCheck size={14} />
                   </button>
                 )}
-                <button type="button" className={styles.actionBtn} onClick={() => handleDelete(n.id)} aria-label="Delete notification">
-                  <Trash2 size={14} />
-                </button>
+                {confirmDeleteId === n.id ? (
+                  <div className={styles.confirmDeleteNotif}>
+                    <button type="button" className={styles.confirmDeleteNotifBtn} onClick={() => { handleDelete(n.id); setConfirmDeleteId(null); }}>Confirm</button>
+                    <button type="button" className={styles.confirmDeleteNotifCancel} onClick={() => setConfirmDeleteId(null)}>Cancel</button>
+                  </div>
+                ) : (
+                  <button type="button" className={styles.actionBtn} onClick={() => setConfirmDeleteId(n.id)} aria-label="Delete notification">
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </div>
             </div>
           ))}

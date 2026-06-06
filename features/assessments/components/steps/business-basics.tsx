@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { InfoTooltip } from "../tooltip";
 import type { BusinessBasicsData } from "../../types/wizard.types";
-import { INDUSTRIES } from "../../data/industries";
+import { getIndustries, getIndustriesSync, type IndustryOption } from "../../api/industries-api";
 import styles from "./business-basics.module.css";
 
 interface BusinessBasicsProps {
@@ -21,7 +21,12 @@ const BUSINESS_STAGES = [
 ];
 
 export function BusinessBasics({ data, onUpdate, onNext }: BusinessBasicsProps) {
+  const [industries, setIndustries] = useState<IndustryOption[]>(() => getIndustriesSync());
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    getIndustries().then(setIndustries).catch(() => {});
+  }, []);
 
   function validate(): boolean {
     const newErrors: Record<string, string> = {};
@@ -100,8 +105,8 @@ export function BusinessBasics({ data, onUpdate, onNext }: BusinessBasicsProps) 
           value={data.industry}
           onChange={(e) => onUpdate({ industry: e.target.value })}
         >
-          <option value="">Select your industry</option>
-          {INDUSTRIES.map((ind) => (
+            <option value="">Select your industry</option>
+          {industries.map((ind) => (
             <option key={ind.id} value={ind.id}>
               {ind.name}
             </option>

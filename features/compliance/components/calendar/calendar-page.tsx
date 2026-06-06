@@ -46,22 +46,22 @@ export function CalendarPage() {
     return map;
   }, [tasks]);
 
-  function handleCreate(input: CreateTaskInput) {
-    createTask(input, "onboarded");
+  async function handleCreate(input: CreateTaskInput) {
+    await createTask(input, "onboarded");
     trackEvent("Task Created", { title: input.title });
     setTasks(loadTasks());
     setShowCreate(false);
   }
 
-  function handleUpdate(id: string, input: UpdateTaskInput) {
-    updateTask(id, input);
+  async function handleUpdate(id: string, input: UpdateTaskInput) {
+    await updateTask(id, input);
     if (input.status === "completed") trackEvent("Task Completed", { id });
     setTasks(loadTasks());
     setSelectedTask(null);
   }
 
-  function handleDelete(id: string) {
-    deleteTask(id);
+  async function handleDelete(id: string) {
+    await deleteTask(id);
     trackEvent("Task Deleted", { id });
     setTasks(loadTasks());
     setSelectedTask(null);

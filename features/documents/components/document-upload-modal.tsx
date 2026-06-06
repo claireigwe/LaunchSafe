@@ -29,6 +29,7 @@ export function DocumentUploadModal({ onSave, onClose }: Props) {
     if (!title.trim()) e.title = "Title is required";
     if (!file) e.file = "Please select a file";
     if (file && !ALLOWED.includes(file.type)) e.file = "Only PDF, PNG, and JPG files are supported";
+    if (file && file.size > 10 * 1024 * 1024) e.file = "File size must be under 10MB";
     setErrors(e);
     return Object.keys(e).length === 0;
   }

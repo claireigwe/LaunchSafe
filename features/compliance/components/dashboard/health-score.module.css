@@ -55,18 +55,18 @@
 }
 
 .healthy {
-  background-color: var(--color-role-light-successContainer);
-  color: var(--color-role-light-onSuccessContainer);
+  background-color: var(--color-palette-success-95);
+  color: var(--color-palette-success-30);
 }
 
 .attention {
-  background-color: var(--color-role-light-warningContainer);
-  color: var(--color-role-light-onWarningContainer);
+  background-color: var(--color-palette-warning-95);
+  color: var(--color-palette-warning-30);
 }
 
 .risk {
-  background-color: var(--color-role-light-errorContainer);
-  color: var(--color-role-light-onErrorContainer);
+  background-color: var(--color-palette-error-95);
+  color: var(--color-palette-error-30);
 }
 
 .scoreValue {

@@ -1,6 +1,26 @@
 import { createNotification } from "./notifications-api";
 import { loadTasks } from "@/features/compliance/api/tasks-api";
+import { loadProfile } from "@/features/settings/api/settings-api";
 import type { ComplianceTaskItem } from "@/features/compliance/types/tasks.types";
+
+function getUserEmail(): string | null {
+  try {
+    const p = loadProfile();
+    return p.email || null;
+  } catch { return null; }
+}
+
+function fireEmail(type: string, data?: Record<string, unknown>): void {
+  const email = getUserEmail();
+  if (!email) return;
+  try {
+    fetch("/api/notifications/send-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to: email, type, data }),
+    }).catch(() => {});
+  } catch {}
+}
 
 export function triggerTaskCreated(task: ComplianceTaskItem): void {
   createNotification(
@@ -11,6 +31,7 @@ export function triggerTaskCreated(task: ComplianceTaskItem): void {
     "/compliance",
     "View Task"
   );
+  fireEmail("task_created", { title: task.title, dueDate: task.dueDate });
 }
 
 export function triggerTaskCompleted(title: string): void {
@@ -21,6 +42,7 @@ export function triggerTaskCompleted(title: string): void {
     "info",
     "/compliance"
   );
+  fireEmail("task_completed", { title });
 }
 
 export function triggerTaskOverdue(title: string): void {
@@ -32,6 +54,7 @@ export function triggerTaskOverdue(title: string): void {
     "/compliance",
     "View Task"
   );
+  fireEmail("task_overdue", { title });
 }
 
 export function triggerDocumentUploaded(title: string): void {
@@ -43,6 +66,7 @@ export function triggerDocumentUploaded(title: string): void {
     "/documents",
     "View Document"
   );
+  fireEmail("document_uploaded", { title });
 }
 
 export function triggerSubscriptionActivated(planName: string): void {
@@ -53,6 +77,7 @@ export function triggerSubscriptionActivated(planName: string): void {
     "info",
     "/dashboard"
   );
+  fireEmail("subscription_activated", { planName });
 }
 
 export function triggerSubscriptionRenewal(planName: string): void {
@@ -63,6 +88,7 @@ export function triggerSubscriptionRenewal(planName: string): void {
     "info",
     "/settings/billing"
   );
+  fireEmail("subscription_renewed", { planName });
 }
 
 export function triggerPaymentFailed(): void {
@@ -74,6 +100,7 @@ export function triggerPaymentFailed(): void {
     "/settings/billing",
     "Update Payment Method"
   );
+  fireEmail("payment_failed");
 }
 
 export function triggerWelcome(): void {
@@ -85,6 +112,7 @@ export function triggerWelcome(): void {
     "/compliance",
     "Create Task"
   );
+  fireEmail("welcome");
 }
 
 export function syncDeadlineNotifications(): void {
@@ -105,41 +133,30 @@ export function syncDeadlineNotifications(): void {
       if (!existing.some((n) => n.title === "Task Overdue")) {
         triggerTaskOverdue(t.title);
       }
-    } else if (diffDays <= 1) {
+    } else if (diffDays <= 0) {
       const existing = loadNotificationsForTask(t.id);
       if (!existing.some((n) => n.title.includes("Due"))) {
-        createNotification(
-          diffDays === 0 ? "Due Today" : "Due Tomorrow",
-          `${t.title} is due ${diffDays === 0 ? "today" : "tomorrow"}.`,
-          "deadline",
-          "critical",
-          "/compliance",
-          "View Task"
-        );
+        const title = "Due Today";
+        createNotification(title, `${t.title} is due today.`, "deadline", "critical", "/compliance", "View Task");
+        fireEmail("deadline_today", { title: t.title });
+      }
+    } else if (diffDays === 1) {
+      const existing = loadNotificationsForTask(t.id);
+      if (!existing.some((n) => n.title.includes("Due"))) {
+        createNotification("Due Tomorrow", `${t.title} is due tomorrow.`, "deadline", "critical", "/compliance", "View Task");
+        fireEmail("deadline_due_soon", { title: t.title, days: 1 });
       }
     } else if (diffDays <= 3) {
       const existing = loadNotificationsForTask(t.id);
       if (!existing.some((n) => n.title === "Due Soon")) {
-        createNotification(
-          "Due Soon",
-          `${t.title} is due in ${diffDays} days.`,
-          "deadline",
-          "warning",
-          "/compliance",
-          "View Task"
-        );
+        createNotification("Due Soon", `${t.title} is due in ${diffDays} days.`, "deadline", "warning", "/compliance", "View Task");
+        fireEmail("deadline_due_soon", { title: t.title, days: diffDays });
       }
     } else if (diffDays <= 7) {
       const existing = loadNotificationsForTask(t.id);
       if (!existing.some((n) => n.title === "Deadline Approaching")) {
-        createNotification(
-          "Deadline Approaching",
-          `${t.title} is due in ${diffDays} days.`,
-          "deadline",
-          "warning",
-          "/compliance",
-          "View Task"
-        );
+        createNotification("Deadline Approaching", `${t.title} is due in ${diffDays} days.`, "deadline", "warning", "/compliance", "View Task");
+        fireEmail("deadline_approaching", { title: t.title, days: diffDays });
       }
     }
   }

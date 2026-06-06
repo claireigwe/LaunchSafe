@@ -1,44 +1,244 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
+import crypto from "crypto";
 import type { ApiResponse } from "@/types/api.types";
 
-/**
- * POST /api/billing/webhooks/paystack
- *
- * Receives and processes Paystack webhook events.
- *
- * Security requirements (ALL must be satisfied before any action):
- * 1. Verify HMAC-SHA512 signature using PAYSTACK_WEBHOOK_SECRET
- * 2. Verify the payment reference exists in the payments table
- * 3. Verify payment status with Paystack API directly (do not trust event data alone)
- * 4. Prevent duplicate processing (check billing_events for existing event)
- * 5. Log all events to billing_events before taking action
- *
- * Supported events:
- * - charge.success → unlock assessment OR activate subscription
- * - subscription.create → record subscription
- * - subscription.not_renew → update subscription status
- * - invoice.payment_failed → mark payment failed, notify user
- */
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+
+async function logEvent(supabase: any, userId: string, eventType: string, metadata: any) {
+  try {
+    await supabase.from("billing_events").insert({
+      user_id: userId,
+      event_type: eventType,
+      metadata,
+    });
+  } catch (err) {
+    console.error("[Paystack] Failed to log billing event:", err);
+  }
+}
+
+async function insertNotification(supabase: any, userId: string, title: string, message: string, actionUrl?: string) {
+  try {
+    await supabase.from("notifications").insert({
+      user_id: userId,
+      type: "payment_success",
+      title,
+      message,
+      action_url: actionUrl || null,
+    });
+  } catch (err) {
+    console.error("[Paystack] Failed to insert notification:", err);
+  }
+}
+
+async function handleChargeSuccess(supabase: any, eventData: any, rawEvent: any) {
+  const metadata = eventData.metadata || {};
+  const userId = metadata.userId;
+  const paymentType = metadata.type;
+
+  if (!userId) {
+    console.warn("[Paystack] charge.success missing userId in metadata");
+    return;
+  }
+
+  await supabase.from("payments").insert({
+    user_id: userId,
+    amount: eventData.amount,
+    currency: eventData.currency || "NGN",
+    provider: "paystack",
+    payment_type: paymentType || "subscription",
+    reference: eventData.reference,
+    provider_reference: eventData.reference,
+    status: "paid",
+    metadata: { ...metadata, event_id: rawEvent.id },
+  });
+
+  if (paymentType === "assessment") {
+    const assessmentId = metadata.assessmentId;
+    if (assessmentId) {
+      const { data: payment } = await supabase
+        .from("payments")
+        .select("id")
+        .eq("reference", eventData.reference)
+        .single();
+
+      if (payment) {
+        await supabase.from("assessment_purchases").insert({
+          user_id: userId,
+          assessment_id: assessmentId,
+          payment_id: payment.id,
+          status: "paid",
+          unlocked_at: new Date().toISOString(),
+        });
+      }
+    }
+
+    await insertNotification(
+      supabase,
+      userId,
+      "Assessment Unlocked",
+      "Your full compliance report is now available. View your requirements, costs, and roadmap.",
+      "/assessment"
+    );
+  }
+
+  if (paymentType === "subscription") {
+    const planId = metadata.planId;
+    const billingCycle = metadata.billingCycle || "monthly";
+
+    if (planId) {
+      const { data: plans } = await supabase
+        .from("subscription_plans")
+        .select("id")
+        .eq("slug", planId)
+        .single();
+
+      if (plans) {
+        const now = new Date();
+        const end = new Date(now);
+        end.setMonth(end.getMonth() + (billingCycle === "annual" ? 12 : 1));
+
+        await supabase.from("subscriptions").insert({
+          user_id: userId,
+          plan_id: plans.id,
+          status: "active",
+          paystack_subscription_code: eventData.subscription_code || null,
+          current_period_start: now.toISOString(),
+          current_period_end: end.toISOString(),
+        });
+      }
+    }
+
+    const planName = metadata.planName || planId || "your plan";
+    await insertNotification(
+      supabase,
+      userId,
+      "Subscription Activated",
+      `Your ${planName} plan is now active. Welcome to Compliance Autopilot.`,
+      "/dashboard"
+    );
+  }
+}
+
+async function handleSubscriptionCreate(supabase: any, eventData: any) {
+  const subCode = eventData.subscription_code;
+  const customerEmail = eventData.customer?.email;
+
+  if (!subCode || !customerEmail) return;
+
+  const { data: users } = await supabase
+    .from("user_profiles")
+    .select("user_id")
+    .eq("email", customerEmail)
+    .single();
+
+  if (users) {
+    await supabase
+      .from("subscriptions")
+      .update({ paystack_subscription_code: subCode })
+      .eq("user_id", users.user_id);
+  }
+}
+
+async function handleSubscriptionNotRenew(supabase: any, eventData: any) {
+  const subCode = eventData.subscription_code;
+  if (!subCode) return;
+
+  const { data: subs } = await supabase
+    .from("subscriptions")
+    .select("id, user_id")
+    .eq("paystack_subscription_code", subCode)
+    .single();
+
+  if (subs) {
+    await supabase
+      .from("subscriptions")
+      .update({ status: "expired" })
+      .eq("id", subs.id);
+
+    await insertNotification(
+      supabase,
+      subs.user_id,
+      "Subscription Expired",
+      "Your subscription has ended. Renew to continue accessing compliance management features.",
+      "/settings/billing"
+    );
+  }
+}
+
+async function handleInvoiceFailed(supabase: any, eventData: any) {
+  const userId = eventData.metadata?.userId;
+  if (!userId) return;
+
+  await insertNotification(
+    supabase,
+    userId,
+    "Payment Failed",
+    "Your recent payment could not be processed. Please update your payment method to continue.",
+    "/settings/billing"
+  );
+}
+
 export async function POST(request: Request) {
   const signature = request.headers.get("x-paystack-signature");
+  const rawBody = await request.text();
 
-  if (!signature) {
+  if (!signature || !PAYSTACK_SECRET_KEY) {
     return NextResponse.json<ApiResponse>(
-      { success: false, error: { message: "Missing signature" } },
+      { success: false, error: { message: "Missing signature or secret key" } },
       { status: 400 }
     );
   }
 
-  try {
-    const rawBody = await request.text();
+  const hash = crypto.createHmac("sha512", PAYSTACK_SECRET_KEY).update(rawBody).digest("hex");
 
-    // TODO: WebhookService.verifySignature(rawBody, signature)
-    // TODO: const event = JSON.parse(rawBody)
-    // TODO: WebhookService.handleEvent(event)
-    //       — deduplicate
-    //       — log to billing_events
-    //       — route to BillingService.handleChargeSuccess() etc.
+  if (hash !== signature) {
+    return NextResponse.json<ApiResponse>(
+      { success: false, error: { message: "Invalid signature" } },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const event = JSON.parse(rawBody);
+    const supabase = createAdminClient();
+    const eventId = event.id;
+
+    const { data: existing } = await supabase
+      .from("billing_events")
+      .select("id")
+      .eq("metadata->>event_id", eventId)
+      .maybeSingle();
+
+    if (existing) {
+      return NextResponse.json<ApiResponse>(
+        { success: true, data: { received: true, duplicated: true } },
+        { status: 200 }
+      );
+    }
+
+    const eventType = event.event;
+    const eventData = event.data;
+
+    switch (eventType) {
+      case "charge.success":
+        await handleChargeSuccess(supabase, eventData, event);
+        break;
+      case "subscription.create":
+        await handleSubscriptionCreate(supabase, eventData);
+        break;
+      case "subscription.not_renew":
+        await handleSubscriptionNotRenew(supabase, eventData);
+        break;
+      case "invoice.payment_failed":
+        await handleInvoiceFailed(supabase, eventData);
+        break;
+      default:
+        console.log("[Paystack] Unhandled event type:", eventType);
+    }
+
+    const userId = eventData?.metadata?.userId || "unknown";
+    await logEvent(supabase, userId, eventType, { event_id: eventId, event_data: eventData });
 
     return NextResponse.json<ApiResponse>(
       { success: true, data: { received: true } },

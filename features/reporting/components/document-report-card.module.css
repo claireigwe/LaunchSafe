@@ -1,0 +1,11 @@
+.card { background: var(--color-role-light-surfaceContainerLowest); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 20px; padding: 24px; }
+.header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.icon { color: var(--color-role-light-primary); }
+.title { font-family: var(--font-title-title-large-fontFamily); font-size: 16px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.stat { text-align: center; }
+.statValue { display: block; font-family: var(--font-headline-headline-small-fontFamily); font-size: 24px; font-weight: 700; color: var(--color-role-light-onSurface); }
+.statLabel { display: block; font-family: var(--font-label-label-small-fontFamily); font-size: 11px; color: var(--color-role-light-onSurfaceVariant); margin-top: 2px; }
+.recs { display: flex; flex-direction: column; gap: 4px; padding: 12px; background: var(--color-role-light-surfaceContainer); border-radius: 10px; }
+.recLabel { font-family: var(--font-label-label-small-fontFamily); font-size: 11px; font-weight: 600; color: var(--color-role-light-onSurfaceVariant); text-transform: uppercase; margin-bottom: 4px; }
+.recItem { font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onSurface); }

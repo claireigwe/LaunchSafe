@@ -1,17 +1,10 @@
 import { Clock } from "lucide-react";
-import type { DashboardActivity } from "../../types/dashboard.types";
+import type { ActivityEntry } from "@/features/activity/api/activity-api";
 import styles from "./recent-activity.module.css";
 
 interface Props {
-  activities: DashboardActivity[];
+  activities: ActivityEntry[];
 }
-
-const TYPE_LABELS: Record<string, string> = {
-  task_completed: "Task Completed",
-  document_uploaded: "Document Uploaded",
-  compliance_event: "Compliance Event",
-  subscription: "Subscription",
-};
 
 export function RecentActivity({ activities }: Props) {
   return (

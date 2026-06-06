@@ -1,22 +1,22 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { PlusCircle, Upload, Calendar, Building2, CreditCard } from "lucide-react";
+import { PlusCircle, Upload, Calendar, Building2 } from "lucide-react";
 import styles from "./quick-actions.module.css";
 
 interface Props {
   onAddTask?: () => void;
+  onUploadDocument?: () => void;
 }
 
-const ITEMS: { icon: any; label: string; href?: string; action?: "addTask" }[] = [
+const ITEMS: { icon: any; label: string; href?: string; action?: "addTask" | "uploadDoc" }[] = [
   { icon: PlusCircle, label: "Add Compliance Task", action: "addTask" },
-  { icon: Upload, label: "Upload Document", href: "/documents" },
+  { icon: Upload, label: "Upload Document", action: "uploadDoc" },
   { icon: Calendar, label: "View Calendar", href: "/calendar" },
   { icon: Building2, label: "Update Business Info", href: "/settings" },
-  { icon: CreditCard, label: "Manage Subscription", href: "/settings/billing" },
 ];
 
-export function QuickActions({ onAddTask }: Props) {
+export function QuickActions({ onAddTask, onUploadDocument }: Props) {
   const router = useRouter();
 
   return (
@@ -33,6 +33,8 @@ export function QuickActions({ onAddTask }: Props) {
             onClick={() => {
               if (item.action === "addTask" && onAddTask) {
                 onAddTask();
+              } else if (item.action === "uploadDoc" && onUploadDocument) {
+                onUploadDocument();
               } else if (item.href) {
                 router.push(item.href);
               }

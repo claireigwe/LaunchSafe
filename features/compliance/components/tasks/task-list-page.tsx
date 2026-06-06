@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Plus, Search, Filter } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskCard } from "./task-card";
 import { TaskCreateModal } from "./task-create-modal";
 import { TaskDetailModal } from "./task-detail-modal";
 import { SuggestedTasksWidget } from "./suggested-tasks-widget";
-import { loadTasks, createTask, updateTask, deleteTask, saveTasks, reconcileTaskStatuses } from "../../api/tasks-api";
+import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from "../../hooks/use-tasks-query";
+import { reconcileTaskStatuses } from "../../api/tasks-api";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import type { ComplianceTaskItem, CreateTaskInput, UpdateTaskInput } from "../../types/tasks.types";
 import styles from "./task-list-page.module.css";
@@ -24,7 +25,10 @@ const FILTERS: { key: FilterKey; label: string }[] = [
 ];
 
 export function TaskListPage() {
-  const [tasks, setTasks] = useState<ComplianceTaskItem[]>([]);
+  const { data: tasks = [], isLoading } = useTasks();
+  const createTaskMutation = useCreateTask();
+  const updateTaskMutation = useUpdateTask();
+  const deleteTaskMutation = useDeleteTask();
   const [filter, setFilter] = useState<FilterKey>("all");
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
   const [search, setSearch] = useState("");
@@ -33,7 +37,6 @@ export function TaskListPage() {
 
   useEffect(() => {
     reconcileTaskStatuses();
-    setTasks(loadTasks());
     trackEvent("Compliance Tasks Viewed");
   }, []);
 
@@ -53,25 +56,22 @@ export function TaskListPage() {
     return result;
   }, [tasks, filter, sourceFilter, search]);
 
-  function handleCreate(input: CreateTaskInput) {
-    const task = createTask(input, "onboarded");
-    trackEvent("Task Created", { title: task.title });
-    setTasks(loadTasks());
+  async function handleCreate(input: CreateTaskInput) {
+    await createTaskMutation.mutateAsync({ input, businessId: "onboarded" });
+    trackEvent("Task Created", { title: input.title });
     setShowCreate(false);
   }
 
-  function handleUpdate(id: string, input: UpdateTaskInput) {
-    updateTask(id, input);
+  async function handleUpdate(id: string, input: UpdateTaskInput) {
+    await updateTaskMutation.mutateAsync({ id, input });
     trackEvent("Task Updated", { id });
     if (input.status === "completed") trackEvent("Task Completed", { id });
-    setTasks(loadTasks());
     setSelectedTask(null);
   }
 
-  function handleDelete(id: string) {
-    deleteTask(id);
+  async function handleDelete(id: string) {
+    await deleteTaskMutation.mutateAsync(id);
     trackEvent("Task Deleted", { id });
-    setTasks(loadTasks());
     setSelectedTask(null);
   }
 
@@ -107,7 +107,9 @@ export function TaskListPage() {
         </select>
       </div>
 
-      {filtered.length > 0 ? (
+      {isLoading ? (
+        <div className={styles.empty}><p className={styles.emptyText}>Loading tasks...</p></div>
+      ) : filtered.length > 0 ? (
         <div className={styles.list}>
           {filtered.map((t) => <TaskCard key={t.id} task={t} onClick={setSelectedTask} />)}
         </div>

@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
+import { AlertTriangle } from "lucide-react";
+import { getEvidenceForTask, linkDocumentAsEvidence } from "@/features/documents/api/document-generation";
+import { getDocuments } from "@/features/documents/api/documents-api";
 import type { ComplianceTaskItem, UpdateTaskInput, TaskPriority, TaskStatus } from "../../types/tasks.types";
+import type { EvidenceRecord } from "@/features/documents/api/document-generation";
 import styles from "./task-detail-modal.module.css";
 
 interface Props {
@@ -20,6 +24,22 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
   const [dueDate, setDueDate] = useState(task.dueDate || "");
   const [priority, setPriority] = useState<TaskPriority>(task.priority);
   const [status, setStatus] = useState<TaskStatus>(task.status);
+  const [evidence, setEvidence] = useState<EvidenceRecord[]>([]);
+  const [availableDocs, setAvailableDocs] = useState<any[]>([]);
+  const [showLinkDoc, setShowLinkDoc] = useState(false);
+  const [showEvidenceWarning, setShowEvidenceWarning] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  useEffect(() => {
+    setEvidence(getEvidenceForTask(task.id));
+    setAvailableDocs(getDocuments());
+  }, [task.id]);
+
+  function handleLinkDoc(docId: string, docTitle: string) {
+    linkDocumentAsEvidence(docId, docTitle, task.id);
+    setEvidence(getEvidenceForTask(task.id));
+    setShowLinkDoc(false);
+  }
 
   function handleSave() {
     onUpdate(task.id, {
@@ -114,6 +134,52 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
                 </div>
               </div>
 
+              {evidence.length > 0 && (
+                <div className={styles.section}>
+                  <h4 className={styles.sectionTitle}>Evidence ({evidence.length})</h4>
+                  {evidence.map((e) => (
+                    <div key={e.id} className={styles.evidenceItem}>
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L5.5 9.5L11 4" stroke="var(--color-key-success)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      <span className={styles.evidenceTitle}>{e.documentTitle}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className={styles.linkDocRow}>
+                {showLinkDoc ? (
+                  <div className={styles.linkDocDropdown}>
+                    <p className={styles.linkDocLabel}>Select a document to link as evidence:</p>
+                    {availableDocs.length === 0 ? (
+                      <p className={styles.linkDocEmpty}>No documents available. Upload a document first.</p>
+                    ) : (
+                      availableDocs.map((d) => (
+                        <button key={d.id} type="button" className={styles.linkDocItem} onClick={() => handleLinkDoc(d.id, d.title)}>
+                          {d.title}
+                        </button>
+                      ))
+                    )}
+                    <button type="button" className={styles.linkDocCancel} onClick={() => setShowLinkDoc(false)}>Cancel</button>
+                  </div>
+                ) : (
+                  <button type="button" className={styles.linkDocBtn} onClick={() => setShowLinkDoc(true)}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2V12M2 7H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                    Link Document as Evidence
+                  </button>
+                )}
+              </div>
+
+              {showEvidenceWarning && (
+                <div className={styles.evidenceWarning}>
+                  <AlertTriangle size={16} className={styles.warnIcon} />
+                  <div className={styles.warnBody}>
+                    <strong>Evidence required</strong>
+                    <p>Link at least one document as evidence before marking this task as complete.</p>
+                  </div>
+                  <button type="button" className={styles.warnDismiss} onClick={() => setShowEvidenceWarning(false)}>Got it</button>
+                </div>
+              )}
+
               {task.suggestionReason && (
                 <div className={styles.reason}>
                   <strong>Suggested Because:</strong>
@@ -121,12 +187,27 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
                 </div>
               )}
 
+              {showDeleteConfirm && (
+                <div className={styles.confirmDeleteBanner}>
+                  <p>Delete this task? This action cannot be undone.</p>
+                  <div className={styles.confirmDeleteActions}>
+                    <button type="button" className={styles.confirmDeleteCancel} onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
+                    <button type="button" className={styles.confirmDeleteBtn} onClick={() => onDelete(task.id)}>Delete</button>
+                  </div>
+                </div>
+              )}
               <div className={styles.actions}>
-                <Button type="button" variant="ghost" size="sm" onClick={() => onDelete(task.id)}>Delete</Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(true)}>Delete</Button>
                 <div className={styles.right}>
                   <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(true)}>Edit</Button>
                   {task.status !== "completed" && (
-                    <Button type="button" variant="primary" size="sm" onClick={() => onUpdate(task.id, { status: "completed" })}>Mark Complete</Button>
+                    <Button type="button" variant="primary" size="sm" onClick={() => {
+                      if (evidence.length === 0) {
+                        setShowEvidenceWarning(true);
+                      } else {
+                        onUpdate(task.id, { status: "completed" });
+                      }
+                    }}>Mark Complete</Button>
                   )}
                 </div>
               </div>

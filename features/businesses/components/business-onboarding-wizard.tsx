@@ -10,8 +10,9 @@ import { ProcessingProfile } from "./steps/processing-profile";
 import { SubscriptionSelect } from "./steps/subscription-select";
 import { PaymentProcessing } from "./steps/payment-processing";
 import { DashboardRedirect } from "./steps/dashboard-redirect";
-import { clearUserIntent, saveUserIntent } from "../api/onboarding-api";
+import { clearUserIntent, saveUserIntent, addBusiness, getBusinessCount } from "../api/onboarding-api";
 import { schedulePlanChange } from "@/features/billing/api/billing-api";
+import { getPlanLimit } from "@/features/billing/api/feature-access";
 import type { OnboardingStep, OnboardingData } from "../types/onboarding.types";
 import { createEmptyOnboardingData, ONBOARDING_STEPS } from "../types/onboarding.types";
 import styles from "./business-onboarding-wizard.module.css";
@@ -27,7 +28,9 @@ export function BusinessOnboardingWizard() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isAnnual, setIsAnnual] = useState(true);
   const [session, setSession] = useState<any>(null);
-  const isChangePlan = searchParams.get("mode") === "change-plan";
+  const mode = searchParams.get("mode");
+  const isChangePlan = mode === "change-plan";
+  const isAddBusiness = mode === "add-business";
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -35,6 +38,14 @@ export function BusinessOnboardingWizard() {
       if (!session) {
         saveUserIntent("existing_business");
         router.push("/signup?redirect=/business-onboarding");
+        return;
+      }
+      if (isAddBusiness) {
+        const count = getBusinessCount();
+        const limit = getPlanLimit("businesses");
+        if (count >= limit) {
+          router.push("/business");
+        }
       }
     });
   }, []);
@@ -77,7 +88,7 @@ export function BusinessOnboardingWizard() {
       case 3:
         return <BusinessOperations data={data.operations} onUpdate={(v) => updateStepData("operations", v)} onNext={goNext} onBack={goBack} />;
       case 4:
-        return <ProcessingProfile onComplete={goNext} />;
+        return <ProcessingProfile onComplete={isAddBusiness ? async () => { await addBusiness(data as any); clearUserIntent(); router.push("/business"); } : goNext} />;
       case 5:
         return (
           <SubscriptionSelect

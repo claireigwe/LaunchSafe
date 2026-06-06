@@ -29,6 +29,30 @@
 .detailLabel { font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); }
 .detailValue { font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 500; color: var(--color-role-light-onSurface); }
 .overdueText { color: var(--color-role-light-error); font-weight: 600; }
+.section { margin-bottom: 16px; }
+.sectionTitle { font-family: var(--font-label-label-large-fontFamily); font-size: 14px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0 0 8px; }
+.evidenceItem { display: flex; align-items: center; gap: 8px; padding: 8px 0; font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onSurface); }
+.evidenceTitle { flex: 1; }
+.linkDocRow { margin-bottom: 16px; }
+.linkDocBtn { display: inline-flex; align-items: center; gap: 6px; background: none; border: 1px dashed var(--color-role-light-outlineVariant); border-radius: 8px; padding: 8px 12px; font-family: var(--font-label-label-medium-fontFamily); font-size: 12px; color: var(--color-role-light-primary); cursor: pointer; transition: all .15s; }
+.linkDocBtn:hover { border-color: var(--color-role-light-primary); background: var(--color-role-light-primaryContainer); }
+.linkDocDropdown { padding: 12px; background: var(--color-role-light-surfaceContainerLow); border-radius: 10px; display: flex; flex-direction: column; gap: 4px; }
+.linkDocLabel { font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); margin: 0 0 4px; }
+.linkDocEmpty { font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); margin: 0; font-style: italic; }
+.linkDocItem { display: block; width: 100%; padding: 8px 10px; border: none; background: none; border-radius: 6px; cursor: pointer; text-align: left; font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onSurface); transition: background .1s; }
+.linkDocItem:hover { background: var(--color-role-light-surfaceContainer); }
+.linkDocCancel { align-self: flex-start; background: none; border: none; font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; padding: 4px 0; margin-top: 4px; }
+.evidenceWarning { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 10px; background: var(--color-role-light-warningContainer); border: 1px solid var(--color-key-warning); }
+.warnIcon { color: var(--color-key-warning); flex-shrink: 0; margin-top: 2px; }
+.warnBody { flex: 1; }
+.warnBody strong { display: block; font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onWarningContainer); }
+.warnBody p { font-family: var(--font-body-body-medium-fontFamily); font-size: 12px; color: var(--color-role-light-onWarningContainer); margin: 2px 0 0; line-height: 1.4; }
+.warnDismiss { background: none; border: 1px solid var(--color-key-warning); border-radius: 6px; padding: 4px 10px; font-family: var(--font-label-label-small-fontFamily); font-size: 11px; font-weight: 600; color: var(--color-key-warning); cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.confirmDeleteBanner { padding: 12px 14px; border-radius: 10px; background: var(--color-role-light-errorContainer); border: 1px solid var(--color-role-light-error); }
+.confirmDeleteBanner p { font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onErrorContainer); margin: 0 0 8px; }
+.confirmDeleteActions { display: flex; gap: 8px; }
+.confirmDeleteCancel { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--color-role-light-outlineVariant); background: none; font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; }
+.confirmDeleteBtn { padding: 6px 12px; border-radius: 6px; border: none; background: var(--color-role-light-error); color: var(--color-role-light-onError); font-family: var(--font-label-label-small-fontFamily); font-size: 12px; font-weight: 600; cursor: pointer; }
 .reason { padding: 14px; background: var(--color-role-light-primaryContainer); border-radius: 12px; font-family: var(--font-body-body-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onPrimaryContainer); line-height: 1.5; }
 .reason strong { display: block; margin-bottom: 4px; }
 .reason p { margin: 0; }

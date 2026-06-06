@@ -8,6 +8,7 @@
 .sidebarBtn { padding: 10px 14px; border-radius: 10px; border: none; background: none; cursor: pointer; font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; font-weight: 500; color: var(--color-role-light-onSurfaceVariant); text-align: left; transition: all .15s; }
 .sidebarBtn:hover { background: var(--color-role-light-surfaceContainer); color: var(--color-role-light-onSurface); }
 .sidebarActive { background: var(--color-role-light-primaryContainer); color: var(--color-role-light-onPrimaryContainer); font-weight: 600; }
+.sidebarLink { text-decoration: none; display: block; }
 @media (max-width: 768px) { .sidebarBtn { flex: 1; text-align: center; min-width: 120px; } }
 .content { flex: 1; min-width: 0; }
 .sectionTitle { font-family: var(--font-headline-headline-small-fontFamily); font-size: 22px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0 0 4px; }
