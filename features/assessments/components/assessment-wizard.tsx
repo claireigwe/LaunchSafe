@@ -115,6 +115,10 @@ export function AssessmentWizard() {
     handleUnlockReport();
   }, [handleUnlockReport]);
 
+  const handleEditAnswers = useCallback(() => {
+    goToStep(1);
+  }, [goToStep]);
+
   const handleMaybeLater = useCallback(() => {
     trackEvent("Assessment Skipped Payment");
     router.push("/");
@@ -185,6 +189,7 @@ export function AssessmentWizard() {
             summary={summary}
             onUnlock={handleUnlockReport}
             onLater={handleMaybeLater}
+            onEdit={handleEditAnswers}
           />
         ) : null;
       default:

@@ -263,6 +263,26 @@ export const INDUSTRIES: IndustryOption[] = [
       { id: "distribution", label: "Will you distribute energy or resources?", tooltip: "Distribution of energy or resources requires distribution licenses, infrastructure permits, and compliance with industry regulations." },
     ],
   },
+  {
+    id: "fashion-apparel",
+    name: "Fashion & Apparel",
+    description: "Fashion design, clothing manufacturing, textile production, and fashion retail",
+    baseRequirementCount: 8,
+    baseAgencyCount: 4,
+    complexityModifier: 10,
+    categories: [
+      "Business Registration",
+      "Tax Compliance",
+      "Industry Licensing",
+      "Trade License",
+      "Employment Compliance",
+    ],
+    questions: [
+      { id: "clothingManufacturing", label: "Will you manufacture clothing?", tooltip: "Clothing manufacturing may require factory registration, safety inspections, and labor compliance." },
+      { id: "clothingRetail", label: "Will you sell clothing directly to customers?", tooltip: "Retail fashion businesses need trade licenses, premises permits, and consumer protection compliance." },
+      { id: "textileImport", label: "Will you import fabrics or materials?", tooltip: "Importing textiles requires customs clearance, SON certification, and import permits." },
+    ],
+  },
 ];
 
 export function getIndustryById(id: string): IndustryOption | undefined {

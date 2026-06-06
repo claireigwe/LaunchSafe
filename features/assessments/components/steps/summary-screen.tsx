@@ -10,6 +10,7 @@ interface SummaryScreenProps {
   summary: AssessmentSummary;
   onUnlock: () => void;
   onLater: () => void;
+  onEdit?: () => void;
 }
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -29,7 +30,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   "Transport Regulation": "🚚",
 };
 
-export function SummaryScreen({ summary, onUnlock, onLater }: SummaryScreenProps) {
+export function SummaryScreen({ summary, onUnlock, onLater, onEdit }: SummaryScreenProps) {
   useEffect(() => {
     trackEvent("Summary Viewed", { requirementCount: summary.requirementCount, complexityScore: summary.complexityScore });
   }, [summary]);
@@ -93,6 +94,25 @@ export function SummaryScreen({ summary, onUnlock, onLater }: SummaryScreenProps
           ))}
         </div>
       </div>
+
+      {onEdit && (
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <button
+            type="button"
+            onClick={onEdit}
+            style={{
+              background: "none", border: "none",
+              fontFamily: "var(--font-label-label-medium-fontFamily)",
+              fontSize: 13, fontWeight: 500,
+              color: "var(--color-role-light-primary)",
+              cursor: "pointer", padding: "8px 16px",
+              textDecoration: "underline",
+            }}
+          >
+            Edit Answers
+          </button>
+        </div>
+      )}
 
       <div className={styles.lockedSection}>
         <div className={styles.lockedHeader}>

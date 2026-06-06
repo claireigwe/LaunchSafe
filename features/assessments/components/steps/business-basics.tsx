@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { InfoTooltip } from "../tooltip";
 import type { BusinessBasicsData } from "../../types/wizard.types";
-import { getIndustries, getIndustriesSync, type IndustryOption } from "../../api/industries-api";
+import { getIndustries, getIndustriesSync, type IndustryOption } from "@/features/assessments/api/industries-api";
 import styles from "./business-basics.module.css";
 
 interface BusinessBasicsProps {
