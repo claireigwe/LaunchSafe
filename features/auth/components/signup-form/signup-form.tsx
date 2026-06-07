@@ -9,6 +9,15 @@ import { triggerWelcome } from "@/features/notifications/api/notification-trigge
 import styles from "./signup-form.module.css";
 import Link from "next/link";
 
+function validatePassword(password: string): string | null {
+  if (password.length < 8) return "Password must be at least 8 characters.";
+  if (!/[A-Z]/.test(password)) return "Password must contain at least one uppercase letter.";
+  if (!/[a-z]/.test(password)) return "Password must contain at least one lowercase letter.";
+  if (!/[0-9]/.test(password)) return "Password must contain at least one number.";
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return "Password must contain at least one special character.";
+  return null;
+}
+
 export function SignupForm() {
   const router = useRouter();
   const supabase = createClient();
@@ -17,6 +26,7 @@ export function SignupForm() {
   const [password, setPassword] = useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
   const redirectTo = typeof window !== "undefined"
@@ -25,8 +35,20 @@ export function SignupForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setIsLoading(true);
     setError(null);
+    setFieldErrors({});
+
+    const errs: Record<string, string> = {};
+    if (!fullName.trim()) errs.fullName = "Full name is required.";
+    if (!email.trim()) errs.email = "Email is required.";
+    const pwErr = validatePassword(password);
+    if (pwErr) errs.password = pwErr;
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      return;
+    }
+
+    setIsLoading(true);
 
     const { error: signUpError } = await supabase.auth.signUp({
       email,
@@ -73,12 +95,13 @@ export function SignupForm() {
         <p className={styles.subtitle}>Start discovering compliance requirements today.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className={styles.form}>
+      <form onSubmit={handleSubmit} className={styles.form} noValidate>
         {error && <div className={styles.errorAlert}>{error}</div>}
 
         <div className={styles.formGroup}>
           <label htmlFor="fullName" className={styles.label}>Full Name</label>
-          <input id="fullName" type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} className={styles.input} placeholder="John Doe" autoComplete="name" />
+          {fieldErrors.fullName && <p className={styles.fieldError}>{fieldErrors.fullName}</p>}
+          <input id="fullName" type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} className={`${styles.input} ${fieldErrors.fullName ? styles.inputError : ""}`} placeholder="John Doe" autoComplete="name" />
         </div>
 
         <div className={styles.formGroup}>
@@ -88,12 +111,15 @@ export function SignupForm() {
 
         <div className={styles.formGroup}>
           <label htmlFor="email" className={styles.label}>Email Address</label>
-          <input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={styles.input} placeholder="you@company.com" autoComplete="email" />
+          {fieldErrors.email && <p className={styles.fieldError}>{fieldErrors.email}</p>}
+          <input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={`${styles.input} ${fieldErrors.email ? styles.inputError : ""}`} placeholder="you@company.com" autoComplete="email" />
         </div>
 
         <div className={styles.formGroup}>
           <label htmlFor="password" className={styles.label}>Password</label>
-          <input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className={styles.input} placeholder="••••••••" minLength={6} autoComplete="new-password" />
+          {fieldErrors.password && <p className={styles.fieldError}>{fieldErrors.password}</p>}
+          <input id="password" type="password" required value={password} onChange={(e) => { setPassword(e.target.value); if (fieldErrors.password) setFieldErrors((p) => { const n = {...p}; delete n.password; return n; }); }} className={`${styles.input} ${fieldErrors.password ? styles.inputError : ""}`} placeholder="••••••••" autoComplete="new-password" />
+          <p className={styles.hint}>Min 8 characters, uppercase, lowercase, number, and special character.</p>
         </div>
 
         <Button type="submit" fullWidth isLoading={isLoading}>

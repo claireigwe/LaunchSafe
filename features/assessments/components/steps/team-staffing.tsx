@@ -142,7 +142,7 @@ export function TeamStaffing({
           Back
         </Button>
         <Button type="submit" variant="primary" size="lg">
-          Review Answers
+          Continue
         </Button>
       </div>
     </form>
