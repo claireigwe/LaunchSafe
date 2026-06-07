@@ -80,6 +80,17 @@
   white-space: nowrap;
 }
 
+.setupLink {
+  color: var(--color-role-light-primary);
+  font-weight: 600;
+  border: 1px dashed var(--color-role-light-primary);
+  margin-bottom: 4px;
+}
+
+.setupLink:hover {
+  background: var(--color-role-light-primaryContainer);
+}
+
 .link:hover {
   background-color: var(--color-role-light-surfaceContainer);
   color: var(--color-role-light-onSurface);

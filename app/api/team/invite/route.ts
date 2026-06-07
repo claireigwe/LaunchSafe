@@ -1,12 +1,43 @@
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import type { ApiResponse } from "@/types/api.types";
+
+async function resolveMembership(db: any, userId: string): Promise<{ business_id: string; role: string } | null> {
+  const { data: membership } = await db
+    .from("business_members")
+    .select("business_id, role")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (membership) return membership;
+
+  const { data: business } = await db
+    .from("businesses")
+    .select("id")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!business) return null;
+
+  await db.from("business_members").insert({
+    business_id: business.id,
+    user_id: userId,
+    role: "owner",
+    invited_by: userId,
+    invited_at: new Date().toISOString(),
+    joined_at: new Date().toISOString(),
+  });
+
+  return { business_id: business.id, role: "owner" };
+}
 
 export async function POST(request: Request) {
   try {
     const user = await getRequiredUser();
-    const supabase = await createClient() as any;
+    const db = createAdminClient() as any;
     const body = await request.json();
     const { email, role } = body;
 
@@ -17,11 +48,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: membership } = await supabase
-      .from("business_members")
-      .select("business_id, role")
-      .eq("user_id", user.id)
-      .single();
+    const membership = await resolveMembership(db, user.id);
 
     if (!membership || membership.role === "member") {
       return NextResponse.json<ApiResponse>(
@@ -30,24 +57,41 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: invitedProfile } = await supabase
-      .from("user_profiles")
-      .select("user_id")
-      .eq("email", email)
-      .single();
+    const { data: planData } = await db
+      .from("subscriptions")
+      .select("subscription_plans!inner(slug)")
+      .eq("user_id", user.id)
+      .eq("subscription_plans.slug", "enterprise")
+      .in("status", ["active", "trial"])
+      .maybeSingle();
 
-    if (!invitedProfile) {
+    if (!planData) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: "Team collaboration requires an Enterprise plan" } },
+        { status: 403 }
+      );
+    }
+
+    const { data: authUsers } = await db.auth.admin.listUsers();
+
+    const invitedAuthUser = authUsers?.users?.find(
+      (u: any) => u.email?.toLowerCase() === email.toLowerCase()
+    );
+
+    if (!invitedAuthUser?.id) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: { message: "User not found. They need to sign up first." } },
         { status: 404 }
       );
     }
 
-    const { error } = await supabase
+    const invitedUserId = invitedAuthUser.id;
+
+    const { error } = await db
       .from("business_members")
       .insert({
         business_id: membership.business_id,
-        user_id: invitedProfile.user_id,
+        user_id: invitedUserId,
         role: role || "member",
         invited_by: user.id,
         invited_at: new Date().toISOString(),
@@ -62,8 +106,8 @@ export async function POST(request: Request) {
 
     if (error) throw error;
 
-    await supabase.from("notifications").insert({
-      user_id: invitedProfile.user_id,
+    await db.from("notifications").insert({
+      user_id: invitedUserId,
       title: "You've been added to a team",
       message: `You have been added to the business. You now have ${role || "member"} access.`,
       type: "system",

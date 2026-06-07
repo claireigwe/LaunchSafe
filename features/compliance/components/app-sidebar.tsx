@@ -16,9 +16,11 @@ import {
   Settings,
   ChevronLeft,
   Menu,
+  Compass,
 } from "lucide-react";
 import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { getCurrentPlanName } from "@/features/billing/api/feature-access";
+import { isInSetupMode } from "@/features/billing/api/setup-check";
 import styles from "./app-sidebar.module.css";
 
 const NAV_ITEMS = [
@@ -36,6 +38,7 @@ const NAV_ITEMS = [
 export function AppSidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const setupMode = isInSetupMode();
 
   return (
     <>
@@ -54,6 +57,16 @@ export function AppSidebar() {
         </div>
 
         <nav className={styles.nav} aria-label="Main navigation">
+          {setupMode && (
+            <Link
+              href="/onboarding"
+              className={cn(styles.link, styles.setupLink, pathname === "/onboarding" && styles.active)}
+              tabIndex={collapsed ? -1 : 0}
+            >
+              <Compass size={18} className={styles.icon} />
+              {!collapsed && <span>Setup</span>}
+            </Link>
+          )}
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
             let isActive = false;
             if (href === "/settings") {

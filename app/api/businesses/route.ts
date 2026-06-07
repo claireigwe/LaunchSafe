@@ -64,6 +64,15 @@ export async function POST(request: Request) {
 
     if (error) throw error;
 
+    await supabase.from("business_members").insert({
+      business_id: data.id,
+      user_id: user.id,
+      role: "owner",
+      invited_by: user.id,
+      invited_at: new Date().toISOString(),
+      joined_at: new Date().toISOString(),
+    });
+
     return NextResponse.json<ApiResponse>(
       { success: true, data: { id: data.id, name: data.name } },
       { status: 201 }

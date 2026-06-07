@@ -17,6 +17,7 @@ import { loadTasks, reconcileTaskStatuses, createTask } from "../../api/tasks-ap
 import { getDocuments, formatFileSize, uploadDocument, type UploadDocumentInput } from "@/features/documents/api/documents-api";
 import { DOC_TYPE_LABELS } from "@/features/documents/types/documents.types";
 import { getSubscription, formatCurrency } from "@/features/billing/api/billing-api";
+import { SetupOverlay } from "@/features/billing/components/setup-overlay";
 import { getRegulatoryUpdates } from "@/features/regulatory-updates/api/regulatory-updates-api";
 import { getRecentActivity, type ActivityEntry } from "@/features/activity/api/activity-api";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
@@ -34,10 +35,19 @@ export function DashboardPage() {
   const [recentActivity, setRecentActivity] = useState<ActivityEntry[]>(getRecentActivity(5));
   const subscription = getSubscription();
 
-  useEffect(() => {
+  function refreshDashboard() {
     reconcileTaskStatuses();
     setSavedTasks(loadTasks());
     setRecentDocs(getDocuments().slice(0, 4));
+    setRegUpdates(getRegulatoryUpdates().slice(0, 3));
+    setRecentActivity(getRecentActivity(5));
+  }
+
+  useEffect(() => {
+    refreshDashboard();
+    const onFocus = () => refreshDashboard();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
   }, []);
 
   useEffect(() => {
@@ -253,35 +263,37 @@ function EmptyTasks({ onAddTask }: { onAddTask: () => void }) {
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Welcome back, {data.business?.name || "Founder"}</h1>
-          <p className={styles.subtitle}>Here is your compliance overview for today.</p>
+    <SetupOverlay>
+      <div className={styles.page}>
+        <div className={styles.header}>
+          <div>
+            <h1 className={styles.title}>Welcome back, {data.business?.name || "Founder"}</h1>
+            <p className={styles.subtitle}>Here is your compliance overview for today.</p>
+          </div>
         </div>
-      </div>
 
-      <div className={styles.grid}>
-        <section className={styles.primary}>
-          <HealthScore score={computedScore} />
-          {overdue.length > 0 && <OverdueCards items={overdue} />}
-          <SuggestedTasksWidget />
-          {upcoming.length > 0 && <UpcomingSection items={upcoming} />}
-          {recentDocs.length > 0 && <DocumentsSection docs={recentDocs} />}
-          {savedTasks.length > 0 ? <TasksSection tasks={savedTasks} onAddTask={() => setShowCreate(true)} /> : <EmptyTasks onAddTask={() => setShowCreate(true)} />}
-          <ReportsPreview />
-          <RegulatoryUpdates updates={regUpdates} />
-        </section>
-        <aside className={styles.secondary}>
-          <QuickActions onAddTask={() => setShowCreate(true)} onUploadDocument={() => setShowUploadDoc(true)} />
-          {subscription && <SubscriptionStatus sub={subscription} />}
-          <BusinessOverview business={data.business} />
-          <RecentActivity activities={recentActivity} />
-        </aside>
-      </div>
+        <div className={styles.grid}>
+          <section className={styles.primary}>
+            <HealthScore score={computedScore} />
+            {overdue.length > 0 && <OverdueCards items={overdue} />}
+            <SuggestedTasksWidget />
+            {upcoming.length > 0 && <UpcomingSection items={upcoming} />}
+            {recentDocs.length > 0 && <DocumentsSection docs={recentDocs} />}
+            {savedTasks.length > 0 ? <TasksSection tasks={savedTasks} onAddTask={() => setShowCreate(true)} /> : <EmptyTasks onAddTask={() => setShowCreate(true)} />}
+            <ReportsPreview />
+            <RegulatoryUpdates updates={regUpdates} />
+          </section>
+          <aside className={styles.secondary}>
+            <QuickActions onAddTask={() => setShowCreate(true)} onUploadDocument={() => setShowUploadDoc(true)} />
+            {subscription && <SubscriptionStatus sub={subscription} />}
+            <BusinessOverview business={data.business} />
+            <RecentActivity activities={recentActivity} />
+          </aside>
+        </div>
 
-      {showCreate && <TaskCreateModal onSave={handleCreateTask} onClose={() => setShowCreate(false)} />}
-      {showUploadDoc && <DocumentUploadModal onSave={handleUploadDocument} onClose={() => setShowUploadDoc(false)} />}
-    </div>
+        {showCreate && <TaskCreateModal onSave={handleCreateTask} onClose={() => setShowCreate(false)} />}
+        {showUploadDoc && <DocumentUploadModal onSave={handleUploadDocument} onClose={() => setShowUploadDoc(false)} />}
+      </div>
+    </SetupOverlay>
   );
 }

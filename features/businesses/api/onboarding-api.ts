@@ -95,6 +95,7 @@ export async function addBusiness(data: Record<string, unknown>): Promise<Stored
 
   all.push(biz);
   try { localStorage.setItem(ALL_BUSINESSES_KEY, JSON.stringify(all)); } catch {}
+  saveBusinessData(data);
 
   await apiPost("/api/businesses", {
     name: biz.name,

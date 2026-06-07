@@ -13,6 +13,7 @@ import { getGeneratedDocuments, DOC_TYPE_LABELS_GEN } from "../api/document-gene
 import { DOC_TYPE_LABELS, type DocType } from "../types/documents.types";
 import type { AppDocument } from "../types/documents.types";
 import type { ComplianceDocument } from "@/types/domain/document";
+import { SetupOverlay } from "@/features/billing/components/setup-overlay";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import styles from "./document-library.module.css";
 
@@ -122,6 +123,7 @@ export function DocumentLibrary() {
   }
 
   return (
+    <SetupOverlay>
     <div className={styles.page}>
       <div className={styles.header}>
         <div>
@@ -193,5 +195,6 @@ export function DocumentLibrary() {
       {showGenerate && <DocumentGeneratorModal onClose={() => setShowGenerate(false)} onComplete={refresh} />}
       {selectedDoc && <DocumentDetailModal doc={selectedDoc} onUpdate={refresh} onDelete={handleDelete} onClose={() => setSelectedDoc(null)} />}
     </div>
+    </SetupOverlay>
   );
 }

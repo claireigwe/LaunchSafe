@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 import { loadProfile, saveProfile, loadNotificationPrefs, saveNotificationPrefs } from "../api/settings-api";
+import { canManageTeam } from "@/features/settings/api/permissions";
 import { getBusinessData, clearUserIntent } from "@/features/businesses/api/onboarding-api";
 import { getSubscription } from "@/features/billing/api/billing-api";
+import { canAccess, getCurrentPlanName } from "@/features/billing/api/feature-access";
 import { getIndustriesSync } from "@/features/assessments/api/industries-api";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import type { NotificationPrefs } from "../types/settings.types";
@@ -16,12 +17,12 @@ import styles from "./settings-page.module.css";
 
 type Section = "profile" | "business" | "notifications" | "security" | "team" | "account";
 
-const SECTIONS: { key: Section; label: string; href?: string }[] = [
+const SECTIONS: { key: Section; label: string }[] = [
   { key: "profile", label: "Profile" },
   { key: "business", label: "Business Settings" },
   { key: "notifications", label: "Notification Preferences" },
   { key: "security", label: "Security" },
-  { key: "team", label: "Team", href: "/settings/team" },
+  { key: "team", label: "Team" },
   { key: "account", label: "Account Management" },
 ];
 
@@ -32,6 +33,7 @@ export function SettingsPage() {
   const [section, setSection] = useState<Section>(() => {
     const tab = searchParams.get("tab");
     if (tab === "business") return "business";
+    if (tab === "team") return "team";
     return "profile";
   });
 
@@ -47,15 +49,9 @@ export function SettingsPage() {
       <div className={styles.layout}>
         <nav className={styles.sidebar} aria-label="Settings sections">
           {SECTIONS.map((s) => (
-            s.href ? (
-              <Link key={s.key} href={s.href} className={cn(styles.sidebarBtn, styles.sidebarLink)}>
-                {s.label}
-              </Link>
-            ) : (
-              <button key={s.key} type="button" className={cn(styles.sidebarBtn, section === s.key && styles.sidebarActive)} onClick={() => setSection(s.key)}>
-                {s.label}
-              </button>
-            )
+            <button key={s.key} type="button" className={cn(styles.sidebarBtn, section === s.key && styles.sidebarActive)} onClick={() => setSection(s.key)}>
+              {s.label}
+            </button>
           ))}
         </nav>
         <div className={styles.content}>
@@ -63,6 +59,7 @@ export function SettingsPage() {
           {section === "business" && <BusinessSection router={router} />}
           {section === "notifications" && <NotificationsSection />}
           {section === "security" && <SecuritySection supabase={supabase} />}
+          {section === "team" && <TeamSection />}
           {section === "account" && <AccountSection router={router} supabase={supabase} />}
         </div>
       </div>
@@ -255,6 +252,135 @@ function SecuritySection({ supabase }: { supabase: any }) {
       <div className={styles.subSection}>
         <h3 className={styles.subTitle}>Two-Factor Authentication</h3>
         <p className={styles.comingSoon}>Two-factor authentication is coming soon. This feature will add an extra layer of security to your account.</p>
+      </div>
+    </Section>
+  );
+}
+
+function TeamSection() {
+  const [members, setMembers] = useState<Member[]>([]);
+  const [myRole, setMyRole] = useState("member");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("member");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  interface Member {
+    id: string;
+    businessId: string;
+    role: string;
+    name: string;
+    joinedAt: string;
+    invitedAt: string;
+  }
+
+  async function load() {
+    try {
+      const res = await fetch("/api/team/members");
+      const json = await res.json();
+      if (json.success) {
+        setMembers(json.data);
+        const me = json.data.find((m: any) => m.role === "owner" || m.role === "admin");
+        setMyRole(me?.role || "member");
+      }
+    } catch {}
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function handleInvite() {
+    setError(""); setSuccess("");
+    if (!inviteEmail) { setError("Enter an email address"); return; }
+    try {
+      const res = await fetch("/api/team/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setSuccess(`Invited ${inviteEmail} successfully.`);
+        setInviteEmail("");
+        load();
+      } else {
+        setError(json.error?.message || "Invite failed");
+      }
+    } catch { setError("Invite failed"); }
+  }
+
+  async function handleRemove(memberId: string) {
+    await fetch("/api/team/members", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ memberId }),
+    });
+    load();
+  }
+
+  const canInvite = canManageTeam(myRole as any);
+  const hasTeamAccess = canAccess("team_collaboration");
+  const currentPlan = getCurrentPlanName();
+
+  if (!hasTeamAccess) {
+    return (
+      <Section title="Team" subtitle="Manage who has access to your business.">
+        <div className={styles.emptyCard}>
+          <p className={styles.emptyText}>
+            Team collaboration is available on the <strong>Enterprise</strong> plan. You are currently on the <strong>{currentPlan}</strong> plan.
+          </p>
+          <Button variant="primary" size="md" onClick={() => window.location.href = "/settings/billing"}>
+            Upgrade to Enterprise
+          </Button>
+        </div>
+      </Section>
+    );
+  }
+
+  return (
+    <Section title="Team" subtitle="Manage who has access to your business.">
+      {canInvite && (
+        <div className={styles.inviteCard}>
+          <h3 className={styles.subTitle}>Invite Member</h3>
+          {error && <p className={styles.error} role="alert">{error}</p>}
+          {success && <p className={styles.success} role="status">{success}</p>}
+          <div className={styles.inviteRow}>
+            <input className={styles.input} placeholder="Email address" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
+            <select className={styles.select} value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}>
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+            </select>
+            <Button variant="primary" size="md" onClick={handleInvite}>Invite</Button>
+          </div>
+          <p className={styles.hint}>The user must already have a LaunchSafe account to be invited.</p>
+        </div>
+      )}
+
+      <div className={styles.membersCard}>
+        <h3 className={styles.subTitle}>Team Members</h3>
+        {members.length === 0 ? (
+          <p className={styles.emptyText}>No team members yet.</p>
+        ) : (
+          <div className={styles.membersList}>
+            {members.map((m) => (
+              <div key={m.id} className={styles.memberRow}>
+                <div>
+                  <span className={styles.memberName}>{m.name}</span>
+                  <span className={cn(styles.roleBadge, m.role === "owner" ? styles.roleOwner : m.role === "admin" ? styles.roleAdmin : styles.roleMember)}>
+                    {m.role}
+                  </span>
+                </div>
+                <div className={styles.memberActions}>
+                  <span className={styles.memberDate}>
+                    {m.joinedAt ? `Joined ${new Date(m.joinedAt).toLocaleDateString()}` : "Invited"}
+                  </span>
+                  {m.role !== "owner" && canInvite && (
+                    <button className={styles.removeBtn} onClick={() => handleRemove(m.id)}>Remove</button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </Section>
   );

@@ -7,6 +7,7 @@ import { TaskCard } from "../tasks/task-card";
 import { TaskCreateModal } from "../tasks/task-create-modal";
 import { TaskDetailModal } from "../tasks/task-detail-modal";
 import { loadTasks, createTask, updateTask, deleteTask, reconcileTaskStatuses } from "../../api/tasks-api";
+import { SetupOverlay } from "@/features/billing/components/setup-overlay";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import type { ComplianceTaskItem, CreateTaskInput, UpdateTaskInput } from "../../types/tasks.types";
 import styles from "./calendar-page.module.css";
@@ -86,6 +87,7 @@ export function CalendarPage() {
     : [];
 
   return (
+    <SetupOverlay>
     <div className={styles.page}>
       <div className={styles.header}>
         <div>
@@ -165,5 +167,6 @@ export function CalendarPage() {
       {showCreate && <TaskCreateModal onSave={handleCreate} onClose={() => setShowCreate(false)} />}
       {selectedTask && <TaskDetailModal task={selectedTask} onUpdate={handleUpdate} onDelete={handleDelete} onClose={() => setSelectedTask(null)} />}
     </div>
+    </SetupOverlay>
   );
 }

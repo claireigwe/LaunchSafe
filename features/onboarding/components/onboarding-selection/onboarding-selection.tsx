@@ -2,13 +2,11 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import styles from "./onboarding-selection.module.css";
-import { Building2, FileText, LogOut } from "lucide-react";
+import { Building2, FileText } from "lucide-react";
 
 export function OnboardingSelection() {
   const router = useRouter();
-  const supabase = createClient();
 
   useEffect(() => {
     const pending = localStorage.getItem("launchsafe-pending-unlock");
@@ -27,6 +25,7 @@ export function OnboardingSelection() {
       try {
         const parsed = JSON.parse(intent);
         if (parsed === "existing_business") {
+          try { localStorage.removeItem("launchsafe-intent"); } catch {}
           router.replace("/business-onboarding");
           return;
         }
@@ -34,23 +33,8 @@ export function OnboardingSelection() {
     }
   }, [router]);
 
-  async function handleSignOut() {
-    await supabase.auth.signOut();
-    router.push("/login");
-  }
-
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <div className={styles.logo}>LaunchSafe</div>
-          <button onClick={handleSignOut} className={styles.signOutButton}>
-            <LogOut size={16} />
-            Sign Out
-          </button>
-        </div>
-      </header>
-
       <main className={styles.main}>
         <div className={styles.welcomeSection}>
           <h1 className={styles.title}>Welcome to LaunchSafe</h1>
@@ -58,10 +42,9 @@ export function OnboardingSelection() {
         </div>
 
         <div className={styles.cardsContainer}>
-          {/* Option 1: Free Assessment */}
           <button 
             className={styles.card}
-            onClick={() => router.push("/assessment")} // Just a placeholder route per rules
+            onClick={() => router.push("/assessment")}
           >
             <div className={styles.cardIconContainer}>
               <FileText className={styles.cardIcon} />
@@ -75,10 +58,9 @@ export function OnboardingSelection() {
             </div>
           </button>
 
-          {/* Option 2: Existing Business */}
           <button 
             className={styles.card}
-            onClick={() => router.push("/dashboard")} // Just a placeholder route per rules
+            onClick={() => router.push("/business-onboarding")}
           >
             <div className={styles.cardIconContainer}>
               <Building2 className={styles.cardIcon} />

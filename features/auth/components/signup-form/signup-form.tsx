@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,10 @@ export function SignupForm() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    try { localStorage.removeItem("launchsafe-intent"); } catch {}
+  }, []);
 
   const redirectTo = typeof window !== "undefined"
     ? new URLSearchParams(window.location.search).get("redirect") || "/onboarding"

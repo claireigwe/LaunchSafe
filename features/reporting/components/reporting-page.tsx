@@ -56,7 +56,7 @@ export function ReportingPage() {
           <p className={styles.subtitle}>Executive compliance intelligence for your business.</p>
         </div>
         <div className={styles.headerMeta}>
-          <span className={styles.planTag}>Growth Plan</span>
+          <span className={styles.planTag}>{planId === "enterprise" ? "Enterprise Plan" : planId === "growth" ? "Growth Plan" : "Starter Plan"}</span>
           {!canExportReport && (
             <Button variant="outline" size="sm" onClick={() => router.push("/business-onboarding?mode=change-plan")}>
               <ArrowUp size={12} /> Enterprise

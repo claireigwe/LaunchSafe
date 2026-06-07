@@ -13,8 +13,8 @@ export function Header() {
   const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setSession(user ? { user } : null);
     });
 
     const {

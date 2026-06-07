@@ -9,6 +9,7 @@ import { TaskDetailModal } from "./task-detail-modal";
 import { SuggestedTasksWidget } from "./suggested-tasks-widget";
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from "../../hooks/use-tasks-query";
 import { reconcileTaskStatuses } from "../../api/tasks-api";
+import { SetupOverlay } from "@/features/billing/components/setup-overlay";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import type { ComplianceTaskItem, CreateTaskInput, UpdateTaskInput } from "../../types/tasks.types";
 import styles from "./task-list-page.module.css";
@@ -76,6 +77,7 @@ export function TaskListPage() {
   }
 
   return (
+    <SetupOverlay>
     <div className={styles.page}>
       <div className={styles.header}>
         <div>
@@ -125,5 +127,6 @@ export function TaskListPage() {
       {showCreate && <TaskCreateModal onSave={handleCreate} onClose={() => setShowCreate(false)} />}
       {selectedTask && <TaskDetailModal task={selectedTask} onUpdate={handleUpdate} onDelete={handleDelete} onClose={() => setSelectedTask(null)} />}
     </div>
+    </SetupOverlay>
   );
 }
