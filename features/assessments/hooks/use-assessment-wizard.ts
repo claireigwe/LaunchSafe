@@ -40,7 +40,10 @@ export function useAssessmentWizard(): UseAssessmentWizardReturn {
       const saved = loadAssessmentFromLocalStorage();
       if (saved.data) {
         setDataState(saved.data);
-        setCurrentStep(saved.step);
+        const restoredStep = typeof saved.step === "number" && saved.step >= 1 && saved.step <= 5
+          ? saved.step
+          : 1;
+        setCurrentStep(restoredStep as WizardStep);
       }
       setInitialized(true);
     }

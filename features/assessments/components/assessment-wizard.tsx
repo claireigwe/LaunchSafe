@@ -65,12 +65,18 @@ export function AssessmentWizard() {
   useEffect(() => {
     if (currentStep === "summary" && !summary) {
       const savedSummary = loadSummaryFromLocalStorage();
-      if (savedSummary) {
+      const pending = typeof window !== "undefined"
+        ? localStorage.getItem("launchsafe-pending-unlock")
+        : null;
+      if (savedSummary && pending) {
         setSummary(savedSummary);
       }
       const savedId = loadAssessmentIdFromLocalStorage();
-      if (savedId) {
+      if (savedId && pending) {
         setAssessmentId(savedId);
+      }
+      if (!pending) {
+        goToStep(1);
       }
     }
   }, [currentStep, summary]);

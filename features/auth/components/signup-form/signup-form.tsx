@@ -33,28 +33,19 @@ export function SignupForm() {
     ? new URLSearchParams(window.location.search).get("redirect") || "/onboarding"
     : "/onboarding";
 
+  const appOrigin = typeof window !== "undefined" ? window.location.origin : "";
+  const appEmailUrl = process.env.NEXT_PUBLIC_APP_URL || appOrigin;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    setFieldErrors({});
-
-    const errs: Record<string, string> = {};
-    if (!fullName.trim()) errs.fullName = "Full name is required.";
-    if (!email.trim()) errs.email = "Email is required.";
-    const pwErr = validatePassword(password);
-    if (pwErr) errs.password = pwErr;
-    if (Object.keys(errs).length > 0) {
-      setFieldErrors(errs);
-      return;
-    }
-
     setIsLoading(true);
+    setError(null);
 
     const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${location.origin}/api/auth/callback?next=${redirectTo}`,
+        emailRedirectTo: `${appEmailUrl}/api/auth/callback?next=${redirectTo}`,
       },
     });
 
