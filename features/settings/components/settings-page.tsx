@@ -264,6 +264,7 @@ function TeamSection() {
   const [inviteRole, setInviteRole] = useState("member");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(true);
 
   interface Member {
     id: string;
@@ -275,15 +276,33 @@ function TeamSection() {
   }
 
   async function load() {
+    setLoading(true);
     try {
       const res = await fetch("/api/team/members");
       const json = await res.json();
-      if (json.success) {
+      if (json.success && json.data.length > 0) {
         setMembers(json.data);
         const me = json.data.find((m: any) => m.role === "owner" || m.role === "admin");
         setMyRole(me?.role || "member");
+      } else {
+        const biz = getBusinessData() as any;
+        if (biz?.info?.businessName) {
+          await fetch("/api/businesses", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: biz.info.businessName }),
+          });
+          const retry = await fetch("/api/team/members");
+          const retryJson = await retry.json();
+          if (retryJson.success) {
+            setMembers(retryJson.data);
+            const me = retryJson.data.find((m: any) => m.role === "owner" || m.role === "admin");
+            setMyRole(me?.role || "member");
+          }
+        }
       }
     } catch {}
+    setLoading(false);
   }
 
   useEffect(() => { load(); }, []);
@@ -320,6 +339,14 @@ function TeamSection() {
   const canInvite = canManageTeam(myRole as any);
   const hasTeamAccess = canAccess("team_collaboration");
   const currentPlan = getCurrentPlanName();
+
+  if (loading) {
+    return (
+      <Section title="Team" subtitle="Manage who has access to your business.">
+        <p className={styles.emptyText}>Loading team information...</p>
+      </Section>
+    );
+  }
 
   if (!hasTeamAccess) {
     return (

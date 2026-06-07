@@ -51,6 +51,29 @@ export async function POST(request: Request) {
       );
     }
 
+    const { data: existing } = await supabase
+      .from("businesses")
+      .select("id, name")
+      .eq("user_id", user.id)
+      .eq("name", name)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase.from("business_members").insert({
+        business_id: existing.id,
+        user_id: user.id,
+        role: "owner",
+        invited_by: user.id,
+        invited_at: new Date().toISOString(),
+        joined_at: new Date().toISOString(),
+      }).maybeSingle();
+
+      return NextResponse.json<ApiResponse>(
+        { success: true, data: { id: existing.id, name: existing.name } },
+        { status: 200 }
+      );
+    }
+
     const { data, error } = await supabase
       .from("businesses")
       .insert({
