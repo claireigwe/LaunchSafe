@@ -1,75 +1,45 @@
 import React from "react";
 import { useRouter } from "next/navigation";
-import { PlusCircle, Building2 } from "lucide-react";
+import { Building2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function EmptyBusinessState() {
   const router = useRouter();
 
   return (
     <div style={{
+      textAlign: "center",
+      padding: "80px 24px",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      justifyContent: "center",
-      padding: "80px 20px",
-      textAlign: "center",
-      backgroundColor: "var(--color-role-light-surface)",
-      borderRadius: "var(--radius-xl)",
-      border: "1px dashed var(--color-role-light-outlineVariant)",
-      margin: "40px auto",
-      maxWidth: "600px",
-      minHeight: "400px"
+      gap: 12,
+      maxWidth: 600,
+      margin: "0 auto",
     }}>
-      <div style={{
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        backgroundColor: "var(--color-role-light-surfaceContainerHigh)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        marginBottom: 24
-      }}>
-        <Building2 size={32} color="var(--color-role-light-onSurfaceVariant)" />
-      </div>
-      
+      <Building2 size={48} color="var(--color-role-light-outlineVariant)" />
       <h2 style={{
-        fontSize: "var(--font-size-heading-small)",
-        fontWeight: "var(--font-weight-heading-small)",
+        fontFamily: "var(--font-headline-headline-small-fontFamily)",
+        fontSize: 22,
+        fontWeight: 600,
         color: "var(--color-role-light-onSurface)",
-        marginBottom: 12
+        margin: 0,
       }}>
         No Businesses Found
       </h2>
-      
       <p style={{
-        fontSize: "var(--font-size-body-large)",
+        fontFamily: "var(--font-body-body-medium-fontFamily)",
+        fontSize: 15,
         color: "var(--color-role-light-onSurfaceVariant)",
-        marginBottom: 32,
-        maxWidth: 400
+        margin: 0,
       }}>
         You need to add a business before you can manage compliance tasks, generate documents, and track your obligations.
       </p>
-      
-      <button 
-        onClick={() => router.push("/business-onboarding?mode=add-business")} 
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          backgroundColor: "var(--color-role-light-primary)",
-          color: "var(--color-role-light-onPrimary)",
-          padding: "12px 24px",
-          borderRadius: "var(--radius-full)",
-          fontWeight: 500,
-          border: "none",
-          cursor: "pointer",
-          fontSize: 16
-        }}
-      >
-        <PlusCircle size={20} />
-        Add Your First Business
-      </button>
+      <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+        <Button variant="primary" size="md" onClick={() => router.push("/business-onboarding?mode=add-business")}>
+          Add Your First Business
+        </Button>
+      </div>
     </div>
   );
 }
