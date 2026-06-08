@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
     const supabase = createAdminClient() as any;
 
-    let activeBusinessId = businessId;
+    let activeBusinessId: string | null = businessId || null;
     if (activeBusinessId) {
       const { data: b } = await supabase.from("businesses").select("id").eq("id", activeBusinessId).eq("user_id", user.id).single();
       if (!b) activeBusinessId = null;
