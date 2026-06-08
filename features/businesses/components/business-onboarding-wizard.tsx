@@ -67,10 +67,10 @@ export function BusinessOnboardingWizard() {
     if (step > 1) setStep((step - 1) as OnboardingStep);
   }
 
-  const handlePlanChange = useCallback(() => {
+  const handlePlanChange = useCallback(async () => {
     if (selectedPlan) {
       const plans: Record<string, string> = { starter: "Starter", growth: "Growth", enterprise: "Enterprise" };
-      schedulePlanChange(selectedPlan, plans[selectedPlan] || selectedPlan, isAnnual ? "annual" : "monthly");
+      await schedulePlanChange(selectedPlan, plans[selectedPlan] || selectedPlan, isAnnual ? "annual" : "monthly");
       clearUserIntent();
       router.push("/settings/billing");
     }

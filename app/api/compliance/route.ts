@@ -12,7 +12,8 @@ export async function GET(request: Request) {
 
     let query = (supabase as any)
       .from("compliance_tasks")
-      .select("*");
+      .select("*, businesses!inner(user_id)")
+      .eq("businesses.user_id", user.id);
 
     if (businessId) query = query.eq("business_id", businessId);
 
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
     const user = await getRequiredUser();
     const supabase = await createClient() as any;
     const body = await request.json();
-    const { title, description, dueDate, priority, businessId } = body;
+    const { id, title, description, dueDate, priority, businessId } = body;
 
     if (!title || !businessId) {
       return NextResponse.json<ApiResponse>(
@@ -48,6 +49,7 @@ export async function POST(request: Request) {
     const { data, error } = await (supabase as any)
       .from("compliance_tasks")
       .insert({
+        id: id || undefined,
         user_id: user.id,
         business_id: businessId,
         requirement_name: title,
@@ -78,6 +80,17 @@ export async function POST(request: Request) {
   }
 }
 
+async function verifyTaskOwnership(supabase: any, taskId: string, userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("compliance_tasks")
+    .select("id, businesses!inner(user_id)")
+    .eq("id", taskId)
+    .eq("businesses.user_id", userId)
+    .maybeSingle();
+
+  return !!data;
+}
+
 export async function PATCH(request: Request) {
   try {
     const user = await getRequiredUser();
@@ -89,6 +102,13 @@ export async function PATCH(request: Request) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: { message: "id is required" } },
         { status: 400 }
+      );
+    }
+
+    if (!(await verifyTaskOwnership(supabase, id, user.id))) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: "Task not found" } },
+        { status: 404 }
       );
     }
 
@@ -134,6 +154,13 @@ export async function DELETE(request: Request) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: { message: "id is required" } },
         { status: 400 }
+      );
+    }
+
+    if (!(await verifyTaskOwnership(supabase, id, user.id))) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: "Task not found" } },
+        { status: 404 }
       );
     }
 

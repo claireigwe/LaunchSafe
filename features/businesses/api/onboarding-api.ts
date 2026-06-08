@@ -1,5 +1,6 @@
 const INTENT_KEY = "launchsafe-intent";
 const BUSINESS_DATA_KEY = "launchsafe-business-data";
+const ALL_BIZ_KEY = "launchsafe-all-businesses";
 
 /* ----- API helpers ----- */
 async function apiGet<T>(url: string): Promise<T | null> {
@@ -72,39 +73,51 @@ export interface StoredBusiness {
   fullData?: any;
 }
 
+function loadCachedBusinesses(): StoredBusiness[] {
+  try {
+    const raw = localStorage.getItem(ALL_BIZ_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function cacheBusinesses(list: StoredBusiness[]): void {
+  try { localStorage.setItem(ALL_BIZ_KEY, JSON.stringify(list)); } catch {}
+}
+
 export async function fetchAllBusinesses(): Promise<StoredBusiness[]> {
   try {
     const data: any[] | null = await apiGet("/api/businesses");
-    if (!data) return [];
-    
-    return data.map((b) => {
-      let type = "";
-      let state = "";
-      let industry = "";
-      let fullData: any = null;
-      try {
-        if (b.description) {
-          const parsed = JSON.parse(b.description);
-          type = parsed.type || "";
-          state = parsed.state || "";
-          industry = parsed.industry || "";
-          fullData = parsed.fullData || null;
-        }
-      } catch {
-        // Ignore parse error
-      }
-      return {
-        id: b.id,
-        name: b.name,
-        industry: industry,
-        type: type,
-        state: state,
-        createdAt: b.createdAt,
-        fullData: fullData,
-      };
-    });
+    if (data) {
+      const mapped = data.map((b) => {
+        let type = "";
+        let state = "";
+        let industry = "";
+        let fullData: any = null;
+        try {
+          if (b.description) {
+            const parsed = JSON.parse(b.description);
+            type = parsed.type || "";
+            state = parsed.state || "";
+            industry = parsed.industry || "";
+            fullData = parsed.fullData || null;
+          }
+        } catch {}
+        return {
+          id: b.id,
+          name: b.name,
+          industry: industry,
+          type: type,
+          state: state,
+          createdAt: b.createdAt,
+          fullData: fullData,
+        };
+      });
+      cacheBusinesses(mapped);
+      return mapped;
+    }
+    return loadCachedBusinesses();
   } catch {
-    return [];
+    return loadCachedBusinesses();
   }
 }
 
@@ -112,11 +125,23 @@ export async function addBusiness(data: Record<string, unknown>): Promise<Stored
   const info: any = data.info || {};
   const name = info.businessName || "Unnamed Business";
 
+  const ops: any = data.operations || {};
+  const st: any = data.status || {};
   const result: any = await apiPost("/api/businesses", {
     name,
     description: JSON.stringify({ industry: info.industry || "", type: info.businessType || "", state: info.state || "", fullData: data }),
     industrySlug: info.industry || "",
     stateSlug: info.state || "",
+    website: info.website || null,
+    employeeCount: ops.employeeCount || null,
+    details: {
+      businessType: info.businessType || "",
+      isRegistered: st.isRegistered ?? null,
+      hasCAC: st.hasCAC ?? null,
+      cacNumber: st.cacNumber || null,
+      hasPhysicalLocation: ops.hasPhysicalLocation ?? null,
+      hasOnlineOperations: ops.hasOnlineOperations ?? null,
+    },
   });
 
   if (!result || !result.id) return null;

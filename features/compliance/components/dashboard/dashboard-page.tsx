@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ClipboardList, Plus, AlertTriangle, FileText, BarChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDashboard } from "../../hooks/use-dashboard";
+import { useHasBusiness } from "@/features/businesses/hooks/use-has-business";
 import { EmptyBusinessState } from "@/features/businesses/components/empty-business-state";
 import { HealthScore } from "./health-score";
 import { RegulatoryUpdates } from "./regulatory-updates";
@@ -34,18 +35,20 @@ export function DashboardPage() {
   const [savedTasks, setSavedTasks] = useState<ComplianceTaskItem[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [showUploadDoc, setShowUploadDoc] = useState(false);
+  const hasBusiness = useHasBusiness();
   const [regUpdates, setRegUpdates] = useState(getRegulatoryUpdates().slice(0, 3));
-  const [recentActivity, setRecentActivity] = useState<ActivityEntry[]>(getRecentActivity(5));
+  const [recentActivity, setRecentActivity] = useState<ActivityEntry[]>([]);
   const subscription = getSubscription();
   const { data: uploadedDocs = [] } = useDocuments();
   const uploadMutation = useUploadDocument();
   const recentDocs = uploadedDocs.slice(0, 4);
 
-  function refreshDashboard() {
-    reconcileTaskStatuses();
+  async function refreshDashboard() {
+    await reconcileTaskStatuses();
     setSavedTasks(loadTasks());
     setRegUpdates(getRegulatoryUpdates().slice(0, 3));
-    setRecentActivity(getRecentActivity(5));
+    const acts = await getRecentActivity(5);
+    setRecentActivity(acts);
   }
 
   useEffect(() => {
@@ -268,6 +271,10 @@ function EmptyTasks({ onAddTask }: { onAddTask: () => void }) {
   }
 
   const isSetup = isInSetupMode();
+
+  if (!isSetup && hasBusiness === false) {
+    return <EmptyBusinessState />;
+  }
 
   return (
     <SetupOverlay>

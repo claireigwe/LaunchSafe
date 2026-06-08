@@ -42,7 +42,7 @@ export function TaskListPage() {
   const hasBusiness = useHasBusiness();
 
   useEffect(() => {
-    reconcileTaskStatuses();
+    reconcileTaskStatuses().catch(() => {});
     trackEvent("Compliance Tasks Viewed");
   }, []);
 

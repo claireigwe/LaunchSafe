@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { initiateSubscriptionPayment, saveBusinessData, addBusiness } from "../../api/onboarding-api";
-import { saveSubscription, addPayment } from "@/features/billing/api/billing-api";
+import { saveSubscription } from "@/features/billing/api/billing-api";
 import { logActivity } from "@/features/activity/api/activity-api";
 import { audit } from "@/features/audit/api/audit-api";
 import styles from "./payment-processing.module.css";
@@ -55,15 +55,6 @@ export function PaymentProcessing({ planId, isAnnual, onboardingData, isChangePl
       });
       logActivity("subscription_activated", "Subscription Activated", `${plan!.name} Plan - ${billingCycle === "annual" ? "Annual" : "Monthly"}`);
       audit.subscriptionActivated(`${plan!.name} (${billingCycle})`);
-      addPayment({
-        amount: billingCycle === "annual" ? plan!.annualTotal : plan!.monthlyPrice,
-        currency: "NGN",
-        status: "paid",
-        paymentType: "subscription",
-        reference: `SUB-${Date.now().toString(36).toUpperCase()}`,
-        description: `${plan!.name} Plan - ${billingCycle === "annual" ? "Annual" : "Monthly"}`,
-        createdAt: now.toISOString(),
-      });
       const { authorizationUrl } = await initiateSubscriptionPayment(planId, billingCycle);
       window.location.href = authorizationUrl;
     } catch {

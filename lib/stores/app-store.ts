@@ -17,8 +17,30 @@ function saveActiveBusinessId(id: string | null): void {
   } catch {}
 }
 
+function syncToServer(id: string | null): void {
+  try {
+    fetch("/api/user/preferences", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ preferredBusinessId: id }),
+    }).catch(() => {});
+  } catch {}
+}
+
 export function getActiveBusinessId(): string | null {
   return loadActiveBusinessId();
+}
+
+export async function fetchPreferredBusiness(): Promise<string | null> {
+  try {
+    const res = await fetch("/api/user/preferences");
+    const json = await res.json();
+    if (json.success && json.data?.preferredBusinessId) {
+      saveActiveBusinessId(json.data.preferredBusinessId);
+      return json.data.preferredBusinessId;
+    }
+    return null;
+  } catch { return null; }
 }
 
 interface AppState {
@@ -34,6 +56,7 @@ export const useAppStore = create<AppState>((set) => ({
   activeBusinessId: loadActiveBusinessId(),
   setActiveBusinessId: (id) => {
     saveActiveBusinessId(id);
+    syncToServer(id);
     set({ activeBusinessId: id });
   },
   sidebarCollapsed: false,

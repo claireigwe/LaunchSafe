@@ -64,20 +64,22 @@ export function AssessmentWizard() {
 
   useEffect(() => {
     if (currentStep === "summary" && !summary) {
-      const savedSummary = loadSummaryFromLocalStorage();
-      const pending = typeof window !== "undefined"
-        ? localStorage.getItem("launchsafe-pending-unlock")
-        : null;
-      if (savedSummary && pending) {
-        setSummary(savedSummary);
-      }
-      const savedId = loadAssessmentIdFromLocalStorage();
-      if (savedId && pending) {
-        setAssessmentId(savedId);
-      }
-      if (!pending) {
-        goToStep(1);
-      }
+      (async () => {
+        const savedSummary = await loadSummaryFromLocalStorage();
+        const pending = typeof window !== "undefined"
+          ? localStorage.getItem("launchsafe-pending-unlock")
+          : null;
+        if (savedSummary && pending) {
+          setSummary(savedSummary);
+        }
+        const savedId = loadAssessmentIdFromLocalStorage();
+        if (savedId && pending) {
+          setAssessmentId(savedId);
+        }
+        if (!pending) {
+          goToStep(1);
+        }
+      })();
     }
   }, [currentStep, summary]);
 
@@ -85,7 +87,7 @@ export function AssessmentWizard() {
     trackEvent("Assessment Completed");
     const generatedSummary = generateAssessmentSummary(data);
     setSummary(generatedSummary);
-    saveSummaryToLocalStorage(generatedSummary);
+    await saveSummaryToLocalStorage(generatedSummary);
 
     try {
       const assessment = await createAssessment(data);
@@ -102,7 +104,7 @@ export function AssessmentWizard() {
     trackEvent("Unlock Report Clicked");
 
     const id = assessmentId || loadAssessmentIdFromLocalStorage();
-    const savedSummary = summary || loadSummaryFromLocalStorage();
+    const savedSummary = summary || await loadSummaryFromLocalStorage();
     
     if (savedSummary) {
       savePendingUnlockIntent({ summary: savedSummary, assessmentId: id });

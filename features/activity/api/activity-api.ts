@@ -20,10 +20,18 @@ async function apiGet<T>(url: string): Promise<T | null> {
   try { const r = await fetch(url); const j = await r.json(); return j.success ? j.data : null; } catch { return null; }
 }
 
-export function getRecentActivity(limit = 5): ActivityEntry[] {
-  apiGet<ActivityEntry[]>("/api/activity").then((server) => {
-    if (server) saveLocal(server);
-  }).catch(() => {});
+async function apiPost(url: string, body: any): Promise<void> {
+  try { await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); } catch {}
+}
+
+export async function getRecentActivity(limit = 5): Promise<ActivityEntry[]> {
+  try {
+    const server = await apiGet<ActivityEntry[]>("/api/activity");
+    if (server) {
+      saveLocal(server);
+      return server.slice(0, limit);
+    }
+  } catch {}
   return loadLocal().slice(0, limit);
 }
 
@@ -36,4 +44,5 @@ export function logActivity(
   entries.unshift({ id: genId(), type, title, description, timestamp: new Date().toISOString() });
   if (entries.length > 50) entries.length = 50;
   saveLocal(entries);
+  apiPost("/api/activity", { type, title, description });
 }

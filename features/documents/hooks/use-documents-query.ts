@@ -14,6 +14,7 @@ export function useDocuments() {
     queryFn: async () => {
       return getDocuments();
     },
+    staleTime: 30_000,
   });
 }
 
@@ -24,6 +25,7 @@ export function useGeneratedDocuments() {
     queryFn: async () => {
       return getGeneratedDocuments();
     },
+    staleTime: 30_000,
   });
 }
 

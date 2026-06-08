@@ -7,51 +7,99 @@ const STEP_KEY = "launchsafe-assessment-step";
 const SUMMARY_KEY = "launchsafe-assessment-summary";
 const ASSESSMENT_ID_KEY = "launchsafe-assessment-id";
 
-export function saveAssessmentToLocalStorage(data: WizardData, step: WizardStep): void {
+async function apiPost<T>(url: string, body: any): Promise<T | null> {
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const json = await res.json();
+    return json.success ? json.data : null;
+  } catch {
+    return null;
+  }
+}
+
+async function apiGet<T>(url: string): Promise<T | null> {
+  try {
+    const res = await fetch(url);
+    const json = await res.json();
+    return json.success ? json.data : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveAssessmentToLocalStorage(data: WizardData, step: WizardStep): Promise<void> {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     localStorage.setItem(STEP_KEY, String(step));
   } catch {
   }
+
+  const assessmentId = loadAssessmentIdFromLocalStorage();
+  const result = await apiPost<{ id: string }>("/api/assessments/wizard", { assessmentId, wizardData: data, wizardStep: step });
+  if (result?.id && !assessmentId) {
+    saveAssessmentIdToLocalStorage(result.id);
+  }
 }
 
-export function loadAssessmentFromLocalStorage(): {
+export async function loadAssessmentFromLocalStorage(): Promise<{
   data: WizardData | null;
   step: WizardStep;
-} {
+}> {
   try {
     const dataRaw = localStorage.getItem(STORAGE_KEY);
     const stepRaw = localStorage.getItem(STEP_KEY);
 
-    if (!dataRaw) {
-      return { data: null, step: 1 };
+    if (dataRaw) {
+      const parsedStep = parseInt(stepRaw || "", 10);
+      return {
+        data: JSON.parse(dataRaw),
+        step: isNaN(parsedStep) ? (stepRaw as WizardStep) || 1 : (parsedStep as WizardStep),
+      };
     }
 
-    const parsedStep = parseInt(stepRaw || "", 10);
-    const step: WizardStep = isNaN(parsedStep)
-      ? (stepRaw as WizardStep) || 1
-      : (parsedStep as WizardStep);
+    const server = await apiGet<{ assessmentId: string; wizardData: any; wizardStep: string }>("/api/assessments/wizard");
+    if (server?.wizardData && server?.wizardStep) {
+      saveAssessmentIdToLocalStorage(server.assessmentId);
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(server.wizardData)); localStorage.setItem(STEP_KEY, server.wizardStep); } catch {}
+      return {
+        data: server.wizardData as WizardData,
+        step: (parseInt(server.wizardStep, 10) || server.wizardStep) as WizardStep,
+      };
+    }
 
-    return {
-      data: JSON.parse(dataRaw),
-      step,
-    };
+    return { data: null, step: 1 };
   } catch {
     return { data: null, step: 1 };
   }
 }
 
-export function saveSummaryToLocalStorage(summary: AssessmentSummary): void {
+export async function saveSummaryToLocalStorage(summary: AssessmentSummary): Promise<void> {
   try {
     localStorage.setItem(SUMMARY_KEY, JSON.stringify(summary));
   } catch {
   }
+
+  const assessmentId = loadAssessmentIdFromLocalStorage();
+  const result = await apiPost<{ id: string }>("/api/assessments/wizard", { assessmentId, summary });
+  if (result?.id && !assessmentId) {
+    saveAssessmentIdToLocalStorage(result.id);
+  }
 }
 
-export function loadSummaryFromLocalStorage(): AssessmentSummary | null {
+export async function loadSummaryFromLocalStorage(): Promise<AssessmentSummary | null> {
   try {
     const raw = localStorage.getItem(SUMMARY_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (raw) return JSON.parse(raw);
+    const server = await apiGet<{ assessmentId: string; summary: any }>("/api/assessments/wizard");
+    if (server?.summary) {
+      try { localStorage.setItem(SUMMARY_KEY, JSON.stringify(server.summary)); } catch {}
+      return server.summary as AssessmentSummary;
+    }
+    return null;
   } catch {
     return null;
   }
@@ -122,10 +170,11 @@ export function clearAssessmentFromLocalStorage(): void {
 export async function createAssessment(
   data: WizardData
 ): Promise<Assessment> {
+  const assessmentId = loadAssessmentIdFromLocalStorage();
   const res = await fetch("/api/assessments", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ data }),
+    body: JSON.stringify({ data, assessmentId }),
   });
 
   const json: ApiResponse<Assessment> = await res.json();
@@ -134,6 +183,7 @@ export async function createAssessment(
     throw new Error(json.error.message);
   }
 
+  if (json.data?.id) saveAssessmentIdToLocalStorage(json.data.id);
   return json.data;
 }
 

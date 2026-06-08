@@ -8,6 +8,8 @@ import { TaskCreateModal } from "../tasks/task-create-modal";
 import { TaskDetailModal } from "../tasks/task-detail-modal";
 import { loadTasks, createTask, updateTask, deleteTask, reconcileTaskStatuses } from "../../api/tasks-api";
 import { SetupOverlay } from "@/features/billing/components/setup-overlay";
+import { useHasBusiness } from "@/features/businesses/hooks/use-has-business";
+import { EmptyBusinessState } from "@/features/businesses/components/empty-business-state";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import type { ComplianceTaskItem, CreateTaskInput, UpdateTaskInput } from "../../types/tasks.types";
 import styles from "./calendar-page.module.css";
@@ -21,9 +23,10 @@ export function CalendarPage() {
   const [cursor, setCursor] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
   const [showCreate, setShowCreate] = useState(false);
   const [selectedTask, setSelectedTask] = useState<ComplianceTaskItem | null>(null);
+  const hasBusiness = useHasBusiness();
 
   useEffect(() => {
-    reconcileTaskStatuses();
+    reconcileTaskStatuses().catch(() => {});
     setTasks(loadTasks());
     trackEvent("Calendar Viewed");
   }, []);
@@ -85,6 +88,10 @@ export function CalendarPage() {
         return start;
       })
     : [];
+
+  if (hasBusiness === false) {
+    return <EmptyBusinessState />;
+  }
 
   return (
     <SetupOverlay>

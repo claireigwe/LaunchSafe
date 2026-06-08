@@ -37,15 +37,17 @@ export function useAssessmentWizard(): UseAssessmentWizardReturn {
 
   useEffect(() => {
     if (!initialized) {
-      const saved = loadAssessmentFromLocalStorage();
-      if (saved.data) {
-        setDataState(saved.data);
-        const restoredStep = typeof saved.step === "number" && saved.step >= 1 && saved.step <= 5
-          ? saved.step
-          : 1;
-        setCurrentStep(restoredStep as WizardStep);
-      }
-      setInitialized(true);
+      (async () => {
+        const saved = await loadAssessmentFromLocalStorage();
+        if (saved.data) {
+          setDataState(saved.data);
+          const restoredStep = typeof saved.step === "number" && saved.step >= 1 && saved.step <= 5
+            ? saved.step
+            : 1;
+          setCurrentStep(restoredStep as WizardStep);
+        }
+        setInitialized(true);
+      })();
     }
   }, [initialized]);
 

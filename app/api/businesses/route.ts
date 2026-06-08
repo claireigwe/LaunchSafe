@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import type { ApiResponse } from "@/types/api.types";
 
 export async function GET() {
@@ -25,6 +25,7 @@ export async function GET() {
       status: row.status,
       employeeCount: row.employee_count,
       website: row.website,
+      details: row.details || {},
       createdAt: row.created_at,
     }));
 
@@ -42,12 +43,39 @@ export async function POST(request: Request) {
     const user = await getRequiredUser();
     const supabase = await createClient() as any;
     const body = await request.json();
-    const { name, description, industrySlug, stateSlug } = body;
+    const { name, description, industrySlug, stateSlug, website, employeeCount, details } = body;
 
     if (!name) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: { message: "Business name is required" } },
         { status: 400 }
+      );
+    }
+
+    const adminSupabase = createAdminClient() as any;
+    const { data: bizCount } = await adminSupabase
+      .from("businesses")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id);
+
+    const { data: sub } = await adminSupabase
+      .from("subscriptions")
+      .select("subscription_plans!inner(slug)")
+      .eq("user_id", user.id)
+      .in("status", ["active", "trial"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const planSlug = sub?.subscription_plans?.slug || "starter";
+    const limits: Record<string, number> = { starter: 1, enterprise: 20 };
+    const limit = limits[planSlug] || 1;
+    const count = bizCount?.length || 0;
+
+    if (count >= limit) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: `Your plan allows up to ${limit} business${limit > 1 ? "es" : ""}. Upgrade to add more.` } },
+        { status: 403 }
       );
     }
 
@@ -98,6 +126,9 @@ export async function POST(request: Request) {
         user_id: user.id,
         name,
         description: description || null,
+        website: website || null,
+        employee_count: employeeCount ? parseInt(employeeCount, 10) || null : null,
+        details: details || {},
         status: "active",
         industry_id,
         state_id,

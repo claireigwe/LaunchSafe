@@ -36,7 +36,7 @@ export function FullReportScreen() {
           return;
         }
 
-        const saved = loadAssessmentFromLocalStorage();
+        const saved = await loadAssessmentFromLocalStorage();
         const assessmentData = saved.data;
 
         const res = await fetch(`/api/assessments/${assessmentId}/verify`, {
@@ -57,16 +57,6 @@ export function FullReportScreen() {
         trackEvent("Payment Completed", { assessmentId });
         localStorage.removeItem("launchsafe-pending-unlock");
 
-        try {
-          const { addAssessmentPurchase } = await import("@/features/billing/api/billing-api");
-          addAssessmentPurchase({
-            id: assessmentId,
-            reportName: "Full Compliance Report",
-            amount: 10000,
-            status: "paid",
-            createdAt: new Date().toISOString(),
-          });
-        } catch {};
       } catch {
         setError("An error occurred during verification");
       } finally {

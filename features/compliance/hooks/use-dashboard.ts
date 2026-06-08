@@ -18,7 +18,7 @@ export function useDashboard() {
 
   useEffect(() => {
     trackEvent("Dashboard Viewed");
-    reconcileTaskStatuses();
+    reconcileTaskStatuses().catch(() => {});
     const all = loadTasks();
     setTasks(all);
 

@@ -86,20 +86,6 @@ export function getAssessmentPurchases(): SavedAssessmentPurchase[] {
   return loadPurchases().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
-export function addPayment(p: Omit<SavedPayment, "id">): SavedPayment {
-  const items = loadPayments();
-  const payment: SavedPayment = { id: genId(), ...p };
-  items.unshift(payment);
-  savePayments(items);
-  return payment;
-}
-
-export function addAssessmentPurchase(p: SavedAssessmentPurchase): void {
-  const items = loadPurchases();
-  items.unshift(p);
-  savePurchases(items);
-}
-
 export async function cancelSubscription(): Promise<void> {
   await apiPatch("/api/billing/subscription", { action: "cancel" });
   const sub = loadSub();
@@ -113,7 +99,8 @@ export async function cancelSubscription(): Promise<void> {
   }
 }
 
-export function schedulePlanChange(planId: string, planName: string, billingCycle: "monthly" | "annual"): void {
+export async function schedulePlanChange(planId: string, planName: string, billingCycle: "monthly" | "annual"): Promise<void> {
+  await apiPatch("/api/billing/subscription", { action: "schedule_change", planId, planName, billingCycle });
   const sub = loadSub();
   if (sub) {
     sub.pendingPlanId = planId;
@@ -123,7 +110,8 @@ export function schedulePlanChange(planId: string, planName: string, billingCycl
   }
 }
 
-export function clearPendingChange(): void {
+export async function clearPendingChange(): Promise<void> {
+  await apiPatch("/api/billing/subscription", { action: "clear_pending" });
   const sub = loadSub();
   if (sub) {
     sub.pendingPlanId = null;

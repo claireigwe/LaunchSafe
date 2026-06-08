@@ -55,7 +55,7 @@ async function apiDelete(url: string, body: any): Promise<boolean> {
 }
 
 function genId(): string {
-  return `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  try { return crypto.randomUUID(); } catch { return `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
 }
 
 function computeInitialStatus(dueDate: string | undefined | null): "pending" | "overdue" {
@@ -109,8 +109,9 @@ export function saveTasks(tasks: ComplianceTaskItem[], businessId?: string): voi
 export async function createTask(input: CreateTaskInput, businessId?: string): Promise<ComplianceTaskItem> {
   const bid = businessId || getActiveBusinessId() || "";
   const now = new Date().toISOString();
+  const taskId = genId();
   const localTask: ComplianceTaskItem = {
-    id: genId(),
+    id: taskId,
     businessId: bid,
     title: input.title,
     description: input.description || "",
@@ -126,7 +127,7 @@ export async function createTask(input: CreateTaskInput, businessId?: string): P
     updatedAt: now,
   };
 
-  const server = await apiPost<ComplianceTaskItem>("/api/compliance", { ...input, businessId: bid });
+  const server = await apiPost<ComplianceTaskItem>("/api/compliance", { ...input, businessId: bid, id: taskId });
   if (server) {
     const tasks = loadLocal();
     tasks.push(server);
@@ -192,7 +193,7 @@ export async function addSuggestedTask(suggested: { title: string; description: 
   );
 }
 
-export function reconcileTaskStatuses(): void {
+export async function reconcileTaskStatuses(): Promise<void> {
   const tasks = loadLocal();
   const now = new Date();
   now.setHours(0, 0, 0, 0);
@@ -210,5 +211,5 @@ export function reconcileTaskStatuses(): void {
     }
   }
   if (changed) saveLocal(tasks);
-  syncDeadlineNotifications();
+  syncDeadlineNotifications().catch(() => {});
 }

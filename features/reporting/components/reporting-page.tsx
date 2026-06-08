@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { getSubscription } from "@/features/billing/api/billing-api";
 import { generateReportData, canAccessReporting, canExport } from "../api/reporting-engine";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { useHasBusiness } from "@/features/businesses/hooks/use-has-business";
+import { EmptyBusinessState } from "@/features/businesses/components/empty-business-state";
 import { HealthTrendChart } from "./health-trend-chart";
 import { ComplianceExecutionSection } from "./compliance-execution";
 import { RiskAssessmentSection } from "./risk-assessment";
@@ -22,12 +24,17 @@ export function ReportingPage() {
   const planId = sub?.planId || "starter";
   const hasAccess = canAccessReporting(planId);
   const canExportReport = canExport(planId);
+  const hasBusiness = useHasBusiness();
   const [data, setData] = useState<ReportData | null>(null);
 
   useEffect(() => {
     generateReportData().then(setData);
     trackEvent("Advanced Reporting Viewed");
   }, []);
+
+  if (hasBusiness === false) {
+    return <EmptyBusinessState />;
+  }
 
   if (!hasAccess) {
     return (

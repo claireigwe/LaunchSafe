@@ -110,7 +110,7 @@ export function triggerWelcome(): void {
   fireEmail("welcome");
 }
 
-export function syncDeadlineNotifications(): void {
+export async function syncDeadlineNotifications(): Promise<void> {
   const tasks = loadTasks();
   const now = new Date();
   now.setHours(0, 0, 0, 0);
@@ -124,31 +124,30 @@ export function syncDeadlineNotifications(): void {
     const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
     if (t.status === "overdue") {
-      const existing = loadNotificationsForTask(t.id);
+      const existing = await loadNotificationsForTask(t.id);
       if (!existing.some((n) => n.title === "Task Overdue")) {
         triggerTaskOverdue(t.title);
       }
     } else if (diffDays <= 0) {
-      const existing = loadNotificationsForTask(t.id);
+      const existing = await loadNotificationsForTask(t.id);
       if (!existing.some((n) => n.title.includes("Due"))) {
-        const title = "Due Today";
-        createNotification(title, `${t.title} is due today.`, "deadline", "critical", "/compliance", "View Task");
+        createNotification("Due Today", `${t.title} is due today.`, "deadline", "critical", "/compliance", "View Task");
         fireEmail("deadline_today", { title: t.title });
       }
     } else if (diffDays === 1) {
-      const existing = loadNotificationsForTask(t.id);
+      const existing = await loadNotificationsForTask(t.id);
       if (!existing.some((n) => n.title.includes("Due"))) {
         createNotification("Due Tomorrow", `${t.title} is due tomorrow.`, "deadline", "critical", "/compliance", "View Task");
         fireEmail("deadline_due_soon", { title: t.title, days: 1 });
       }
     } else if (diffDays <= 3) {
-      const existing = loadNotificationsForTask(t.id);
+      const existing = await loadNotificationsForTask(t.id);
       if (!existing.some((n) => n.title === "Due Soon")) {
         createNotification("Due Soon", `${t.title} is due in ${diffDays} days.`, "deadline", "warning", "/compliance", "View Task");
         fireEmail("deadline_due_soon", { title: t.title, days: diffDays });
       }
     } else if (diffDays <= 7) {
-      const existing = loadNotificationsForTask(t.id);
+      const existing = await loadNotificationsForTask(t.id);
       if (!existing.some((n) => n.title === "Deadline Approaching")) {
         createNotification("Deadline Approaching", `${t.title} is due in ${diffDays} days.`, "deadline", "warning", "/compliance", "View Task");
         fireEmail("deadline_approaching", { title: t.title, days: diffDays });
@@ -157,10 +156,14 @@ export function syncDeadlineNotifications(): void {
   }
 }
 
-function loadNotificationsForTask(taskId: string): any[] {
+async function loadNotificationsForTask(taskId: string): Promise<any[]> {
   try {
-    const key = "launchsafe-notifications";
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw).filter((n: any) => n.message?.includes(taskId) || n.title?.match(/Due|Overdue|Deadline/)) : [];
+    const res = await fetch("/api/notifications");
+    const json = await res.json();
+    if (!json.success) return [];
+    const all = json.data || [];
+    return all.filter((n: any) =>
+      n.message?.includes(taskId) || n.title?.match(/Due|Overdue|Deadline/)
+    );
   } catch { return []; }
 }

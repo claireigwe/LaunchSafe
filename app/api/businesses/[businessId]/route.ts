@@ -37,6 +37,7 @@ export async function GET(
         status: data.status,
         employeeCount: data.employee_count,
         website: data.website,
+        details: data.details || {},
         createdAt: data.created_at,
       },
     });
@@ -55,13 +56,23 @@ export async function PATCH(
   try {
     const user = await getRequiredUser();
     const { businessId } = await params;
-    const supabase = await createClient() as any;
+    const supabase = createAdminClient() as any;
     const body = await request.json();
 
     const updates: any = {};
-    if (body.name) updates.name = body.name;
+    if (body.name !== undefined) updates.name = body.name;
     if (body.description !== undefined) updates.description = body.description;
     if (body.website !== undefined) updates.website = body.website;
+    if (body.employeeCount !== undefined) updates.employee_count = parseInt(body.employeeCount, 10) || null;
+    if (body.details !== undefined) updates.details = body.details;
+    if (body.industrySlug) {
+      const { data: ind } = await supabase.from("industries").select("id").eq("slug", body.industrySlug).maybeSingle();
+      if (ind) updates.industry_id = ind.id;
+    }
+    if (body.stateSlug) {
+      const { data: st } = await supabase.from("states").select("id").ilike("name", body.stateSlug).maybeSingle();
+      if (st) updates.state_id = st.id;
+    }
 
     const { data, error } = await supabase
       .from("businesses")

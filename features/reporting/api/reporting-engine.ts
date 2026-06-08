@@ -20,10 +20,10 @@ export async function generateReportData(): Promise<ReportData> {
     healthTrend: computeHealthTrend(),
     taskAnalytics: computeTaskAnalytics(),
     deadlinePerformance: computeDeadlinePerformance(),
-    riskReport: computeRiskReport(docs),
-    documentReport: computeDocumentReport(docs),
+    riskReport: await computeRiskReport(docs),
+    documentReport: await computeDocumentReport(docs),
     comparisons: await computeComparisons(),
-    activityReport: computeActivityReport(docs),
+    activityReport: await computeActivityReport(docs),
   };
 }
 
@@ -74,12 +74,12 @@ function computeDeadlinePerformance(): DeadlinePerformance {
   return { met, missed, upcoming, rating };
 }
 
-function computeRiskReport(docs: any[]): RiskReport {
+async function computeRiskReport(docs: any[]): Promise<RiskReport> {
   const tasks = loadTasks();
   const overdue = tasks.filter((t) => t.status === "overdue").length;
   const missed = tasks.filter((t) => t.status === "overdue" && t.dueDate).length;
   const hasDocs = docs.length;
-  const activity = getRecentActivity(30).length;
+  const activity = (await getRecentActivity(30)).length;
 
   let score = 0;
   const factors: string[] = [];
@@ -159,8 +159,8 @@ async function computeComparisons(): Promise<BusinessComparison[]> {
   });
 }
 
-function computeActivityReport(docs: any[]): ActivityReport {
-  const activity = getRecentActivity(100);
+async function computeActivityReport(docs: any[]): Promise<ActivityReport> {
+  const activity = await getRecentActivity(100);
   const tasks = loadTasks();
 
   const tasksCreated = activity.filter((a) => a.type === "task_created").length + tasks.length;

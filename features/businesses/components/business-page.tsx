@@ -25,6 +25,39 @@ export function BusinessPage() {
 
   const [saved, setSaved] = useState<any>(null);
 
+  async function loadBusinessFromServer(id: string): Promise<any> {
+    try {
+      const res = await fetch(`/api/businesses/${id}`);
+      const json = await res.json();
+      if (json.success && json.data) {
+        const d = json.data;
+        const det: any = d.details || {};
+        return {
+          info: {
+            businessName: d.name || "",
+            businessType: det.businessType || "",
+            industry: d.industryId || "",
+            state: d.stateId || "",
+            website: d.website || "",
+            description: d.description || "",
+          },
+          status: {
+            isRegistered: det.isRegistered ?? null,
+            hasCAC: det.hasCAC ?? null,
+            cacNumber: det.cacNumber || null,
+          },
+          operations: {
+            employeeCount: d.employeeCount ? String(d.employeeCount) : "",
+            hasPhysicalLocation: det.hasPhysicalLocation ?? null,
+            hasOnlineOperations: det.hasOnlineOperations ?? null,
+          },
+          _serverId: id,
+        };
+      }
+    } catch {}
+    return null;
+  }
+
   useEffect(() => {
     async function loadData() {
       const all = await fetchAllBusinesses();
@@ -37,9 +70,11 @@ export function BusinessPage() {
       }
       
       setSelectedId(initialId);
-      if (initialId) {
-        const data = initialId === "biz-migrated" ? getBusinessData() : getBusinessDataById(initialId);
-        setSaved(data as any);
+      if (initialId && initialId !== "biz-migrated") {
+        const server = await loadBusinessFromServer(initialId);
+        setSaved(server || getBusinessDataById(initialId) as any);
+      } else if (initialId) {
+        setSaved(getBusinessData() as any);
       }
     }
     loadData();
@@ -47,8 +82,13 @@ export function BusinessPage() {
 
   useEffect(() => {
     if (!selectedId) return;
-    const data = selectedId === "biz-migrated" ? getBusinessData() : getBusinessDataById(selectedId);
-    setSaved(data as any);
+    if (selectedId === "biz-migrated") {
+      setSaved(getBusinessData() as any);
+    } else {
+      loadBusinessFromServer(selectedId).then((server) => {
+        setSaved(server || getBusinessDataById(selectedId) as any);
+      });
+    }
   }, [selectedId]);
 
   const info = saved?.info || null;
@@ -96,6 +136,30 @@ export function BusinessPage() {
     } else if (selectedId) {
       saveBusinessDataForBusiness(selectedId, updated);
     }
+
+    if (selectedId && selectedId !== "biz-migrated") {
+      fetch(`/api/businesses/${selectedId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.businessName,
+          website: formData.website || null,
+          employeeCount: formData.employeeCount || null,
+          description: formData.description || null,
+          industrySlug: formData.industry || null,
+          stateSlug: formData.state || null,
+          details: {
+            businessType: formData.businessType,
+            isRegistered: formData.isRegistered,
+            hasCAC: formData.hasCAC,
+            cacNumber: formData.cacNumber,
+            hasPhysicalLocation: formData.hasPhysicalLocation,
+            hasOnlineOperations: formData.hasOnlineOperations,
+          },
+        }),
+      }).catch(() => {});
+    }
+
     setShowEdit(false);
     window.location.reload();
   }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
 import { chatWithDeepSeek } from "@/features/ai/api/deepseek";
+import { requireFeature } from "@/lib/billing/require-feature";
 import type { ApiResponse } from "@/types/api.types";
 
 const SYSTEM_PROMPT = `You are a compliance assistant for LaunchSafe, a compliance intelligence platform for African businesses.
@@ -15,6 +16,9 @@ RULES:
 export async function POST(request: Request) {
   try {
     const user = await getRequiredUser();
+    const { allowed, response: denied } = await requireFeature(user.id, "priority_support");
+    if (!allowed) return denied;
+
     const body = await request.json();
     const { query, context } = body;
 

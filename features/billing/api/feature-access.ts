@@ -1,41 +1,64 @@
+import type { FeatureFlag, AccessInfo } from "@/lib/billing/features";
+import { resolveAccess } from "@/lib/billing/features";
 import { getSubscription } from "./billing-api";
 
-export type FeatureFlag =
-  | "multi_business"
-  | "advanced_reporting"
-  | "team_collaboration"
-  | "priority_support";
+let cachedAccess: AccessInfo | null = null;
+let refreshPromise: Promise<AccessInfo> | null = null;
 
-const PLAN_FEATURES: Record<string, FeatureFlag[]> = {
-  starter: [],
-  growth: ["multi_business", "advanced_reporting"],
-  enterprise: ["multi_business", "advanced_reporting", "team_collaboration", "priority_support"],
-};
+async function fetchAccess(): Promise<AccessInfo | null> {
+  try {
+    const res = await fetch("/api/billing/access");
+    const json = await res.json();
+    if (json.success && json.data) return json.data as AccessInfo;
+    return null;
+  } catch {
+    return null;
+  }
+}
 
-const PLAN_LIMITS: Record<string, Record<string, number>> = {
-  starter: { businesses: 1 },
-  growth: { businesses: 5 },
-  enterprise: { businesses: 20 },
-};
+export function getAccess(): AccessInfo {
+  if (cachedAccess) return cachedAccess;
+
+  // Try localStorage subscription as fallback
+  const sub = getSubscription();
+  if (sub) {
+    cachedAccess = resolveAccess(sub.planId, sub.status);
+    return cachedAccess;
+  }
+
+  return resolveAccess(null, null);
+}
+
+export async function refreshAccess(): Promise<AccessInfo> {
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = (async () => {
+    const server = await fetchAccess();
+    if (server) {
+      cachedAccess = server;
+    } else {
+      const sub = getSubscription();
+      cachedAccess = resolveAccess(sub?.planId || null, sub?.status || null);
+    }
+    refreshPromise = null;
+    return cachedAccess!;
+  })();
+  return refreshPromise;
+}
 
 export function canAccess(feature: FeatureFlag): boolean {
-  const sub = getSubscription();
-  if (!sub) return false;
-  const features = PLAN_FEATURES[sub.planId];
-  if (!features) return false;
-  return features.includes(feature);
+  const access = getAccess();
+  return access.features.includes(feature);
 }
 
 export function getPlanLimit(key: string): number {
-  const sub = getSubscription();
-  if (!sub) return 0;
-  return PLAN_LIMITS[sub.planId]?.[key] ?? 0;
+  const access = getAccess();
+  return access.limits[key] ?? 0;
 }
 
 export function getCurrentPlanId(): string {
-  return getSubscription()?.planId || "starter";
+  return getAccess().planId;
 }
 
 export function getCurrentPlanName(): string {
-  return getSubscription()?.planName || "Starter";
+  return getAccess().planName;
 }

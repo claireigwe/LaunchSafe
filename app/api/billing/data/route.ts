@@ -1,20 +1,20 @@
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import type { ApiResponse } from "@/types/api.types";
 
 export async function GET() {
   try {
     const user = await getRequiredUser();
-    const supabase = await createClient() as any;
+    const supabase = createAdminClient() as any;
 
     const { data: subs } = await supabase
       .from("subscriptions")
-      .select("*, subscription_plans(slug, name)")
+      .select("*, subscription_plans!inner(slug, name), pending_plan:subscription_plans!pending_plan_id(slug, name)")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     const { data: payments } = await supabase
       .from("payments")
@@ -36,8 +36,8 @@ export async function GET() {
       startDate: subs.current_period_start,
       nextRenewal: subs.current_period_end,
       cancelledAt: subs.cancelled_at,
-      pendingPlanId: null,
-      pendingPlanName: null,
+      pendingPlanId: (subs as any).pending_plan?.slug || null,
+      pendingPlanName: (subs as any).pending_plan?.name || null,
       pendingBillingCycle: null,
     } : null;
 

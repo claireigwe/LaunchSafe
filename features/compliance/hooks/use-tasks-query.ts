@@ -13,6 +13,7 @@ export function useTasks() {
       const tasks = await loadTasks();
       return tasks;
     },
+    staleTime: 30_000,
   });
 }
 
