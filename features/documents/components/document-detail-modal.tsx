@@ -14,10 +14,12 @@ interface Props {
   doc: AppDocument;
   onUpdate: () => void;
   onDelete: (id: string) => void;
+  onDownload: (doc: AppDocument) => void;
   onClose: () => void;
+  isDeleting?: boolean;
 }
 
-export function DocumentDetailModal({ doc, onUpdate, onDelete, onClose }: Props) {
+export function DocumentDetailModal({ doc, onUpdate, onDelete, onDownload, onClose, isDeleting }: Props) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(doc.title);
@@ -26,15 +28,6 @@ export function DocumentDetailModal({ doc, onUpdate, onDelete, onClose }: Props)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const isPreviewable = doc.fileType === "application/pdf" || doc.fileType?.startsWith("image/");
-
-  function handleDownload() {
-    if (doc.fileUrl) {
-      const a = document.createElement("a");
-      a.href = doc.fileUrl;
-      a.download = doc.fileName;
-      a.click();
-    }
-  }
 
   function handleSaveEdit() {
     updateDocument(doc.id, {
@@ -105,12 +98,14 @@ export function DocumentDetailModal({ doc, onUpdate, onDelete, onClose }: Props)
               {doc.description && <p className={styles.description}>{doc.description}</p>}
 
               <div className={styles.actions}>
-                {showDeleteConfirm ? (
+                {isDeleting || showDeleteConfirm ? (
                   <div className={styles.confirmDeleteDoc}>
-                    <span>Delete this document?</span>
+                    <span>{isDeleting ? "Deleting..." : "Delete this document?"}</span>
                     <div className={styles.confirmDocActions}>
-                      <button type="button" className={styles.confirmDocCancel} onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
-                      <button type="button" className={styles.confirmDocBtn} onClick={() => onDelete(doc.id)}>Delete</button>
+                      {!isDeleting && <button type="button" className={styles.confirmDocCancel} onClick={() => setShowDeleteConfirm(false)}>Cancel</button>}
+                      <button type="button" className={styles.confirmDocBtn} disabled={isDeleting} onClick={() => onDelete(doc.id)}>
+                        {isDeleting ? "Deleting..." : "Delete"}
+                      </button>
                     </div>
                   </div>
                 ) : (
@@ -120,7 +115,7 @@ export function DocumentDetailModal({ doc, onUpdate, onDelete, onClose }: Props)
                 )}
                 <div className={styles.rightActions}>
                   {isPreviewable && <Button type="button" variant="outline" size="sm" onClick={() => setPreviewUrl(doc.fileUrl)}><FileText size={14} /> Preview</Button>}
-                  <Button type="button" variant="outline" size="sm" onClick={handleDownload}><Download size={14} /> Download</Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => onDownload(doc)}><Download size={14} /> Download</Button>
                   <Button type="button" variant="primary" size="sm" onClick={() => setEditing(true)}><Edit3 size={14} /> Edit</Button>
                 </div>
               </div>

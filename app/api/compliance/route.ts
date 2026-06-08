@@ -3,15 +3,20 @@ import { getRequiredUser } from "@/lib/auth/get-session";
 import { createClient } from "@/lib/supabase/server";
 import type { ApiResponse } from "@/types/api.types";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const user = await getRequiredUser();
     const supabase = await createClient() as any;
+    const { searchParams } = new URL(request.url);
+    const businessId = searchParams.get("businessId");
 
-    const { data, error } = await (supabase as any)
+    let query = (supabase as any)
       .from("compliance_tasks")
-      .select("*")
-      .order("created_at", { ascending: false });
+      .select("*");
+
+    if (businessId) query = query.eq("business_id", businessId);
+
+    const { data, error } = await query.order("created_at", { ascending: false });
 
     if (error) throw error;
 
@@ -31,11 +36,11 @@ export async function POST(request: Request) {
     const user = await getRequiredUser();
     const supabase = await createClient() as any;
     const body = await request.json();
-    const { title, description, dueDate, priority } = body;
+    const { title, description, dueDate, priority, businessId } = body;
 
-    if (!title) {
+    if (!title || !businessId) {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: { message: "Title is required" } },
+        { success: false, error: { message: "Title and businessId are required" } },
         { status: 400 }
       );
     }
@@ -43,6 +48,8 @@ export async function POST(request: Request) {
     const { data, error } = await (supabase as any)
       .from("compliance_tasks")
       .insert({
+        user_id: user.id,
+        business_id: businessId,
         requirement_name: title,
         agency_name: description || "",
         status: computeStatus(dueDate),
@@ -76,7 +83,7 @@ export async function PATCH(request: Request) {
     const user = await getRequiredUser();
     const supabase = await createClient() as any;
     const body = await request.json();
-    const { id, title, description, dueDate, priority, status } = body;
+    const { id, title, description, dueDate, priority, status, businessId } = body;
 
     if (!id) {
       return NextResponse.json<ApiResponse>(
@@ -91,12 +98,14 @@ export async function PATCH(request: Request) {
     if (dueDate !== undefined) updates.due_date = dueDate || null;
     if (status) updates.status = status;
 
-    const { data, error } = await (supabase as any)
+    let updateQuery = (supabase as any)
       .from("compliance_tasks")
       .update(updates)
-      .eq("id", id)
-      .select()
-      .single();
+      .eq("id", id);
+
+    if (businessId) updateQuery = updateQuery.eq("business_id", businessId);
+
+    const { data, error } = await updateQuery.select().single();
 
     if (error) {
       return NextResponse.json<ApiResponse>(
@@ -119,7 +128,7 @@ export async function DELETE(request: Request) {
     const user = await getRequiredUser();
     const supabase = await createClient() as any;
     const body = await request.json();
-    const { id } = body;
+    const { id, businessId } = body;
 
     if (!id) {
       return NextResponse.json<ApiResponse>(
@@ -128,7 +137,9 @@ export async function DELETE(request: Request) {
       );
     }
 
-    await (supabase as any).from("compliance_tasks").delete().eq("id", id);
+    let deleteQuery = (supabase as any).from("compliance_tasks").delete().eq("id", id);
+    if (businessId) deleteQuery = deleteQuery.eq("business_id", businessId);
+    await deleteQuery;
 
     return NextResponse.json<ApiResponse>({ success: true, data: { deleted: true } });
   } catch {
@@ -155,7 +166,7 @@ function mapTask(row: any): any {
 
   return {
     id: row.id,
-    businessId: row.business_id || "onboarded",
+    businessId: row.business_id || "",
     title: row.requirement_name,
     description: notesObj.description || row.agency_name || "",
     dueDate: row.due_date || null,

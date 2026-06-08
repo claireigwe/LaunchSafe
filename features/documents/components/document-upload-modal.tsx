@@ -9,7 +9,7 @@ import { DOC_TYPES } from "../data/document-types";
 import styles from "./document-upload-modal.module.css";
 
 interface Props {
-  onSave: (input: UploadDocumentInput) => void;
+  onSave: (input: UploadDocumentInput) => Promise<void> | void;
   onClose: () => void;
 }
 
@@ -20,6 +20,8 @@ export function DocumentUploadModal({ onSave, onClose }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const ALLOWED = ["application/pdf", "image/png", "image/jpeg"];
@@ -45,21 +47,27 @@ export function DocumentUploadModal({ onSave, onClose }: Props) {
     if (e.target.files?.[0]) setFile(e.target.files[0]);
   }
 
-  function handleSubmit(ev: React.FormEvent) {
+  async function handleSubmit(ev: React.FormEvent) {
     ev.preventDefault();
+    setSubmitError(null);
     if (!validate()) return;
     if (!file) return;
 
+    setIsSubmitting(true);
     const input: UploadDocumentInput = {
       title: title.trim(),
       description: description.trim(),
       docType,
-      fileName: file.name,
-      fileSize: file.size,
-      fileType: file.type,
-      fileUrl: URL.createObjectURL(file),
+      file,
     };
-    onSave(input);
+    
+    try {
+      await onSave(input);
+    } catch (err: any) {
+      setSubmitError(err.message || "Failed to upload document");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -110,9 +118,10 @@ export function DocumentUploadModal({ onSave, onClose }: Props) {
               )}
             </div>
           </div>
+          {submitError && <div className={styles.submitError} style={{ color: "var(--color-role-light-error)", marginBottom: 16, fontSize: 14 }}>{submitError}</div>}
           <div className={styles.actions}>
-            <Button type="button" variant="ghost" size="md" onClick={onClose}>Cancel</Button>
-            <Button type="submit" variant="primary" size="md">Upload Document</Button>
+            <Button type="button" variant="ghost" size="md" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" variant="primary" size="md" disabled={isSubmitting}>{isSubmitting ? "Uploading..." : "Upload Document"}</Button>
           </div>
         </form>
       </div>

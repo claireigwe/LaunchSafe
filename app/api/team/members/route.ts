@@ -39,6 +39,12 @@ export async function GET() {
     const user = await getRequiredUser();
     const db = createAdminClient() as any;
 
+    const myMembership = await resolveMembership(db, user.id);
+
+    if (!myMembership) {
+      return NextResponse.json<ApiResponse>({ success: true, data: { members: [], myRole: "member" } });
+    }
+
     const { data: planData } = await db
       .from("subscriptions")
       .select("subscription_plans!inner(slug)")
@@ -48,13 +54,7 @@ export async function GET() {
       .maybeSingle();
 
     if (!planData) {
-      return NextResponse.json<ApiResponse>({ success: true, data: [] });
-    }
-
-    const myMembership = await resolveMembership(db, user.id);
-
-    if (!myMembership) {
-      return NextResponse.json<ApiResponse>({ success: true, data: [] });
+      return NextResponse.json<ApiResponse>({ success: true, data: { members: [], myRole: myMembership.role } });
     }
 
     const { data } = await db
@@ -71,7 +71,7 @@ export async function GET() {
       invitedAt: m.invited_at,
     }));
 
-    return NextResponse.json<ApiResponse>({ success: true, data: members });
+    return NextResponse.json<ApiResponse>({ success: true, data: { members, myRole: myMembership.role } });
   } catch {
     return NextResponse.json<ApiResponse>(
       { success: false, error: { message: "Unauthorized" } },

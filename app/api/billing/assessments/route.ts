@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   try {
     const user = await getRequiredUser();
     const body = await request.json();
-    const { assessmentId } = body;
+    const { assessmentId, callbackUrl: clientCallbackUrl } = body;
 
     if (!assessmentId) {
       return NextResponse.json<ApiResponse>(
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/assessment?paid=${assessmentId}&assessmentId=${assessmentId}`;
+    const callbackUrl = clientCallbackUrl || `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/assessment?paid=${assessmentId}&assessmentId=${assessmentId}`;
 
     if (!PAYSTACK_SECRET_KEY) {
       return NextResponse.json<ApiResponse>(

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ClipboardList, Plus, AlertTriangle, FileText, BarChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDashboard } from "../../hooks/use-dashboard";
+import { EmptyBusinessState } from "@/features/businesses/components/empty-business-state";
 import { HealthScore } from "./health-score";
 import { RegulatoryUpdates } from "./regulatory-updates";
 import { BusinessOverview } from "./business-overview";
@@ -14,15 +15,18 @@ import { SuggestedTasksWidget } from "../tasks/suggested-tasks-widget";
 import { TaskCreateModal } from "../tasks/task-create-modal";
 import { DocumentUploadModal } from "@/features/documents/components/document-upload-modal";
 import { loadTasks, reconcileTaskStatuses, createTask } from "../../api/tasks-api";
-import { getDocuments, formatFileSize, uploadDocument, type UploadDocumentInput } from "@/features/documents/api/documents-api";
+import { getActiveBusinessId } from "@/lib/stores/app-store";
+import { formatFileSize, type UploadDocumentInput } from "@/features/documents/api/documents-api";
 import { DOC_TYPE_LABELS } from "@/features/documents/types/documents.types";
 import { getSubscription, formatCurrency } from "@/features/billing/api/billing-api";
 import { SetupOverlay } from "@/features/billing/components/setup-overlay";
+import { isInSetupMode } from "@/features/billing/api/setup-check";
 import { getRegulatoryUpdates } from "@/features/regulatory-updates/api/regulatory-updates-api";
 import { getRecentActivity, type ActivityEntry } from "@/features/activity/api/activity-api";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import type { ComplianceTaskItem, CreateTaskInput } from "../../types/tasks.types";
 import type { AppDocument } from "@/features/documents/types/documents.types";
+import { useDocuments, useUploadDocument } from "@/features/documents/hooks/use-documents-query";
 import styles from "./dashboard-page.module.css";
 
 export function DashboardPage() {
@@ -30,15 +34,16 @@ export function DashboardPage() {
   const [savedTasks, setSavedTasks] = useState<ComplianceTaskItem[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [showUploadDoc, setShowUploadDoc] = useState(false);
-  const [recentDocs, setRecentDocs] = useState<AppDocument[]>([]);
   const [regUpdates, setRegUpdates] = useState(getRegulatoryUpdates().slice(0, 3));
   const [recentActivity, setRecentActivity] = useState<ActivityEntry[]>(getRecentActivity(5));
   const subscription = getSubscription();
+  const { data: uploadedDocs = [] } = useDocuments();
+  const uploadMutation = useUploadDocument();
+  const recentDocs = uploadedDocs.slice(0, 4);
 
   function refreshDashboard() {
     reconcileTaskStatuses();
     setSavedTasks(loadTasks());
-    setRecentDocs(getDocuments().slice(0, 4));
     setRegUpdates(getRegulatoryUpdates().slice(0, 3));
     setRecentActivity(getRecentActivity(5));
   }
@@ -50,18 +55,35 @@ export function DashboardPage() {
     return () => window.removeEventListener("focus", onFocus);
   }, []);
 
+  const [computedScore, setComputedScore] = useState<any>({
+    id: "computed",
+    businessId: getActiveBusinessId() || "",
+    score: 0,
+    breakdown: {
+      completedTasks: 0,
+      totalTasks: 0,
+      overdueCount: 0,
+      missingEvidence: 0,
+      expiredDocuments: 0,
+    },
+    calculatedAt: new Date().toISOString(),
+  });
+
   useEffect(() => {
     if (savedTasks.length > 0) {
+      const businessId = getActiveBusinessId();
       fetch("/api/compliance/score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          score: healthScore,
-          completedTasks: completedCount,
-          totalTasks: savedTasks.length,
-          overdueCount: overdue.length,
-        }),
-      }).catch(() => {});
+        body: JSON.stringify({ businessId }),
+      })
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && json.data) {
+          setComputedScore(json.data);
+        }
+      })
+      .catch(() => {});
     }
   }, [savedTasks.length]);
 
@@ -72,37 +94,20 @@ export function DashboardPage() {
 
   const overdue = savedTasks.filter((t) => t.status === "overdue");
 
-  const completedCount = savedTasks.filter((t) => t.status === "completed").length;
-  const healthScore = savedTasks.length > 0
-    ? Math.round((completedCount / savedTasks.length) * 100)
-    : 0;
-
-  const computedScore = {
-    id: "computed",
-    businessId: "onboarded",
-    score: healthScore,
-    breakdown: {
-      completedTasks: completedCount,
-      totalTasks: savedTasks.length,
-      overdueCount: overdue.length,
-      missingEvidence: 0,
-      expiredDocuments: 0,
-    },
-    calculatedAt: new Date().toISOString(),
-  };
-
   async function handleCreateTask(input: CreateTaskInput) {
-    await createTask(input, "onboarded");
+    await createTask(input);
     trackEvent("Task Created", { title: input.title });
     setSavedTasks(loadTasks());
     setShowCreate(false);
   }
 
   function handleUploadDocument(input: UploadDocumentInput) {
-    uploadDocument(input);
-    trackEvent("Document Uploaded", { title: input.title });
-    setRecentDocs(getDocuments().slice(0, 4));
-    setShowUploadDoc(false);
+    uploadMutation.mutate(input, {
+      onSuccess: () => {
+        trackEvent("Document Uploaded", { title: input.title });
+        setShowUploadDoc(false);
+      }
+    });
   }
 
 function OverdueCards({ items }: { items: ComplianceTaskItem[] }) {
@@ -262,12 +267,14 @@ function EmptyTasks({ onAddTask }: { onAddTask: () => void }) {
     );
   }
 
+  const isSetup = isInSetupMode();
+
   return (
     <SetupOverlay>
       <div className={styles.page}>
         <div className={styles.header}>
           <div>
-            <h1 className={styles.title}>Welcome back, {data.business?.name || "Founder"}</h1>
+            <h1 className={styles.title}>Welcome back, {data.userProfile?.fullName || data.business?.name || "Founder"}</h1>
             <p className={styles.subtitle}>Here is your compliance overview for today.</p>
           </div>
         </div>
@@ -279,12 +286,36 @@ function EmptyTasks({ onAddTask }: { onAddTask: () => void }) {
             <SuggestedTasksWidget />
             {upcoming.length > 0 && <UpcomingSection items={upcoming} />}
             {recentDocs.length > 0 && <DocumentsSection docs={recentDocs} />}
-            {savedTasks.length > 0 ? <TasksSection tasks={savedTasks} onAddTask={() => setShowCreate(true)} /> : <EmptyTasks onAddTask={() => setShowCreate(true)} />}
+            {savedTasks.length > 0 ? (
+              <TasksSection 
+                tasks={savedTasks} 
+                onAddTask={() => {
+                  if (!data.business) alert("Please add a business first to create tasks.");
+                  else setShowCreate(true);
+                }} 
+              />
+            ) : (
+              <EmptyTasks 
+                onAddTask={() => {
+                  if (!data.business) alert("Please add a business first to create tasks.");
+                  else setShowCreate(true);
+                }} 
+              />
+            )}
             <ReportsPreview />
             <RegulatoryUpdates updates={regUpdates} />
           </section>
           <aside className={styles.secondary}>
-            <QuickActions onAddTask={() => setShowCreate(true)} onUploadDocument={() => setShowUploadDoc(true)} />
+            <QuickActions 
+              onAddTask={() => {
+                if (!data.business) alert("Please add a business first to create tasks.");
+                else setShowCreate(true);
+              }} 
+              onUploadDocument={() => {
+                if (!data.business) alert("Please add a business first to upload documents.");
+                else setShowUploadDoc(true);
+              }} 
+            />
             {subscription && <SubscriptionStatus sub={subscription} />}
             <BusinessOverview business={data.business} />
             <RecentActivity activities={recentActivity} />

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { getNotifications, getUnreadCount, markAsRead } from "../api/notifications-api";
+import { fetchNotifications, getUnreadCount, markAsRead } from "../api/notifications-api";
 import type { AppNotification } from "../types/notifications.types";
 import styles from "./notification-bell.module.css";
 
@@ -28,14 +28,18 @@ export function NotificationBell() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
-  function refresh() {
-    setNotifications(getNotifications().slice(0, 5));
-    setUnread(getUnreadCount());
+  async function refresh() {
+    const [allNotifs, unreadNotifs] = await Promise.all([
+      fetchNotifications(),
+      getUnreadCount()
+    ]);
+    setNotifications(allNotifs.slice(0, 5));
+    setUnread(unreadNotifs);
   }
 
-  function handleClick(n: AppNotification) {
+  async function handleClick(n: AppNotification) {
     if (!n.isRead) {
-      markAsRead(n.id);
+      await markAsRead(n.id);
       refresh();
     }
     if (n.actionUrl) {

@@ -6,7 +6,7 @@ import { Bell, Trash2, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 import {
-  getNotifications,
+  fetchNotifications,
   markAsRead,
   markAllAsRead,
   deleteNotification,
@@ -41,37 +41,45 @@ export function NotificationCenter() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [filter, setFilter] = useState<FilterValue>("all");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const loadNotifications = async () => {
+    setLoading(true);
+    const data = await fetchNotifications();
+    setNotifications(data);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    setNotifications(getNotifications());
+    loadNotifications();
     trackEvent("Notification Center Viewed");
   }, []);
 
   const filtered = notifications.filter((n) => matchesFilter(n, filter));
 
-  function handleRead(id: string) {
-    markAsRead(id);
+  async function handleRead(id: string) {
+    await markAsRead(id);
     trackEvent("Notification Read", { id });
-    setNotifications(getNotifications());
+    loadNotifications();
   }
 
-  function handleMarkAll() {
-    markAllAsRead();
+  async function handleMarkAll() {
+    await markAllAsRead();
     trackEvent("Notification Read", { bulk: true });
-    setNotifications(getNotifications());
+    loadNotifications();
   }
 
-  function handleDelete(id: string) {
-    deleteNotification(id);
+  async function handleDelete(id: string) {
+    await deleteNotification(id);
     trackEvent("Notification Deleted", { id });
-    setNotifications(getNotifications());
+    loadNotifications();
   }
 
-  function handleClick(n: AppNotification) {
+  async function handleClick(n: AppNotification) {
     if (!n.isRead) {
-      markAsRead(n.id);
-      setNotifications(getNotifications());
+      await markAsRead(n.id);
+      loadNotifications();
     }
     trackEvent("Notification Action Clicked", { id: n.id });
     if (n.actionUrl) router.push(n.actionUrl);

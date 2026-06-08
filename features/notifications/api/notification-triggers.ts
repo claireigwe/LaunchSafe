@@ -1,19 +1,14 @@
 import { createNotification } from "./notifications-api";
 import { loadTasks } from "@/features/compliance/api/tasks-api";
-import { loadProfile } from "@/features/settings/api/settings-api";
+import { fetchProfileAndPrefs } from "@/features/settings/api/settings-api";
 import type { ComplianceTaskItem } from "@/features/compliance/types/tasks.types";
 
-function getUserEmail(): string | null {
+async function fireEmail(type: string, data?: Record<string, unknown>): Promise<void> {
   try {
-    const p = loadProfile();
-    return p.email || null;
-  } catch { return null; }
-}
+    const pData = await fetchProfileAndPrefs();
+    const email = pData?.profile?.email;
+    if (!email) return;
 
-function fireEmail(type: string, data?: Record<string, unknown>): void {
-  const email = getUserEmail();
-  if (!email) return;
-  try {
     fetch("/api/notifications/send-email", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

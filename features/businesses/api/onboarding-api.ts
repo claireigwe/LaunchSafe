@@ -1,6 +1,5 @@
 const INTENT_KEY = "launchsafe-intent";
 const BUSINESS_DATA_KEY = "launchsafe-business-data";
-const ALL_BUSINESSES_KEY = "launchsafe-all-businesses";
 
 /* ----- API helpers ----- */
 async function apiGet<T>(url: string): Promise<T | null> {
@@ -46,6 +45,22 @@ export function getBusinessData(): Record<string, unknown> | null {
   } catch { return null; }
 }
 
+/* ----- Per-business data storage ----- */
+function businessDataKey(id: string): string {
+  return `launchsafe-business-data-${id}`;
+}
+
+export function saveBusinessDataForBusiness(id: string, data: Record<string, unknown>): void {
+  try { localStorage.setItem(businessDataKey(id), JSON.stringify(data)); } catch {}
+}
+
+export function getBusinessDataById(id: string): Record<string, unknown> | null {
+  try {
+    const raw = localStorage.getItem(businessDataKey(id));
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
 /* ----- Multi-business support ----- */
 export interface StoredBusiness {
   id: string;
@@ -54,65 +69,83 @@ export interface StoredBusiness {
   type: string;
   state: string;
   createdAt: string;
+  fullData?: any;
 }
 
-export function getAllBusinesses(): StoredBusiness[] {
+export async function fetchAllBusinesses(): Promise<StoredBusiness[]> {
   try {
-    const raw = localStorage.getItem(ALL_BUSINESSES_KEY);
-    if (raw) return JSON.parse(raw);
-    const single: any = getBusinessData();
-    if (single?.info?.businessName) {
-      const biz: StoredBusiness = {
-        id: `biz-migrated`,
-        name: single.info.businessName,
-        industry: single.info.industry || "",
-        type: single.info.businessType || "",
-        state: single.info.state || "",
-        createdAt: single._savedAt || new Date().toISOString(),
+    const data: any[] | null = await apiGet("/api/businesses");
+    if (!data) return [];
+    
+    return data.map((b) => {
+      let type = "";
+      let state = "";
+      let industry = "";
+      let fullData: any = null;
+      try {
+        if (b.description) {
+          const parsed = JSON.parse(b.description);
+          type = parsed.type || "";
+          state = parsed.state || "";
+          industry = parsed.industry || "";
+          fullData = parsed.fullData || null;
+        }
+      } catch {
+        // Ignore parse error
+      }
+      return {
+        id: b.id,
+        name: b.name,
+        industry: industry,
+        type: type,
+        state: state,
+        createdAt: b.createdAt,
+        fullData: fullData,
       };
-      try { localStorage.setItem(ALL_BUSINESSES_KEY, JSON.stringify([biz])); } catch {}
-      return [biz];
-    }
+    });
+  } catch {
     return [];
-  } catch { return []; }
+  }
 }
 
 export async function addBusiness(data: Record<string, unknown>): Promise<StoredBusiness | null> {
-  const all = getAllBusinesses();
   const info: any = data.info || {};
   const name = info.businessName || "Unnamed Business";
 
-  if (all.some((b) => b.name === name)) return null;
+  const result: any = await apiPost("/api/businesses", {
+    name,
+    description: JSON.stringify({ industry: info.industry || "", type: info.businessType || "", state: info.state || "", fullData: data }),
+    industrySlug: info.industry || "",
+    stateSlug: info.state || "",
+  });
+
+  if (!result || !result.id) return null;
 
   const biz: StoredBusiness = {
-    id: `biz-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-    name,
+    id: result.id,
+    name: result.name,
     industry: info.industry || "",
     type: info.businessType || "",
     state: info.state || "",
     createdAt: new Date().toISOString(),
   };
 
-  all.push(biz);
-  try { localStorage.setItem(ALL_BUSINESSES_KEY, JSON.stringify(all)); } catch {}
-  saveBusinessData(data);
-
-  await apiPost("/api/businesses", {
-    name: biz.name,
-    description: JSON.stringify({ industry: biz.industry, type: biz.type, state: biz.state, fullData: data }),
-  });
-
+  saveBusinessDataForBusiness(biz.id, data);
   return biz;
 }
 
 export async function removeBusiness(id: string): Promise<void> {
-  const all = getAllBusinesses().filter((b) => b.id !== id);
-  try { localStorage.setItem(ALL_BUSINESSES_KEY, JSON.stringify(all)); } catch {}
+  try { localStorage.removeItem(`launchsafe-business-data-${id}`); } catch {}
+  try {
+    const activeId = localStorage.getItem("launchsafe-active-business");
+    if (activeId === id) localStorage.removeItem("launchsafe-active-business");
+  } catch {}
   await apiDelete(`/api/businesses/${id}`);
 }
 
-export function getBusinessCount(): number {
-  return getAllBusinesses().length;
+export async function getBusinessCount(): Promise<number> {
+  const all = await fetchAllBusinesses();
+  return all.length;
 }
 
 /* ----- User intent ----- */

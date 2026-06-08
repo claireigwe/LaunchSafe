@@ -53,7 +53,7 @@ export function SuggestedTasksWidget() {
 
   function handleAccept(s: SuggestedTask) {
     trackEvent("Suggested Task Accepted", { title: s.title });
-    addSuggestedTask({ title: s.title, description: s.description, priority: s.priority, explanation: s.explanation }, "onboarded");
+    addSuggestedTask({ title: s.title, description: s.description, priority: s.priority, explanation: s.explanation });
     const next = new Set(dismissed);
     next.add(s.id);
     setDismissed(next);

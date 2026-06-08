@@ -1,7 +1,7 @@
 import { loadTasks } from "@/features/compliance/api/tasks-api";
 import { getDocuments } from "@/features/documents/api/documents-api";
 import { getRecentActivity } from "@/features/activity/api/activity-api";
-import { getAllBusinesses, getBusinessData } from "@/features/businesses/api/onboarding-api";
+import { fetchAllBusinesses, getBusinessData } from "@/features/businesses/api/onboarding-api";
 import { getRegulatoryUpdates } from "@/features/regulatory-updates/api/regulatory-updates-api";
 import type {
   ReportData,
@@ -14,15 +14,16 @@ import type {
   ActivityReport,
 } from "../types/reporting.types";
 
-export function generateReportData(): ReportData {
+export async function generateReportData(): Promise<ReportData> {
+  const docs = await getDocuments();
   return {
     healthTrend: computeHealthTrend(),
     taskAnalytics: computeTaskAnalytics(),
     deadlinePerformance: computeDeadlinePerformance(),
-    riskReport: computeRiskReport(),
-    documentReport: computeDocumentReport(),
-    comparisons: computeComparisons(),
-    activityReport: computeActivityReport(),
+    riskReport: computeRiskReport(docs),
+    documentReport: computeDocumentReport(docs),
+    comparisons: await computeComparisons(),
+    activityReport: computeActivityReport(docs),
   };
 }
 
@@ -73,11 +74,11 @@ function computeDeadlinePerformance(): DeadlinePerformance {
   return { met, missed, upcoming, rating };
 }
 
-function computeRiskReport(): RiskReport {
+function computeRiskReport(docs: any[]): RiskReport {
   const tasks = loadTasks();
   const overdue = tasks.filter((t) => t.status === "overdue").length;
   const missed = tasks.filter((t) => t.status === "overdue" && t.dueDate).length;
-  const hasDocs = getDocuments().length;
+  const hasDocs = docs.length;
   const activity = getRecentActivity(30).length;
 
   let score = 0;
@@ -108,8 +109,7 @@ function computeRiskReport(): RiskReport {
   return { level, score, factors, insights };
 }
 
-function computeDocumentReport(): DocumentReport {
-  const docs = getDocuments();
+function computeDocumentReport(docs: any[]): DocumentReport {
   const uploaded = docs.length;
 
   const recommended = getMissingRecommended();
@@ -135,8 +135,8 @@ function getMissingRecommended(): string[] {
   ];
 }
 
-function computeComparisons(): BusinessComparison[] {
-  const businesses = getAllBusinesses();
+async function computeComparisons(): Promise<BusinessComparison[]> {
+  const businesses = await fetchAllBusinesses();
   const tasks = loadTasks();
 
   if (businesses.length <= 1) return [];
@@ -159,13 +159,13 @@ function computeComparisons(): BusinessComparison[] {
   });
 }
 
-function computeActivityReport(): ActivityReport {
+function computeActivityReport(docs: any[]): ActivityReport {
   const activity = getRecentActivity(100);
   const tasks = loadTasks();
 
   const tasksCreated = activity.filter((a) => a.type === "task_created").length + tasks.length;
   const tasksCompleted = activity.filter((a) => a.type === "task_completed").length + tasks.filter((t) => t.status === "completed").length;
-  const documentsUploaded = activity.filter((a) => a.type === "document_uploaded").length + getDocuments().length;
+  const documentsUploaded = activity.filter((a) => a.type === "document_uploaded").length + docs.length;
   const events = activity.filter((a) => a.type === "subscription_activated" || a.type === "notification_triggered").length;
 
   const trendDays: { date: string; count: number }[] = [];

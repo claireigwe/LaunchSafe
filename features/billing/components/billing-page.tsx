@@ -80,29 +80,31 @@ export function BillingPage() {
         </div>
         {sub ? (
           <>
-            <div className={styles.subCard}>
-              <div className={styles.subRow}>
-                <span className={styles.subLabel}>Plan</span>
-                <span className={styles.subValue}>{sub.planName}</span>
-              </div>
-              <div className={styles.subRow}>
-                <span className={styles.subLabel}>Billing</span>
-                <span className={styles.subValue}>{sub.billingCycle === "annual" ? "Annual" : "Monthly"}</span>
-              </div>
-              <div className={styles.subRow}>
-                <span className={styles.subLabel}>Status</span>
-                <span className={`${styles.statusBadge} ${statusInfo ? styles[statusInfo.className] : ""}`}>{statusInfo?.label || sub.status}</span>
-              </div>
-              <div className={styles.subRow}>
-                <span className={styles.subLabel}>Started</span>
-                <span className={styles.subValue}>{formatDate(sub.startDate)}</span>
-              </div>
-              {sub.nextRenewal && (
+            <div className={styles.subCardWrap}>
+              <div className={styles.subCard}>
                 <div className={styles.subRow}>
-                  <span className={styles.subLabel}>Next Renewal</span>
-                  <span className={styles.subValue}>{formatDate(sub.nextRenewal)}</span>
+                  <span className={styles.subLabel}>Plan</span>
+                  <span className={styles.subValue}>{sub.planName}</span>
                 </div>
-              )}
+                <div className={styles.subRow}>
+                  <span className={styles.subLabel}>Billing</span>
+                  <span className={styles.subValue}>{sub.billingCycle === "annual" ? "Annual" : "Monthly"}</span>
+                </div>
+                <div className={styles.subRow}>
+                  <span className={styles.subLabel}>Status</span>
+                  <span className={`${styles.statusBadge} ${statusInfo ? styles[statusInfo.className] : ""}`}>{statusInfo?.label || sub.status}</span>
+                </div>
+                <div className={styles.subRow}>
+                  <span className={styles.subLabel}>Started</span>
+                  <span className={styles.subValue}>{formatDate(sub.startDate)}</span>
+                </div>
+                {sub.nextRenewal && (
+                  <div className={styles.subRow}>
+                    <span className={styles.subLabel}>Next Renewal</span>
+                    <span className={styles.subValue}>{formatDate(sub.nextRenewal)}</span>
+                  </div>
+                )}
+              </div>
             </div>
             {sub.pendingPlanId && (
               <div className={styles.pendingBanner}>

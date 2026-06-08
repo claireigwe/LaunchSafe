@@ -4,33 +4,46 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { getFileUrl } from "@/lib/supabase/storage";
 import type { ApiResponse } from "@/types/api.types";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const user = await getRequiredUser();
     const supabase = createAdminClient() as any;
+    const { searchParams } = new URL(request.url);
+    const businessId = searchParams.get("businessId");
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("compliance_documents")
       .select("*")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+      .is("generated_at", null);
+
+    if (businessId) query = query.eq("business_id", businessId);
+
+    const { data, error } = await query.order("created_at", { ascending: false });
 
     if (error) throw error;
 
     const docs = await Promise.all(
       (data || []).map(async (row: any) => {
         const fileUrl = row.storage_path ? await getFileUrl(row.storage_path) : null;
+        let parsed: any = {};
+        try {
+          parsed = JSON.parse(row.content || "{}");
+        } catch {
+          parsed = { description: row.content };
+        }
+
         return {
           id: row.id,
-          businessId: row.business_id || "onboarded",
+          businessId: row.business_id || "",
           userId: row.user_id,
           title: row.title,
-          description: row.content || "",
-          docType: row.document_type || "other",
+          description: parsed.description ?? row.content ?? "",
+          docType: parsed.docType ?? row.document_type ?? "other",
           fileUrl,
-          fileName: row.file_name || "document",
-          fileSize: row.file_size || 0,
-          fileType: row.file_type || "application/octet-stream",
+          fileName: parsed.file_name ?? "document",
+          fileSize: parsed.file_size ?? 0,
+          fileType: parsed.file_type ?? "application/octet-stream",
           uploadedBy: "You",
           uploadedAt: row.created_at,
           updatedAt: row.updated_at,
@@ -59,25 +72,30 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { title, description, docType, fileName, fileSize, fileType } = body;
 
-    if (!title) {
+    if (!title || !body.businessId) {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: { message: "Title is required" } },
+        { success: false, error: { message: "Title and businessId are required" } },
         { status: 400 }
       );
     }
+
+    const payload = JSON.stringify({
+      description: description || "",
+      docType: docType || "other",
+      file_name: fileName || "document",
+      file_size: fileSize || 0,
+      file_type: fileType || "application/octet-stream"
+    });
 
     const { data, error } = await supabase
       .from("compliance_documents")
       .insert({
         user_id: user.id,
-        business_id: body.businessId || "onboarded",
+        business_id: body.businessId,
         title,
-        document_type: docType || "other",
+        document_type: "report", // fallback for CHECK constraint
         status: "final",
-        content: description || null,
-        file_name: fileName || "document",
-        file_size: fileSize || 0,
-        file_type: fileType || "application/octet-stream",
+        content: payload
       })
       .select()
       .single();

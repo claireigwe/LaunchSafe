@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { Download, FileText, Table } from "lucide-react";
+import { Download, FileText, ListChecks, ShieldAlert, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getBusinessData } from "@/features/businesses/api/onboarding-api";
 import { generatePdfFromText } from "@/lib/pdf/generator";
@@ -20,10 +20,10 @@ export function ExportSection() {
   };
 
   const reports = [
-    { id: "health", label: "Compliance Health", icon: FileText },
-    { id: "execution", label: "Compliance Execution", icon: FileText },
-    { id: "risk", label: "Compliance Risk Assessment", icon: FileText },
-    { id: "docs", label: "Documentation Health", icon: Table },
+    { id: "health", label: "Compliance Health", desc: "Performance summary", icon: FileText },
+    { id: "execution", label: "Compliance Execution", desc: "Activity records", icon: ListChecks },
+    { id: "risk", label: "Compliance Risk Assessment", desc: "Vulnerability report", icon: ShieldAlert },
+    { id: "docs", label: "Documentation Health", desc: "Archival status", icon: FolderOpen },
   ];
 
   function handleExport(reportId: string) {
@@ -39,19 +39,24 @@ export function ExportSection() {
         <p className={styles.subtitle}>Download compliance reports for your records or audits.</p>
       </div>
 
-      <div className={styles.reportList}>
+      <div className={styles.reportGrid}>
         {reports.map((r) => (
-          <div key={r.id} className={styles.reportRow}>
-            <div className={styles.reportInfo}>
-              <r.icon size={16} className={styles.reportIcon} />
-              <div>
-                <span className={styles.reportName}>{r.label}</span>
-                <span className={styles.reportMeta}>PDF</span>
+          <div key={r.id} className={styles.reportCard}>
+            <div className={styles.cardHeader}>
+              <div className={styles.iconWrapper}>
+                <r.icon size={20} className={styles.reportIcon} />
               </div>
+              <span className={styles.pdfLabel}>PDF</span>
             </div>
-            <div className={styles.reportActions}>
-              <Button variant="outline" size="sm" onClick={() => handleExport(r.id)}>
-                <Download size={12} /> Export
+            
+            <div className={styles.cardBody}>
+              <h3 className={styles.reportName}>{r.label}</h3>
+              <p className={styles.reportDesc}>{r.desc}</p>
+            </div>
+
+            <div className={styles.cardFooter}>
+              <Button variant="outline" className={styles.exportBtn} onClick={() => handleExport(r.id)}>
+                <Download size={14} /> Export
               </Button>
             </div>
           </div>

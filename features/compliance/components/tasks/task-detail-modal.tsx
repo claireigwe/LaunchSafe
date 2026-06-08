@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
-import { AlertTriangle } from "lucide-react";
-import { getEvidenceForTask, linkDocumentAsEvidence } from "@/features/documents/api/document-generation";
+import { AlertTriangle, Loader2 } from "lucide-react";
+import { fetchEvidence, linkDocumentAsEvidenceAPI } from "@/features/compliance/api/evidence-api";
 import { getDocuments } from "@/features/documents/api/documents-api";
 import type { ComplianceTaskItem, UpdateTaskInput, TaskPriority, TaskStatus } from "../../types/tasks.types";
-import type { EvidenceRecord } from "@/features/documents/api/document-generation";
+import type { EvidenceRecord } from "@/features/compliance/api/evidence-api";
 import styles from "./task-detail-modal.module.css";
 
 interface Props {
@@ -29,16 +29,31 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
   const [showLinkDoc, setShowLinkDoc] = useState(false);
   const [showEvidenceWarning, setShowEvidenceWarning] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isLinking, setIsLinking] = useState(false);
 
   useEffect(() => {
-    setEvidence(getEvidenceForTask(task.id));
-    setAvailableDocs(getDocuments());
+    async function loadData() {
+      const allEvidence = await fetchEvidence();
+      setEvidence(allEvidence.filter(e => e.complianceTaskId === task.id));
+      const docs = await getDocuments();
+      setAvailableDocs(docs);
+    }
+    loadData();
   }, [task.id]);
 
-  function handleLinkDoc(docId: string, docTitle: string) {
-    linkDocumentAsEvidence(docId, docTitle, task.id);
-    setEvidence(getEvidenceForTask(task.id));
-    setShowLinkDoc(false);
+  async function handleLinkDoc(docId: string, docTitle: string) {
+    try {
+      setIsLinking(true);
+      await linkDocumentAsEvidenceAPI(docId, docTitle, task.id);
+      const allEvidence = await fetchEvidence();
+      setEvidence(allEvidence.filter(e => e.complianceTaskId === task.id));
+      setShowLinkDoc(false);
+    } catch (err) {
+      console.error("Failed to link document", err);
+      alert("Failed to link document as evidence.");
+    } finally {
+      setIsLinking(false);
+    }
   }
 
   function handleSave() {
@@ -162,9 +177,13 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
                     <button type="button" className={styles.linkDocCancel} onClick={() => setShowLinkDoc(false)}>Cancel</button>
                   </div>
                 ) : (
-                  <button type="button" className={styles.linkDocBtn} onClick={() => setShowLinkDoc(true)}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2V12M2 7H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
-                    Link Document as Evidence
+                  <button type="button" className={styles.linkDocBtn} onClick={() => setShowLinkDoc(true)} disabled={isLinking}>
+                    {isLinking ? (
+                      <Loader2 size={14} className="animate-spin mr-2 inline" />
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2V12M2 7H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                    )}
+                    {isLinking ? "Linking..." : "Link Document as Evidence"}
                   </button>
                 )}
               </div>

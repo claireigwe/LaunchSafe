@@ -42,11 +42,11 @@
   background: var(--color-role-light-surfaceContainerLow);
 }
 
-.action:nth-child(odd):nth-last-child(n+2) {
+.action:nth-child(odd) {
   border-right: 1px solid var(--color-role-light-outlineVariant);
 }
 
-.action:nth-child(-n+4) {
+.action:nth-child(-n+2) {
   border-bottom: 1px solid var(--color-role-light-outlineVariant);
 }
 

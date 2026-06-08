@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { TrendingUp, TrendingDown, Minus, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import { loadTasks } from "@/features/compliance/api/tasks-api";
-import { getDocuments } from "@/features/documents/api/documents-api";
+import { useDocuments } from "@/features/documents/hooks/use-documents-query";
 import type { HealthTrendPoint } from "../types/reporting.types";
 import styles from "./health-trend-chart.module.css";
 
@@ -47,7 +47,8 @@ export function HealthTrendChart({ data }: Props) {
   const completedTasks = tasks.filter((t) => t.status === "completed").length;
   const overdueTasks = tasks.filter((t) => t.status === "overdue").length;
   const missedDeadlines = tasks.filter((t) => t.status === "overdue" && t.dueDate).length;
-  const docsUploaded = getDocuments().length;
+  const { data: documents = [] } = useDocuments();
+  const docsUploaded = documents.length;
   const pendingTasks = tasks.filter((t) => t.status === "pending" || t.status === "in_progress").length;
 
   const riskLevel = current.score >= 80 ? "low" : current.score >= 50 ? "medium" : "high";
@@ -84,12 +85,11 @@ export function HealthTrendChart({ data }: Props) {
           <h2 className={styles.title}>Compliance Health Trends</h2>
           <p className={styles.subtitle}>Monitor how your compliance performance changes over time.</p>
         </div>
-      </div>
-
-      <div className={styles.timeToggle}>
-        <span className={`${styles.timeBtn} ${timeRange === "30d" ? styles.timeActive : ""}`} onClick={() => { setTimeRange("30d"); setHovered(null); }}>30 Days</span>
-        <span className={`${styles.timeBtn} ${timeRange === "90d" ? styles.timeActive : ""}`} onClick={() => { setTimeRange("90d"); setHovered(null); }}>90 Days</span>
-        <span className={`${styles.timeBtn} ${timeRange === "12m" ? styles.timeActive : ""}`} onClick={() => { setTimeRange("12m"); setHovered(null); }}>12 Months</span>
+        <div className={styles.timeToggle}>
+          <span className={`${styles.timeBtn} ${timeRange === "30d" ? styles.timeActive : ""}`} onClick={() => { setTimeRange("30d"); setHovered(null); }}>30 Days</span>
+          <span className={`${styles.timeBtn} ${timeRange === "90d" ? styles.timeActive : ""}`} onClick={() => { setTimeRange("90d"); setHovered(null); }}>90 Days</span>
+          <span className={`${styles.timeBtn} ${timeRange === "12m" ? styles.timeActive : ""}`} onClick={() => { setTimeRange("12m"); setHovered(null); }}>12 Months</span>
+        </div>
       </div>
 
       <div className={styles.kpiRow}>

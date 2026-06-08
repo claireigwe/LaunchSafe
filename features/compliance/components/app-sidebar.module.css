@@ -114,6 +114,16 @@
   border-top: 1px solid var(--color-role-light-outlineVariant);
 }
 
+.unreadBadge {
+  margin-left: auto;
+  background-color: var(--color-role-light-error);
+  color: var(--color-role-light-onError);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
 .footerCollapsed {
   align-items: center;
 }

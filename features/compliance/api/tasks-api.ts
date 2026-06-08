@@ -2,19 +2,23 @@ import type { ComplianceTaskItem, CreateTaskInput, UpdateTaskInput } from "../ty
 import { triggerTaskCreated, triggerTaskCompleted, triggerTaskOverdue, syncDeadlineNotifications } from "@/features/notifications/api/notification-triggers";
 import { logActivity } from "@/features/activity/api/activity-api";
 import { audit } from "@/features/audit/api/audit-api";
+import { getActiveBusinessId } from "@/lib/stores/app-store";
 
-const TASKS_KEY = "launchsafe-tasks";
+function tasksKey(businessId?: string): string {
+  const bid = businessId || getActiveBusinessId() || "default";
+  return `launchsafe-tasks-${bid}`;
+}
 
 /* ----- localStorage fallback ----- */
-function loadLocal(): ComplianceTaskItem[] {
+function loadLocal(businessId?: string): ComplianceTaskItem[] {
   try {
-    const raw = localStorage.getItem(TASKS_KEY);
+    const raw = localStorage.getItem(tasksKey(businessId));
     return raw ? JSON.parse(raw) : [];
   } catch { return []; }
 }
 
-function saveLocal(tasks: ComplianceTaskItem[]): void {
-  try { localStorage.setItem(TASKS_KEY, JSON.stringify(tasks)); } catch {}
+function saveLocal(tasks: ComplianceTaskItem[], businessId?: string): void {
+  try { localStorage.setItem(tasksKey(businessId), JSON.stringify(tasks)); } catch {}
 }
 
 /* ----- API helpers ----- */
@@ -68,10 +72,12 @@ let syncPromise: Promise<void> | null = null;
 
 function triggerSync(): void {
   if (syncPromise) return;
+  const businessId = getActiveBusinessId();
+  if (!businessId) return;
   syncPromise = (async () => {
     try {
-      const server = await apiGet<ComplianceTaskItem[]>("/api/compliance");
-      if (server) saveLocal(server);
+      const server = await apiGet<ComplianceTaskItem[]>(`/api/compliance?businessId=${businessId}`);
+      if (server) saveLocal(server, businessId);
     } catch {} finally {
       syncPromise = null;
     }
@@ -84,25 +90,28 @@ export function loadTasks(): ComplianceTaskItem[] {
 }
 
 export async function ensureTasksSynced(): Promise<ComplianceTaskItem[]> {
+  const businessId = getActiveBusinessId();
+  if (!businessId) return loadLocal();
   try {
-    const server = await apiGet<ComplianceTaskItem[]>("/api/compliance");
+    const server = await apiGet<ComplianceTaskItem[]>(`/api/compliance?businessId=${businessId}`);
     if (server) {
-      saveLocal(server);
+      saveLocal(server, businessId);
       return server;
     }
   } catch {}
-  return loadLocal();
+  return loadLocal(businessId);
 }
 
-export function saveTasks(tasks: ComplianceTaskItem[]): void {
-  saveLocal(tasks);
+export function saveTasks(tasks: ComplianceTaskItem[], businessId?: string): void {
+  saveLocal(tasks, businessId);
 }
 
-export async function createTask(input: CreateTaskInput, businessId: string): Promise<ComplianceTaskItem> {
+export async function createTask(input: CreateTaskInput, businessId?: string): Promise<ComplianceTaskItem> {
+  const bid = businessId || getActiveBusinessId() || "";
   const now = new Date().toISOString();
   const localTask: ComplianceTaskItem = {
     id: genId(),
-    businessId,
+    businessId: bid,
     title: input.title,
     description: input.description || "",
     dueDate: input.dueDate || null,
@@ -117,7 +126,7 @@ export async function createTask(input: CreateTaskInput, businessId: string): Pr
     updatedAt: now,
   };
 
-  const server = await apiPost<ComplianceTaskItem>("/api/compliance", input);
+  const server = await apiPost<ComplianceTaskItem>("/api/compliance", { ...input, businessId: bid });
   if (server) {
     const tasks = loadLocal();
     tasks.push(server);
@@ -137,7 +146,8 @@ export async function createTask(input: CreateTaskInput, businessId: string): Pr
 }
 
 export async function updateTask(id: string, input: UpdateTaskInput): Promise<ComplianceTaskItem | null> {
-  const server = await apiPatch<ComplianceTaskItem>("/api/compliance", { id, ...input });
+  const businessId = getActiveBusinessId();
+  const server = await apiPatch<ComplianceTaskItem>("/api/compliance", { id, ...input, businessId });
   if (server) {
     const tasks = loadLocal();
     const idx = tasks.findIndex((t) => t.id === id);
@@ -158,7 +168,8 @@ export async function updateTask(id: string, input: UpdateTaskInput): Promise<Co
 
 export async function deleteTask(id: string): Promise<void> {
   const deletedTask = loadLocal().find((t) => t.id === id);
-  await apiDelete("/api/compliance", { id });
+  const businessId = getActiveBusinessId();
+  await apiDelete("/api/compliance", { id, businessId });
   const tasks = loadLocal().filter((t) => t.id !== id);
   saveLocal(tasks);
   if (deletedTask) audit.taskDeleted(id, deletedTask.title);
@@ -174,7 +185,7 @@ export async function completeTask(id: string): Promise<ComplianceTaskItem | nul
   return result;
 }
 
-export async function addSuggestedTask(suggested: { title: string; description: string; priority: string; explanation?: string }, businessId: string): Promise<ComplianceTaskItem> {
+export async function addSuggestedTask(suggested: { title: string; description: string; priority: string; explanation?: string }, businessId?: string): Promise<ComplianceTaskItem> {
   return createTask(
     { title: suggested.title, description: suggested.description, priority: suggested.priority as any },
     businessId

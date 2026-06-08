@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
+import { AssessmentEngine } from "@/features/assessments/services/assessment-engine";
 import type { ApiResponse } from "@/types/api.types";
 
 /**
@@ -7,15 +8,6 @@ import type { ApiResponse } from "@/types/api.types";
  *
  * Returns the full compliance report.
  * ACCESS REQUIRES server-side payment verification.
- *
- * Flow:
- * 1. Verify user authentication
- * 2. Verify user owns the assessment
- * 3. Check assessment_purchases table for status = 'paid'
- * 4. Only then return results_json
- *
- * NEVER return results_json without completing steps 1-3.
- * Client-side payment state must never be trusted.
  */
 export async function GET(
   _request: Request,
@@ -25,18 +17,22 @@ export async function GET(
     const user = await getRequiredUser();
     const { assessmentId } = await params;
 
-    // TODO: AssessmentService.getFullReport(assessmentId, user.id)
-    //       — verifies ownership
-    //       — verifies assessment_purchases.status = 'paid' in DB
-    //       — returns results_json only if verified
+    const report = await AssessmentEngine.getFullReport(assessmentId, user.id);
 
+    return NextResponse.json<ApiResponse>({
+      success: true,
+      data: report,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === "PaymentRequired") {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: "Payment required" } },
+        { status: 402 }
+      );
+    }
+    
     return NextResponse.json<ApiResponse>(
-      { success: false, error: { message: "Payment required" } },
-      { status: 402 }
-    );
-  } catch {
-    return NextResponse.json<ApiResponse>(
-      { success: false, error: { message: "Unauthorized" } },
+      { success: false, error: { message: "Unauthorized or Assessment not found" } },
       { status: 401 }
     );
   }

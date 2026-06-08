@@ -48,7 +48,7 @@ export function CalendarPage() {
   }, [tasks]);
 
   async function handleCreate(input: CreateTaskInput) {
-    await createTask(input, "onboarded");
+    await createTask(input);
     trackEvent("Task Created", { title: input.title });
     setTasks(loadTasks());
     setShowCreate(false);

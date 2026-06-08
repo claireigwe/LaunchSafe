@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
 import { createClient } from "@/lib/supabase/server";
+import { AssessmentEngine } from "@/features/assessments/services/assessment-engine";
 import type { ApiResponse } from "@/types/api.types";
 import type { Assessment } from "@/types/domain/assessment";
 
@@ -52,7 +53,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const summaryJson = generateSummaryFromData(formData);
+    const { summary: summaryJson, report: resultsJson } = await AssessmentEngine.generateAssessment(formData);
 
     if (userId) {
       const { data: assessment, error } = await supabase
@@ -61,6 +62,7 @@ export async function POST(request: Request) {
           user_id: userId,
           status: "completed",
           summary_json: summaryJson,
+          results_json: resultsJson,
         } as any)
         .select()
         .single();
@@ -85,7 +87,7 @@ export async function POST(request: Request) {
             stateId: null,
             status: a.status,
             summaryJson: a.summary_json,
-            resultsJson: null,
+            resultsJson: null, // Intentionally null, locked until payment
             createdAt: a.created_at,
             updatedAt: a.updated_at,
           },

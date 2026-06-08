@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { generateDocument, DOC_TYPE_LABELS_GEN, DOC_TYPE_DESCRIPTIONS } from "../api/document-generation";
-import { getBusinessData } from "@/features/businesses/api/onboarding-api";
+import { getBusinessData, getBusinessDataById } from "@/features/businesses/api/onboarding-api";
+import { getActiveBusinessId } from "@/lib/stores/app-store";
 import { generatePdfFromText } from "@/lib/pdf/generator";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import type { DocumentType } from "@/types/domain/document";
@@ -22,16 +23,24 @@ export function DocumentGeneratorModal({ onClose, onComplete }: Props) {
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<{ title: string; content: string } | null>(null);
 
-  const saved = getBusinessData() as any;
+  const activeBusinessId = getActiveBusinessId();
+  const saved = activeBusinessId && activeBusinessId !== "biz-migrated"
+    ? getBusinessDataById(activeBusinessId) as any
+    : getBusinessData() as any;
   const businessName = saved?.info?.businessName || "Your Business";
 
   async function handleGenerate() {
     setGenerating(true);
     trackEvent("Document Generated", { docType });
-    const doc = generateDocument(docType, context, businessName);
-    setResult({ title: doc.title, content: doc.content || "" });
-    setGenerating(false);
-    onComplete();
+    try {
+      const doc = await generateDocument(docType, context, activeBusinessId || undefined);
+      setResult({ title: doc.title, content: doc.content || "" });
+      onComplete();
+    } catch (err: any) {
+      alert(`Error generating document: ${err.message}`);
+    } finally {
+      setGenerating(false);
+    }
   }
 
   function handleDownloadPdf() {

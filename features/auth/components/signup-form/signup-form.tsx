@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { setAccountCreated, saveProfile } from "@/features/settings/api/settings-api";
+import { updateProfile } from "@/features/settings/api/settings-api";
 import { triggerWelcome } from "@/features/notifications/api/notification-triggers";
 import styles from "./signup-form.module.css";
 import Link from "next/link";
@@ -72,8 +72,7 @@ export function SignupForm() {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (session) {
-      setAccountCreated();
-      saveProfile({ fullName: fullName.trim(), email, jobTitle: jobTitle.trim() });
+      await updateProfile({ fullName: fullName.trim(), email, jobTitle: jobTitle.trim() });
       triggerWelcome();
       router.push(redirectTo);
       router.refresh();

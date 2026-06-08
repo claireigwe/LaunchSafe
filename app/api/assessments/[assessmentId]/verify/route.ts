@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
 import type { ApiResponse } from "@/types/api.types";
+import { createAdminClient } from "@/lib/supabase/server";
 import type { AssessmentFullReport } from "@/types/domain/assessment";
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
@@ -46,6 +47,71 @@ export async function POST(
     }
 
     const report = generateFullReport(assessmentData || {});
+
+    // Save to database
+    const supabase = createAdminClient() as any;
+
+    // 1. Create or get payment record
+    let paymentId;
+    const { data: existingPayment } = await supabase
+      .from("payments")
+      .select("id")
+      .eq("provider_reference", trxref)
+      .single();
+
+    if (existingPayment) {
+      paymentId = existingPayment.id;
+    } else {
+      const { data: newPayment, error: paymentError } = await supabase
+        .from("payments")
+        .insert({
+          user_id: user.id,
+          amount: verifyData.data.amount,
+          currency: verifyData.data.currency,
+          provider: "paystack",
+          payment_type: "assessment",
+          reference: `ls_ass_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+          provider_reference: trxref,
+          status: "paid",
+        })
+        .select()
+        .single();
+        
+      if (paymentError) throw new Error(`Failed to create payment record: ${paymentError.message}`);
+      paymentId = newPayment.id;
+    }
+
+    // 2. Update assessment
+    const { error: updateError } = await supabase
+      .from("assessments")
+      .update({
+        status: "completed",
+        results_json: report,
+      })
+      .eq("id", assessmentId);
+
+    if (updateError) throw new Error(`Failed to update assessment: ${updateError.message}`);
+
+    // 3. Create assessment purchase record
+    const { data: existingPurchase } = await supabase
+      .from("assessment_purchases")
+      .select("id")
+      .eq("assessment_id", assessmentId)
+      .single();
+
+    if (!existingPurchase) {
+      const { error: purchaseError } = await supabase
+        .from("assessment_purchases")
+        .insert({
+          user_id: user.id,
+          assessment_id: assessmentId,
+          payment_id: paymentId,
+          status: "paid",
+          unlocked_at: new Date().toISOString(),
+        });
+        
+      if (purchaseError) throw new Error(`Failed to create assessment purchase: ${purchaseError.message}`);
+    }
 
     return NextResponse.json<ApiResponse>(
       { success: true, data: { report } },

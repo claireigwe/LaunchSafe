@@ -11,6 +11,7 @@ import { SubscriptionSelect } from "./steps/subscription-select";
 import { PaymentProcessing } from "./steps/payment-processing";
 import { DashboardRedirect } from "./steps/dashboard-redirect";
 import { clearUserIntent, saveUserIntent, addBusiness, getBusinessCount } from "../api/onboarding-api";
+import { getSubscription } from "@/features/billing/api/billing-api";
 import { schedulePlanChange } from "@/features/billing/api/billing-api";
 import { getPlanLimit } from "@/features/billing/api/feature-access";
 import type { OnboardingStep, OnboardingData } from "../types/onboarding.types";
@@ -33,7 +34,7 @@ export function BusinessOnboardingWizard() {
   const isAddBusiness = mode === "add-business";
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       if (!session) {
         saveUserIntent("existing_business");
@@ -41,7 +42,7 @@ export function BusinessOnboardingWizard() {
         return;
       }
       if (isAddBusiness) {
-        const count = getBusinessCount();
+        const count = await getBusinessCount();
         const limit = getPlanLimit("businesses");
         if (count >= limit) {
           router.push("/business");
@@ -88,7 +89,16 @@ export function BusinessOnboardingWizard() {
       case 3:
         return <BusinessOperations data={data.operations} onUpdate={(v) => updateStepData("operations", v)} onNext={goNext} onBack={goBack} />;
       case 4:
-        return <ProcessingProfile onComplete={isAddBusiness ? async () => { await addBusiness(data as any); clearUserIntent(); router.push("/business"); } : goNext} />;
+        return <ProcessingProfile onComplete={async () => {
+          const sub = getSubscription();
+          if (isAddBusiness || (sub && sub.status === "active")) {
+            await addBusiness(data as any);
+            clearUserIntent();
+            router.push("/dashboard");
+          } else {
+            goNext();
+          }
+        }} />;
       case 5:
         return (
           <SubscriptionSelect

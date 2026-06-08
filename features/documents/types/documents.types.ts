@@ -48,6 +48,7 @@ export interface AppDocument {
   verificationStatus: string | null;
   renewalDate: string | null;
   tags: string[];
+  content?: string | null;
 }
 
 export interface SuggestedDocument {

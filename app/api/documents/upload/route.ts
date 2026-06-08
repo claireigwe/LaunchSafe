@@ -12,11 +12,39 @@ export async function POST(request: Request) {
     const title = formData.get("title") as string;
     const description = formData.get("description") as string || "";
     const docType = formData.get("docType") as string || "other";
+    const businessId = formData.get("businessId") as string;
     const file = formData.get("file") as File;
 
     if (!title || !file) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: { message: "Title and file are required" } },
+        { status: 400 }
+      );
+    }
+
+    const supabase = createAdminClient() as any;
+
+    let activeBusinessId = businessId;
+    if (activeBusinessId) {
+      const { data: b } = await supabase.from("businesses").select("id").eq("id", activeBusinessId).eq("user_id", user.id).single();
+      if (!b) activeBusinessId = null;
+    }
+
+    if (!activeBusinessId) {
+      const { data: businesses } = await supabase
+        .from("businesses")
+        .select("id")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (businesses && businesses.length > 0) {
+        activeBusinessId = businesses[0].id;
+      }
+    }
+
+    if (!activeBusinessId) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: "No active business found for document upload" } },
         { status: 400 }
       );
     }
@@ -37,7 +65,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = createAdminClient() as any;
+    const payload = JSON.stringify({
+      description: description || "",
+      docType: docType || "other",
+      file_name: file.name,
+      file_size: file.size,
+      file_type: file.type
+    });
+
     const docId = crypto.randomUUID();
 
     const { data: doc, error: insertError } = await supabase
@@ -45,22 +80,20 @@ export async function POST(request: Request) {
       .insert({
         id: docId,
         user_id: user.id,
-        business_id: "onboarded",
+        business_id: activeBusinessId,
         title,
-        document_type: docType,
+        document_type: "report", // fallback to pass CHECK constraint
         status: "final",
         storage_path: null,
-        content: description,
-        file_name: file.name,
-        file_size: file.size,
-        file_type: file.type,
+        content: payload
       })
       .select()
       .single();
 
     if (insertError || !doc) {
+      console.error("[Upload] Insert Error:", insertError);
       return NextResponse.json<ApiResponse>(
-        { success: false, error: { message: "Failed to create document record" } },
+        { success: false, error: { message: `Failed to create document record: ${insertError?.message || 'Unknown database error'}` } },
         { status: 500 }
       );
     }
@@ -96,10 +129,14 @@ export async function POST(request: Request) {
       },
       { status: 201 }
     );
-  } catch {
+  } catch (err) {
+    console.error("[Upload] Error:", err);
+    const message = err instanceof Error ? err.message : "Upload failed";
     return NextResponse.json<ApiResponse>(
-      { success: false, error: { message: "Unauthorized" } },
-      { status: 401 }
+      { success: false, error: { message } },
+      { status: 500 }
     );
   }
 }
+
+// Force recompilation

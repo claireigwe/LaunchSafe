@@ -27,24 +27,22 @@ export function DocumentationHealthSection({ data }: Props) {
         <p className={styles.subtitle}>How prepared your document records are for compliance.</p>
       </div>
 
-      <div className={styles.scoreRow}>
-        <div className={styles.donut}>
-          <svg width="80" height="80" viewBox="0 0 80 80">
-            <circle cx="40" cy="40" r="32" fill="none" stroke="var(--color-role-light-surfaceContainer)" strokeWidth="8" />
-            <circle cx="40" cy="40" r="32" fill="none" stroke={score >= 80 ? "var(--color-key-success)" : score >= 50 ? "var(--color-key-warning)" : "var(--color-key-error)"} strokeWidth="8" strokeDasharray={`${score * 2.01} 201`} transform="rotate(-90 40 40)" strokeLinecap="round" />
-            <text x="40" y="40" textAnchor="middle" dominantBaseline="central" fontSize="16" fontWeight="700" fill="var(--color-role-light-onSurface)" fontFamily="var(--font-headline-headline-medium-fontFamily)">{score}%</text>
-          </svg>
-        </div>
-        <div className={styles.scoreInfo}>
+      <div className={styles.mainGrid}>
+        <div className={styles.leftCol}>
+          <div className={styles.donut}>
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="32" fill="none" stroke="var(--color-role-light-surfaceContainerHigh)" strokeWidth="6" />
+              <circle cx="40" cy="40" r="32" fill="none" stroke={score >= 80 ? "var(--color-key-success)" : score >= 50 ? "var(--color-key-warning)" : "var(--color-key-error)"} strokeWidth="6" strokeDasharray={`${score * 2.01} 201`} transform="rotate(-90 40 40)" strokeLinecap="round" />
+              <text x="40" y="40" textAnchor="middle" dominantBaseline="central" fontSize="22" fontWeight="700" fill="var(--color-role-light-onSurface)" fontFamily="var(--font-headline-headline-medium-fontFamily)">{score}%</text>
+            </svg>
+          </div>
           <span className={`${styles.statusBadge} ${styles[statusCls]}`}>{statusLabel}</span>
           <p className={styles.scoreDesc}>
             {data.totalUploaded} document{data.totalUploaded !== 1 ? "s" : ""} uploaded · {data.missingRecommended} recommended document{data.missingRecommended !== 1 ? "s" : ""} missing
           </p>
         </div>
-      </div>
 
-      <div className={styles.contentRow}>
-        <div className={styles.metricsRow}>
+        <div className={styles.midCol}>
           <div className={styles.stat}>
             <span className={styles.statValue}>{data.totalUploaded}</span>
             <span className={styles.statLabel}>Uploaded</span>
@@ -59,14 +57,17 @@ export function DocumentationHealthSection({ data }: Props) {
           </div>
         </div>
 
-        <div>
+        <div className={styles.rightCol}>
           {data.recommendations.length > 0 && (
-            <div className={styles.recoSection}>
+            <div className={styles.recoPanel}>
               <h3 className={styles.recoTitle}>Missing Critical Documents</h3>
               {data.recommendations.map((r, i) => (
-                <div key={i} className={styles.recoItem}>
-                  <AlertTriangle size={15} className={styles.recoIcon} />
-                  <span>{r}</span>
+                <div key={i} className={styles.recoCard}>
+                  <div className={styles.recoCardLeft}>
+                    <AlertTriangle size={18} className={styles.recoIcon} />
+                    <span>{r}</span>
+                  </div>
+                  <span className={styles.uploadLink}>Upload</span>
                 </div>
               ))}
               <p className={styles.impact}>{impact}</p>

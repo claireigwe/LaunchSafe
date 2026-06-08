@@ -2,7 +2,7 @@
 .header { margin-bottom: 32px; }
 .title { font-family: var(--font-display-display-small-fontFamily); font-size: 24px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0 0 4px; letter-spacing: -0.3px; }
 .subtitle { font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurfaceVariant); margin: 0; }
-.scoreRow { display: flex; gap: 48px; margin-bottom: 32px; }
+.scoreRow { display: flex; gap: 64px; flex-wrap: wrap; margin-bottom: 32px; }
 @media (max-width: 640px) { .scoreRow { flex-direction: column; gap: 24px; } }
 .scoreCard { padding: 0; background: transparent; border: none; display: flex; flex-direction: column; }
 .scoreLabel { display: block; font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 500; color: var(--color-role-light-onSurfaceVariant); text-transform: none; letter-spacing: 0; margin-bottom: 4px; }

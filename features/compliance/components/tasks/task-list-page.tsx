@@ -9,8 +9,12 @@ import { TaskDetailModal } from "./task-detail-modal";
 import { SuggestedTasksWidget } from "./suggested-tasks-widget";
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from "../../hooks/use-tasks-query";
 import { reconcileTaskStatuses } from "../../api/tasks-api";
+import { getActiveBusinessId } from "@/lib/stores/app-store";
 import { SetupOverlay } from "@/features/billing/components/setup-overlay";
+import { isInSetupMode } from "@/features/billing/api/setup-check";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { useHasBusiness } from "@/features/businesses/hooks/use-has-business";
+import { EmptyBusinessState } from "@/features/businesses/components/empty-business-state";
 import type { ComplianceTaskItem, CreateTaskInput, UpdateTaskInput } from "../../types/tasks.types";
 import styles from "./task-list-page.module.css";
 
@@ -35,6 +39,7 @@ export function TaskListPage() {
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [selectedTask, setSelectedTask] = useState<ComplianceTaskItem | null>(null);
+  const hasBusiness = useHasBusiness();
 
   useEffect(() => {
     reconcileTaskStatuses();
@@ -58,7 +63,7 @@ export function TaskListPage() {
   }, [tasks, filter, sourceFilter, search]);
 
   async function handleCreate(input: CreateTaskInput) {
-    await createTaskMutation.mutateAsync({ input, businessId: "onboarded" });
+    await createTaskMutation.mutateAsync({ input, businessId: getActiveBusinessId() || "" });
     trackEvent("Task Created", { title: input.title });
     setShowCreate(false);
   }
@@ -79,7 +84,11 @@ export function TaskListPage() {
   return (
     <SetupOverlay>
     <div className={styles.page}>
-      <div className={styles.header}>
+      {!isInSetupMode() && hasBusiness === false ? (
+        <EmptyBusinessState />
+      ) : (
+        <>
+          <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Compliance Tasks</h1>
           <p className={styles.subtitle}>Track and manage your compliance obligations.</p>
@@ -126,6 +135,8 @@ export function TaskListPage() {
 
       {showCreate && <TaskCreateModal onSave={handleCreate} onClose={() => setShowCreate(false)} />}
       {selectedTask && <TaskDetailModal task={selectedTask} onUpdate={handleUpdate} onDelete={handleDelete} onClose={() => setSelectedTask(null)} />}
+        </>
+      )}
     </div>
     </SetupOverlay>
   );

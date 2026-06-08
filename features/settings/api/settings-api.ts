@@ -1,48 +1,43 @@
 import type { ProfileData, NotificationPrefs } from "../types/settings.types";
 
-const PROFILE_KEY = "launchsafe-profile";
-const PREFS_KEY = "launchsafe-notification-prefs";
-const CREATED_KEY = "launchsafe-account-created";
-
-export function loadProfile(): ProfileData {
-  try {
-    const raw = localStorage.getItem(PROFILE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return {
-    fullName: "",
-    email: "",
-    jobTitle: "",
-    createdAt: localStorage.getItem(CREATED_KEY) || new Date().toISOString(),
-    lastLogin: new Date().toISOString(),
-  };
+export async function fetchProfileAndPrefs(): Promise<{ profile: ProfileData, prefs: NotificationPrefs }> {
+  const res = await fetch('/api/settings/profile');
+  if (!res.ok) {
+    throw new Error('Failed to fetch profile and preferences');
+  }
+  const data = await res.json();
+  if (!data.success) {
+    throw new Error(data.error || 'Failed to fetch profile and preferences');
+  }
+  return data.data;
 }
 
-export function saveProfile(data: Partial<ProfileData>): ProfileData {
-  const current = loadProfile();
-  const updated = { ...current, ...data };
-  try { localStorage.setItem(PROFILE_KEY, JSON.stringify(updated)); } catch {}
-  return updated;
+export async function updateProfile(profile: Partial<ProfileData>): Promise<void> {
+  const res = await fetch('/api/settings/profile', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ profile }),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to update profile');
+  }
+  const data = await res.json();
+  if (!data.success) {
+    throw new Error(data.error || 'Failed to update profile');
+  }
 }
 
-export function loadNotificationPrefs(): NotificationPrefs {
-  try {
-    const raw = localStorage.getItem(PREFS_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return {
-    taskNotifications: true,
-    deadlineReminders: true,
-    documentNotifications: true,
-    billingNotifications: true,
-    systemAnnouncements: true,
-  };
-}
-
-export function saveNotificationPrefs(prefs: NotificationPrefs): void {
-  try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch {}
-}
-
-export function setAccountCreated(): void {
-  try { localStorage.setItem(CREATED_KEY, new Date().toISOString()); } catch {}
+export async function updateNotificationPrefs(prefs: NotificationPrefs): Promise<void> {
+  const res = await fetch('/api/settings/profile', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prefs }),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to update preferences');
+  }
+  const data = await res.json();
+  if (!data.success) {
+    throw new Error(data.error || 'Failed to update preferences');
+  }
 }

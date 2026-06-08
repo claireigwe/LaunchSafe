@@ -25,7 +25,7 @@ export function ReportingPage() {
   const [data, setData] = useState<ReportData | null>(null);
 
   useEffect(() => {
-    setData(generateReportData());
+    generateReportData().then(setData);
     trackEvent("Advanced Reporting Viewed");
   }, []);
 
@@ -67,8 +67,10 @@ export function ReportingPage() {
 
       <div className={styles.flow}>
         <HealthTrendChart data={[]} />
-        <ComplianceExecutionSection taskData={data.taskAnalytics} deadlineData={data.deadlinePerformance} />
-        <RiskAssessmentSection data={data.riskReport} />
+        <div className={styles.twoColumnFlow}>
+          <ComplianceExecutionSection taskData={data.taskAnalytics} deadlineData={data.deadlinePerformance} />
+          <RiskAssessmentSection data={data.riskReport} />
+        </div>
         <DocumentationHealthSection data={data.documentReport} />
         {data.comparisons.length > 0 && <ComparisonTable data={data.comparisons} />}
         {canExportReport && <ExportSection />}

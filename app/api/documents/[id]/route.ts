@@ -66,3 +66,31 @@ export async function DELETE(
     );
   }
 }
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    await getRequiredUser();
+    const { id } = await params;
+    const supabase = createAdminClient() as any;
+    const body = await request.json();
+
+    const { data, error } = await supabase
+      .from("compliance_documents")
+      .update(body)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json<ApiResponse>({ success: true, data });
+  } catch (err: any) {
+    return NextResponse.json<ApiResponse>(
+      { success: false, error: { message: err.message || "Failed to update document" } },
+      { status: 500 }
+    );
+  }
+}

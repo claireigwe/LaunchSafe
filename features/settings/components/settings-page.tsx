@@ -5,21 +5,19 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
-import { loadProfile, saveProfile, loadNotificationPrefs, saveNotificationPrefs } from "../api/settings-api";
-import { canManageTeam } from "@/features/settings/api/permissions";
-import { getBusinessData, clearUserIntent } from "@/features/businesses/api/onboarding-api";
-import { getSubscription } from "@/features/billing/api/billing-api";
+import { fetchProfileAndPrefs, updateProfile, updateNotificationPrefs } from "../api/settings-api";
+import { canManageTeam } from "../api/permissions";
 import { canAccess, getCurrentPlanName } from "@/features/billing/api/feature-access";
-import { getIndustriesSync } from "@/features/assessments/api/industries-api";
+import { getSubscription } from "@/features/billing/api/billing-api";
+import { getBusinessData } from "@/features/businesses/api/onboarding-api";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
-import type { NotificationPrefs } from "../types/settings.types";
+import type { NotificationPrefs, ProfileData } from "../types/settings.types";
 import styles from "./settings-page.module.css";
 
-type Section = "profile" | "business" | "notifications" | "security" | "team" | "account";
+type Section = "profile" | "notifications" | "security" | "team" | "account";
 
 const SECTIONS: { key: Section; label: string }[] = [
   { key: "profile", label: "Profile" },
-  { key: "business", label: "Business Settings" },
   { key: "notifications", label: "Notification Preferences" },
   { key: "security", label: "Security" },
   { key: "team", label: "Team" },
@@ -32,7 +30,6 @@ export function SettingsPage() {
   const supabase = createClient();
   const [section, setSection] = useState<Section>(() => {
     const tab = searchParams.get("tab");
-    if (tab === "business") return "business";
     if (tab === "team") return "team";
     return "profile";
   });
@@ -56,7 +53,6 @@ export function SettingsPage() {
         </nav>
         <div className={styles.content}>
           {section === "profile" && <ProfileSection />}
-          {section === "business" && <BusinessSection router={router} />}
           {section === "notifications" && <NotificationsSection />}
           {section === "security" && <SecuritySection supabase={supabase} />}
           {section === "team" && <TeamSection />}
@@ -69,38 +65,51 @@ export function SettingsPage() {
 
 function ProfileSection() {
   const supabase = createClient();
-  const [profile, setProfile] = useState(loadProfile());
+  const [profile, setProfile] = useState<ProfileData | null>(null);
   const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(profile.fullName);
-  const [job, setJob] = useState(profile.jobTitle);
+  const [name, setName] = useState("");
+  const [job, setJob] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!profile.email) {
-      supabase.auth.getUser().then(({ data: { user } }) => {
-        if (user?.email) {
-          const updated = saveProfile({ email: user.email });
-          setProfile(updated);
-        }
-      });
+    async function load() {
+      try {
+        const data = await fetchProfileAndPrefs();
+        setProfile(data.profile);
+        setName(data.profile.fullName);
+        setJob(data.profile.jobTitle);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     }
+    load();
   }, []);
 
-  function handleSave() {
+  async function handleSave() {
     if (!name.trim()) { setError("Name is required"); return; }
-    const updated = saveProfile({ fullName: name.trim(), jobTitle: job.trim() });
-    setProfile(updated);
-    setEditing(false);
-    setError("");
-    trackEvent("Profile Updated");
+    try {
+      await updateProfile({ fullName: name.trim(), jobTitle: job.trim() });
+      if (profile) setProfile({ ...profile, fullName: name.trim(), jobTitle: job.trim() });
+      setEditing(false);
+      setError("");
+      trackEvent("Profile Updated");
+    } catch (err: any) {
+      setError(err.message || "Failed to update profile");
+    }
   }
 
   function handleCancel() {
-    setName(profile.fullName);
-    setJob(profile.jobTitle);
+    setName(profile?.fullName || "");
+    setJob(profile?.jobTitle || "");
     setEditing(false);
     setError("");
   }
+
+  if (loading) return <Section title="Profile" subtitle="Manage your account information."><p className={styles.emptyText}>Loading profile...</p></Section>;
+  if (!profile) return null;
 
   return (
     <Section title="Profile" subtitle="Manage your account information.">
@@ -139,58 +148,39 @@ function ProfileSection() {
   );
 }
 
-function BusinessSection({ router }: { router: any }) {
-  const saved = getBusinessData() as any;
-  const info = saved?.info;
-  const operations = saved?.operations;
-
-  if (!info?.businessName) {
-    return (
-      <Section title="Business Settings" subtitle="Manage your business information.">
-        <div className={styles.emptyCard}>
-          <p className={styles.emptyText}>Business information has not been configured yet.</p>
-          <Button variant="primary" size="md" onClick={() => { clearUserIntent(); router.push("/business-onboarding"); }}>Complete Business Profile</Button>
-        </div>
-      </Section>
-    );
-  }
-
-  return (
-    <Section title="Business Settings" subtitle="View your business information.">
-      <div className={styles.field}>
-        <label className={styles.label}>Business Name</label>
-        <input className={styles.input} value={info.businessName} disabled />
-      </div>
-      <div className={styles.field}>
-        <label className={styles.label}>Industry</label>
-        <input className={styles.input} value={getIndustryName(info.industry)} disabled />
-      </div>
-      <div className={styles.field}>
-        <label className={styles.label}>Business Type</label>
-        <input className={styles.input} value={info.businessType || "—"} disabled />
-      </div>
-      <div className={styles.field}>
-        <label className={styles.label}>State</label>
-        <input className={styles.input} value={getStateLabel(info.state)} disabled />
-      </div>
-      {info.website && <div className={styles.field}><label className={styles.label}>Website</label><input className={styles.input} value={info.website} disabled /></div>}
-      {info.description && <div className={styles.field}><label className={styles.label}>Description</label><textarea className={styles.textarea} value={info.description} disabled rows={2} /></div>}
-      {operations?.employeeCount && (
-        <div className={styles.field}><label className={styles.label}>Employees</label><input className={styles.input} value={operations.employeeCount} disabled /></div>
-      )}
-    </Section>
-  );
-}
 
 function NotificationsSection() {
-  const [prefs, setPrefs] = useState<NotificationPrefs>(loadNotificationPrefs());
+  const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  function toggle(key: keyof NotificationPrefs) {
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await fetchProfileAndPrefs();
+        setPrefs(data.prefs);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  async function toggle(key: keyof NotificationPrefs) {
+    if (!prefs) return;
     const next = { ...prefs, [key]: !prefs[key] };
     setPrefs(next);
-    saveNotificationPrefs(next);
-    trackEvent("Notification Preference Updated", { key, value: next[key] });
+    try {
+      await updateNotificationPrefs(next);
+      trackEvent("Notification Preference Updated", { key, value: next[key] });
+    } catch (err) {
+      console.error(err);
+      setPrefs(prefs);
+    }
   }
+
+  if (loading || !prefs) return <Section title="Notification Preferences" subtitle="Control which notifications you receive."><p className={styles.emptyText}>Loading preferences...</p></Section>;
 
   return (
     <Section title="Notification Preferences" subtitle="Control which notifications you receive.">
@@ -280,24 +270,36 @@ function TeamSection() {
     try {
       const res = await fetch("/api/team/members");
       const json = await res.json();
-      if (json.success && json.data.length > 0) {
-        setMembers(json.data);
-        const me = json.data.find((m: any) => m.role === "owner" || m.role === "admin");
-        setMyRole(me?.role || "member");
-      } else {
-        const biz = getBusinessData() as any;
-        if (biz?.info?.businessName) {
-          await fetch("/api/businesses", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: biz.info.businessName }),
-          });
-          const retry = await fetch("/api/team/members");
-          const retryJson = await retry.json();
-          if (retryJson.success) {
-            setMembers(retryJson.data);
-            const me = retryJson.data.find((m: any) => m.role === "owner" || m.role === "admin");
-            setMyRole(me?.role || "member");
+      
+      const parseData = (data: any) => {
+        if (!data) return { members: [], myRole: "member" };
+        if (Array.isArray(data)) {
+          const me = data.find((m: any) => m.role === "owner" || m.role === "admin");
+          return { members: data, myRole: me?.role || "member" };
+        }
+        return { members: data.members || [], myRole: data.myRole || "member" };
+      };
+
+      if (json.success) {
+        const { members: initialMembers, myRole: initialRole } = parseData(json.data);
+        if (initialMembers.length > 0 || initialRole !== "member") {
+          setMembers(initialMembers);
+          setMyRole(initialRole);
+        } else {
+          const biz = getBusinessData() as any;
+          if (biz?.info?.businessName) {
+            await fetch("/api/businesses", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name: biz.info.businessName }),
+            });
+            const retry = await fetch("/api/team/members");
+            const retryJson = await retry.json();
+            if (retryJson.success) {
+              const { members: retryMembers, myRole: retryRole } = parseData(retryJson.data);
+              setMembers(retryMembers);
+              setMyRole(retryRole);
+            }
           }
         }
       }
@@ -511,11 +513,3 @@ function ToggleRow({ label, description, value, onChange }: { label: string; des
   );
 }
 
-function getIndustryName(id: string): string {
-  return getIndustriesSync().find((i) => i.slug === id)?.name || id;
-}
-
-function getStateLabel(id: string): string {
-  const states: Record<string, string> = { lagos: "Lagos", oyo: "Oyo", "abuja-fct": "Abuja (FCT)", rivers: "Rivers", kano: "Kano" };
-  return states[id] || id;
-}

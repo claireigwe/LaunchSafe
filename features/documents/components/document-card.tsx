@@ -13,18 +13,21 @@ interface Props {
   onDownload: (doc: AppDocument) => void;
   onDelete: (id: string) => void;
   viewMode: "table" | "card";
+  isDeleting?: boolean;
 }
 
-export function DocumentCard({ doc, onView, onDownload, onDelete, viewMode }: Props) {
+export function DocumentCard({ doc, onView, onDownload, onDelete, viewMode, isDeleting }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  if (confirmDelete) {
+  if (isDeleting || confirmDelete) {
     return (
       <div className={styles.confirmOverlay}>
-        <span className={styles.confirmText}>Delete this document?</span>
+        <span className={styles.confirmText}>{isDeleting ? "Deleting..." : "Delete this document?"}</span>
         <div className={styles.confirmActions}>
-          <button type="button" className={styles.confirmCancel} onClick={() => setConfirmDelete(false)}>Cancel</button>
-          <button type="button" className={styles.confirmBtn} onClick={() => { onDelete(doc.id); setConfirmDelete(false); }}>Delete</button>
+          {!isDeleting && <button type="button" className={styles.confirmCancel} onClick={() => setConfirmDelete(false)}>Cancel</button>}
+          <button type="button" className={styles.confirmBtn} disabled={isDeleting} onClick={() => { onDelete(doc.id); setConfirmDelete(false); }}>
+            {isDeleting ? "Deleting..." : "Delete"}
+          </button>
         </div>
       </div>
     );

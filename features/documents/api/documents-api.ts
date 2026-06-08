@@ -2,29 +2,24 @@ import type { AppDocument, DocType } from "../types/documents.types";
 import { triggerDocumentUploaded } from "@/features/notifications/api/notification-triggers";
 import { logActivity } from "@/features/activity/api/activity-api";
 import { audit } from "@/features/audit/api/audit-api";
-
-const DOCS_KEY = "launchsafe-documents";
-
-/* ----- localStorage ----- */
-function loadLocal(): AppDocument[] {
-  try {
-    const raw = localStorage.getItem(DOCS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
-
-function saveLocal(items: AppDocument[]): void {
-  try { localStorage.setItem(DOCS_KEY, JSON.stringify(items)); } catch {} 
-}
-
-function genId(): string {
-  return `doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-}
+import { getActiveBusinessId } from "@/lib/stores/app-store";
 
 /* ----- API helpers ----- */
 async function apiGet<T>(url: string): Promise<T | null> {
   try {
     const res = await fetch(url);
+    const json = await res.json();
+    return json.success ? json.data : null;
+  } catch { return null; }
+}
+
+async function apiPatch<T>(url: string, body: any): Promise<T | null> {
+  try {
+    const res = await fetch(url, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
     const json = await res.json();
     return json.success ? json.data : null;
   } catch { return null; }
@@ -44,96 +39,54 @@ export interface UploadDocumentInput {
   title: string;
   description?: string;
   docType: DocType;
-  fileName: string;
-  fileSize: number;
-  fileType: string;
-  fileUrl: string | null;
+  file: File;
 }
 
 export async function uploadDocument(input: UploadDocumentInput): Promise<AppDocument> {
+  const businessId = getActiveBusinessId();
   const formData = new FormData();
   formData.append("title", input.title);
   formData.append("description", input.description || "");
   formData.append("docType", input.docType);
+  if (businessId) formData.append("businessId", businessId);
 
-  if (input.fileUrl && input.fileName) {
-    try {
-      const res = await fetch(input.fileUrl);
-      const blob = await res.blob();
-      formData.append("file", blob, input.fileName);
-    } catch {
-      formData.append("file", new Blob(), input.fileName);
-    }
+  formData.append("file", input.file);
+
+  const res = await fetch("/api/documents/upload", { method: "POST", body: formData });
+  const json = await res.json();
+  if (!json.success) {
+    throw new Error(json.error?.message || "Failed to upload document");
   }
-
-  try {
-    const res = await fetch("/api/documents/upload", { method: "POST", body: formData });
-    const json = await res.json();
-    if (json.success) {
-      const doc = json.data;
-      const items = loadLocal();
-      items.unshift(doc);
-      saveLocal(items);
-      triggerDocumentUploaded(doc.title);
-      logActivity("document_uploaded", "Document Uploaded", doc.title);
-      audit.documentUploaded(doc.id, doc.title);
-      return doc;
-    }
-  } catch {}
-
-  const now = new Date().toISOString();
-  const doc: AppDocument = {
-    id: genId(),
-    businessId: "onboarded",
-    userId: "user",
-    title: input.title,
-    description: input.description || "",
-    docType: input.docType,
-    fileUrl: input.fileUrl,
-    fileName: input.fileName,
-    fileSize: input.fileSize,
-    fileType: input.fileType,
-    uploadedBy: "You",
-    uploadedAt: now,
-    updatedAt: now,
-    expiryDate: null,
-    issuingAgency: null,
-    verificationStatus: null,
-    renewalDate: null,
-    tags: [],
-  };
-  const items = loadLocal();
-  items.unshift(doc);
-  saveLocal(items);
+  
+  const doc = json.data as AppDocument;
   triggerDocumentUploaded(doc.title);
   logActivity("document_uploaded", "Document Uploaded", doc.title);
   audit.documentUploaded(doc.id, doc.title);
   return doc;
 }
 
-export function getDocuments(): AppDocument[] {
-  apiGet<AppDocument[]>("/api/documents").then((server) => {
-    if (server) saveLocal(server);
-  }).catch(() => {});
-  return loadLocal().sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
+export async function getDocuments(): Promise<AppDocument[]> {
+  const businessId = getActiveBusinessId();
+  const data = await apiGet<AppDocument[]>(`/api/documents${businessId ? `?businessId=${businessId}` : ""}`);
+  return data || [];
 }
 
-export function getDocument(id: string): AppDocument | undefined {
-  return loadLocal().find((d) => d.id === id);
+export async function getDocument(id: string): Promise<AppDocument | undefined> {
+  const data = await apiGet<AppDocument>(`/api/documents/${id}`);
+  return data || undefined;
 }
 
-export function updateDocument(id: string, updates: Partial<AppDocument>): AppDocument | null {
-  const items = loadLocal();
-  const idx = items.findIndex((d) => d.id === id);
-  if (idx === -1) return null;
-  items[idx] = { ...items[idx], ...updates, updatedAt: new Date().toISOString() };
-  saveLocal(items);
-  return items[idx];
+export async function updateDocument(id: string, updates: Partial<AppDocument>): Promise<AppDocument | null> {
+  const businessId = getActiveBusinessId();
+  const mappedUpdates: any = { ...updates, businessId };
+  if (updates.description !== undefined) mappedUpdates.content = updates.description;
+  if (updates.docType !== undefined) mappedUpdates.document_type = updates.docType;
+
+  return await apiPatch<AppDocument>(`/api/documents/${id}`, mappedUpdates);
 }
 
 export async function deleteDocument(id: string): Promise<void> {
   await apiDelete(`/api/documents/${id}`);
-  saveLocal(loadLocal().filter((d) => d.id !== id));
 }
 
 export function formatFileSize(bytes: number): string {
@@ -144,12 +97,13 @@ export function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
 
-export function getDocumentsByType(type: DocType): AppDocument[] {
-  return loadLocal().filter((d) => d.docType === type);
+export async function getDocumentsByType(type: DocType): Promise<AppDocument[]> {
+  const allDocs = await getDocuments();
+  return allDocs.filter((d) => d.docType === type);
 }
 
-export function searchDocuments(query: string, typeFilter?: string): AppDocument[] {
-  let docs = loadLocal();
+export async function searchDocuments(query: string, typeFilter?: string): Promise<AppDocument[]> {
+  let docs = await getDocuments();
   if (typeFilter && typeFilter !== "all") {
     docs = docs.filter((d) => d.docType === typeFilter);
   }
@@ -157,5 +111,5 @@ export function searchDocuments(query: string, typeFilter?: string): AppDocument
     const q = query.toLowerCase();
     docs = docs.filter((d) => d.title.toLowerCase().includes(q) || d.description.toLowerCase().includes(q));
   }
-  return docs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
+  return docs;
 }

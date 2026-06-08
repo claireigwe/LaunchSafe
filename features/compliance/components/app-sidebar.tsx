@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
@@ -18,9 +18,10 @@ import {
   Menu,
   Compass,
 } from "lucide-react";
-import { NotificationBell } from "@/features/notifications/components/notification-bell";
-import { getCurrentPlanName } from "@/features/billing/api/feature-access";
 import { isInSetupMode } from "@/features/billing/api/setup-check";
+import { getUnreadCount } from "@/features/notifications/api/notifications-api";
+import { getActiveBusinessId, useAppStore } from "@/lib/stores/app-store";
+import { fetchAllBusinesses } from "@/features/businesses/api/onboarding-api";
 import styles from "./app-sidebar.module.css";
 
 const NAV_ITEMS = [
@@ -38,7 +39,40 @@ const NAV_ITEMS = [
 export function AppSidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const setupMode = isInSetupMode();
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [setupMode, setSetupMode] = useState(false);
+  const [activeBizName, setActiveBizName] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  const storeBizId = useAppStore((s) => s.activeBusinessId);
+
+  async function refreshActiveBusiness() {
+    const id = storeBizId || getActiveBusinessId();
+    if (id) {
+      const all = await fetchAllBusinesses();
+      const biz = all.find((b) => b.id === id);
+      setActiveBizName(biz?.name || "");
+    } else {
+      setActiveBizName("");
+    }
+  }
+
+  useEffect(() => {
+    setSetupMode(isInSetupMode());
+    setMounted(true);
+
+    const refresh = async () => {
+      const count = await getUnreadCount();
+      setUnreadCount(count);
+    };
+    refresh();
+    const interval = setInterval(refresh, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    refreshActiveBusiness();
+  }, [storeBizId]);
 
   return (
     <>
@@ -57,7 +91,7 @@ export function AppSidebar() {
         </div>
 
         <nav className={styles.nav} aria-label="Main navigation">
-          {setupMode && (
+          {mounted && setupMode && (
             <Link
               href="/onboarding"
               className={cn(styles.link, styles.setupLink, pathname === "/onboarding" && styles.active)}
@@ -84,18 +118,19 @@ export function AppSidebar() {
               >
                 <Icon size={18} className={styles.icon} />
                 {!collapsed && (
-                  <span>{label}{href === "/business" && <span className={styles.navPlanTag}>{getCurrentPlanName()}</span>}</span>
+                  <>
+                    <span>{label}{href === "/business" && mounted && activeBizName && <span className={styles.navPlanTag}>{activeBizName}</span>}</span>
+                    {href === "/notifications" && unreadCount > 0 && (
+                      <span className={styles.unreadBadge}>
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
+                  </>
                 )}
               </Link>
             );
           })}
         </nav>
-
-        <div className={cn(styles.footer, collapsed && styles.footerCollapsed)}>
-          <div className={styles.bellRow}>
-            <NotificationBell />
-          </div>
-        </div>
 
         <button
           className={styles.collapseBtn}

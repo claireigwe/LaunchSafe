@@ -20,4 +20,5 @@ export interface DashboardData {
   business: Business | null;
   recentActivity: DashboardActivity[];
   notifications: Notification[];
+  userProfile?: { fullName: string; jobTitle: string; } | null;
 }

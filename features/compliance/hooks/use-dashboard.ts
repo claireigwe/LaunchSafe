@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
-import { getBusinessData } from "@/features/businesses/api/onboarding-api";
+import { fetchAllBusinesses } from "@/features/businesses/api/onboarding-api";
+import { fetchProfileAndPrefs } from "@/features/settings/api/settings-api";
 import { loadTasks, reconcileTaskStatuses } from "@/features/compliance/api/tasks-api";
 import { getIndustriesSync } from "@/features/assessments/api/industries-api";
+import { getActiveBusinessId } from "@/lib/stores/app-store";
 import type { DashboardData } from "../types/dashboard.types";
 import type { Business } from "@/types/domain/business";
 import type { ComplianceTaskItem } from "@/features/compliance/types/tasks.types";
@@ -19,54 +21,68 @@ export function useDashboard() {
     reconcileTaskStatuses();
     const all = loadTasks();
     setTasks(all);
-    setData((prev) => ({
-      ...prev,
-      tasks: all as any,
-      upcomingDeadlines: all
-        .filter((t) => t.status !== "completed" && t.dueDate)
-        .sort((a, b) => (a.dueDate || "").localeCompare(b.dueDate || ""))
-        .slice(0, 5) as any,
-      overdueItems: all.filter((t) => t.status === "overdue") as any,
-    }));
-    setLoading(false);
+
+    async function loadDashBusiness() {
+      const activeId = getActiveBusinessId();
+      try {
+        const bizList = await fetchAllBusinesses();
+        let target = bizList.find((b) => b.id === activeId);
+        if (!target && bizList.length > 0) target = bizList[0];
+        
+        let business: Business | null = null;
+        if (target) {
+          const industryObj = getIndustriesSync().find((i) => i.slug === target!.industry);
+          business = {
+            id: target.id,
+            userId: "",
+            name: target.name,
+            description: `${industryObj?.name || target.type || "Business"} · ${getStateLabel(target.state)}`,
+            industryId: target.industry || "",
+            countryId: "nigeria",
+            stateId: target.state || null,
+            lgaId: null,
+            status: "active",
+            launchDate: null,
+            employeeCount: null,
+            website: null,
+            createdAt: target.createdAt,
+            updatedAt: target.createdAt,
+          };
+        }
+
+        const profileData = await fetchProfileAndPrefs().catch(() => null);
+
+        setData((prev) => ({
+          ...prev,
+          tasks: all as any,
+          upcomingDeadlines: all
+            .filter((t) => t.status !== "completed" && t.dueDate)
+            .sort((a, b) => (a.dueDate || "").localeCompare(b.dueDate || ""))
+            .slice(0, 5) as any,
+          overdueItems: all.filter((t) => t.status === "overdue") as any,
+          business,
+          userProfile: profileData?.profile || null,
+        }));
+      } catch (e) {
+        // Fallback
+      }
+      setLoading(false);
+    }
+
+    loadDashBusiness();
   }, []);
 
   return { data, loading, tasks };
 }
 
 function buildDashboardData(): DashboardData {
-  const saved = getBusinessData() as Record<string, any> | null;
-  const info = saved?.info;
-  const operations = saved?.operations;
-
-  let business: Business | null = null;
-  if (info?.businessName) {
-    const industryObj = getIndustriesSync().find((i) => i.slug === info.industry);
-    business = {
-      id: "onboarded",
-      userId: "",
-      name: info.businessName,
-      description: info.description || `${industryObj?.name || info.businessType || "Business"} · ${getStateLabel(info.state)}`,
-      industryId: info.industry || "",
-      countryId: "nigeria",
-      stateId: info.state || null,
-      lgaId: null,
-      status: "active",
-      launchDate: null,
-      employeeCount: parseCount(operations?.employeeCount),
-      website: info.website || null,
-      createdAt: saved?._savedAt || new Date().toISOString(),
-      updatedAt: saved?._savedAt || new Date().toISOString(),
-    };
-  }
-
   return {
     score: null,
     upcomingDeadlines: [],
     overdueItems: [],
     tasks: [],
     regulatoryUpdates: [],
-    business,
+    business: null,
     recentActivity: [],
     notifications: [],
   };

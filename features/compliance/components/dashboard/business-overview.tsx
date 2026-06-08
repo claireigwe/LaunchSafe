@@ -36,7 +36,7 @@ export function BusinessOverview({ business }: Props) {
       <div className={styles.header}>
         <Building2 size={16} className={styles.icon} />
         <h2 className={styles.title}>Business Overview</h2>
-        <Link href="/settings" className={styles.settingsLink} aria-label="Business settings">
+        <Link href="/business" className={styles.settingsLink} aria-label="Business settings">
           <Settings size={16} />
         </Link>
       </div>

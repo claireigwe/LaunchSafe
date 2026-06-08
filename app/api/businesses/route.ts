@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const user = await getRequiredUser();
     const supabase = await createClient() as any;
     const body = await request.json();
-    const { name, description } = body;
+    const { name, description, industrySlug, stateSlug } = body;
 
     if (!name) {
       return NextResponse.json<ApiResponse>(
@@ -74,6 +74,24 @@ export async function POST(request: Request) {
       );
     }
 
+    let industry_id = null;
+    if (industrySlug) {
+      const { data: ind } = await supabase.from("industries").select("id").eq("slug", industrySlug).maybeSingle();
+      if (ind) industry_id = ind.id;
+    }
+
+    let state_id = null;
+    if (stateSlug) {
+      // States table has no slug column — match by name (case-insensitive)
+      const { data: st } = await supabase.from("states").select("id").ilike("name", stateSlug).maybeSingle();
+      if (st) state_id = st.id;
+    }
+
+    // Default country to Nigeria (Phase 1 market)
+    let country_id = null;
+    const { data: ng } = await supabase.from("countries").select("id").eq("code", "NG").maybeSingle();
+    if (ng) country_id = ng.id;
+
     const { data, error } = await supabase
       .from("businesses")
       .insert({
@@ -81,6 +99,9 @@ export async function POST(request: Request) {
         name,
         description: description || null,
         status: "active",
+        industry_id,
+        state_id,
+        country_id,
       })
       .select()
       .single();

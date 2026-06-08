@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import type { ApiResponse } from "@/types/api.types";
 
 export async function GET(
@@ -83,6 +83,50 @@ export async function PATCH(
     return NextResponse.json<ApiResponse>(
       { success: false, error: { message: "Unauthorized" } },
       { status: 401 }
+    );
+  }
+}
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ businessId: string }> }
+) {
+  try {
+    const user = await getRequiredUser();
+    const { businessId } = await params;
+    const supabase = await createClient() as any;
+
+    const { data: business, error: findError } = await supabase
+      .from("businesses")
+      .select("id")
+      .eq("id", businessId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (findError || !business) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: "Business not found" } },
+        { status: 404 }
+      );
+    }
+
+    const adminSupabase = createAdminClient() as any;
+    const { error: deleteError } = await adminSupabase
+      .from("businesses")
+      .delete()
+      .eq("id", businessId);
+
+    if (deleteError) {
+      console.error("Delete Business Error:", deleteError);
+      throw deleteError;
+    }
+
+    return NextResponse.json<ApiResponse>({ success: true, data: { deleted: true } });
+  } catch (error) {
+    console.error("Delete Business Catch:", error);
+    return NextResponse.json<ApiResponse>(
+      { success: false, error: { message: "Internal Error" } },
+      { status: 500 }
     );
   }
 }

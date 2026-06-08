@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { FileText, X, Check } from "lucide-react";
 import { generateDocumentSuggestions } from "../data/document-suggestions";
-import { getBusinessData } from "@/features/businesses/api/onboarding-api";
+import { fetchAllBusinesses, getBusinessData } from "@/features/businesses/api/onboarding-api";
+import { useAppStore } from "@/lib/stores/app-store";
 import { DOC_TYPE_LABELS } from "../types/documents.types";
 import type { SuggestedDocument } from "../types/documents.types";
 import styles from "./suggested-documents-widget.module.css";
@@ -23,17 +24,37 @@ export function SuggestedDocumentsWidget({ onUpload }: { onUpload?: (title: stri
   const [dismissed, setDismissed] = useState<Set<string>>(() => loadSet(DISMISSED_KEY));
   const [accepted, setAccepted] = useState<Set<string>>(() => loadSet(ACCEPTED_KEY));
 
+  const activeBusinessId = useAppStore((s) => s.activeBusinessId);
+
   useEffect(() => {
-    const saved = getBusinessData() as any;
-    const profile = saved ? {
-      industry: saved.info?.industry || "",
-      isRegistered: saved.status?.isRegistered ?? null,
-      hasCAC: saved.status?.hasCAC ?? null,
-      hasPhysicalLocation: saved.operations?.hasPhysicalLocation ?? null,
-      hasOnlineOperations: saved.operations?.hasOnlineOperations ?? null,
-    } : null;
-    setSuggestions(generateDocumentSuggestions(profile));
-  }, []);
+    async function loadData() {
+      try {
+        const businesses = await fetchAllBusinesses();
+        const active = activeBusinessId ? businesses.find(b => b.id === activeBusinessId) : businesses[0];
+        
+        const saved = active?.fullData || getBusinessData() || null;
+        const profile = saved ? {
+          industry: saved.info?.industry || active?.industry || "",
+          isRegistered: saved.status?.isRegistered ?? null,
+          hasCAC: saved.status?.hasCAC ?? null,
+          hasPhysicalLocation: saved.operations?.hasPhysicalLocation ?? null,
+          hasOnlineOperations: saved.operations?.hasOnlineOperations ?? null,
+        } : null;
+        setSuggestions(generateDocumentSuggestions(profile));
+      } catch {
+        const saved = getBusinessData() as any;
+        const profile = saved ? {
+          industry: saved.info?.industry || "",
+          isRegistered: saved.status?.isRegistered ?? null,
+          hasCAC: saved.status?.hasCAC ?? null,
+          hasPhysicalLocation: saved.operations?.hasPhysicalLocation ?? null,
+          hasOnlineOperations: saved.operations?.hasOnlineOperations ?? null,
+        } : null;
+        setSuggestions(generateDocumentSuggestions(profile));
+      }
+    }
+    loadData();
+  }, [activeBusinessId]);
 
   const visible = suggestions.filter((s) => !dismissed.has(s.id) && !accepted.has(s.id)).slice(0, 4);
 
