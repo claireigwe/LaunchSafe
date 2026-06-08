@@ -135,8 +135,8 @@ export function DocumentLibrary() {
     refetchGen();
   }
 
-  function handleUpload(input: UploadDocumentInput) {
-    return uploadMutation.mutateAsync(input, {
+  async function handleUpload(input: UploadDocumentInput) {
+    await uploadMutation.mutateAsync(input, {
       onSuccess: () => {
         trackEvent("Document Uploaded", { title: input.title });
         setShowUpload(false);
