@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { DOC_TYPE_LABELS, type DocType } from "../types/documents.types";
 import type { UploadDocumentInput } from "../api/documents-api";
 import { DOC_TYPES } from "../data/document-types";
@@ -85,9 +86,7 @@ export function DocumentUploadModal({ onSave, onClose }: Props) {
           </div>
           <div className={styles.field}>
             <label className={styles.label}>Document Type</label>
-            <select className={styles.select} value={docType} onChange={(e) => setDocType(e.target.value as DocType)}>
-              {DOC_TYPES.map((k) => <option key={k} value={k}>{DOC_TYPE_LABELS[k]}</option>)}
-            </select>
+            <Select value={docType} onChange={(e) => setDocType(e.target.value as DocType)} options={DOC_TYPES.map((k) => ({ value: k, label: DOC_TYPE_LABELS[k] }))} />
           </div>
           <div className={styles.field}>
             <label className={styles.label}>Description <span className={styles.opt}>(optional)</span></label>

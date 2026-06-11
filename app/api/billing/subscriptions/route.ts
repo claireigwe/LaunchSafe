@@ -8,7 +8,6 @@ const PAYSTACK_API = "https://api.paystack.co/transaction/initialize";
 const PLANS: Record<string, { monthly: number; annual: number }> = {
   starter: { monthly: 10000, annual: 102000 },
   growth: { monthly: 20000, annual: 216000 },
-  enterprise: { monthly: 35000, annual: 384000 },
 };
 
 export async function POST(request: Request) {

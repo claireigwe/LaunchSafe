@@ -1,7 +1,6 @@
 .section {
   padding: 100px 24px;
-  background-color: var(--color-role-light-secondaryContainer);
-  color: var(--color-role-light-onSecondaryContainer);
+  background-color: #ffffff;
 }
 
 .container {

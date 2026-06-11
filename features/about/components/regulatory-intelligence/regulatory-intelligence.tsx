@@ -1,14 +1,15 @@
+import Image from "next/image";
 import styles from "./regulatory-intelligence.module.css";
 
-export function RegulatoryIntelligence() {
-  const agencies = [
-    { name: "CAC", fullName: "Corporate Affairs Commission" },
-    { name: "FIRS", fullName: "Federal Inland Revenue Service" },
-    { name: "NAFDAC", fullName: "National Agency for Food and Drug Administration and Control" },
-    { name: "SON", fullName: "Standards Organisation of Nigeria" },
-    { name: "NDPC", fullName: "Nigeria Data Protection Commission" },
-  ];
+const AGENCIES = [
+  { slug: "cac", name: "CAC", fullName: "Corporate Affairs Commission" },
+  { slug: "firs", name: "FIRS", fullName: "Federal Inland Revenue Service" },
+  { slug: "nafdac", name: "NAFDAC", fullName: "National Agency for Food and Drug Administration and Control" },
+  { slug: "son", name: "SON", fullName: "Standards Organisation of Nigeria" },
+  { slug: "ndpc", name: "NDPC", fullName: "Nigeria Data Protection Commission" },
+];
 
+export function RegulatoryIntelligence() {
   return (
     <section className={styles.section}>
       <div className={styles.container}>
@@ -20,9 +21,9 @@ export function RegulatoryIntelligence() {
         </div>
 
         <div className={styles.agencyGrid}>
-          {agencies.map((agency, i) => (
+          {AGENCIES.map((agency, i) => (
             <div key={i} className={styles.agencyCard}>
-              <div className={styles.agencyAbbr}>{agency.name}</div>
+              <Image src={`/images/regulators/${agency.slug}.png`} alt={agency.name} width={100} height={40} className={styles.agencyLogo} />
               <div className={styles.agencyFull}>{agency.fullName}</div>
             </div>
           ))}

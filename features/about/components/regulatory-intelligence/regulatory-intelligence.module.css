@@ -1,7 +1,6 @@
 .section {
   padding: 80px 24px;
-  background-color: var(--color-role-light-surfaceContainerLowest);
-  border-top: 1px solid var(--color-role-light-outlineVariant);
+  background-color: #f8faff;
 }
 
 .container {
@@ -47,8 +46,8 @@
 }
 
 .agencyCard {
-  background-color: var(--color-role-light-background);
-  border: 1px solid var(--color-role-light-outlineVariant);
+  background-color: #ffffff;
+  border: none;
   border-radius: 16px;
   padding: 24px;
   width: 100%;
@@ -58,6 +57,7 @@
   align-items: center;
   text-align: center;
   gap: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -72,6 +72,12 @@
   font-weight: 700;
   color: var(--color-role-light-onSurface);
   letter-spacing: -0.5px;
+}
+
+.agencyLogo {
+  object-fit: contain;
+  height: 40px;
+  width: auto;
 }
 
 .agencyFull {

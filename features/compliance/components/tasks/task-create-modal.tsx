@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import type { CreateTaskInput, TaskPriority } from "../../types/tasks.types";
 import styles from "./task-create-modal.module.css";
 
@@ -54,12 +55,7 @@ export function TaskCreateModal({ onSave, onClose }: Props) {
             </div>
             <div className={styles.field}>
               <label className={styles.label}>Priority</label>
-              <select className={styles.select} value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)}>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="critical">Critical</option>
-              </select>
+              <Select value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)} options={["low","medium","high","critical"]} />
             </div>
           </div>
           <div className={styles.actions}>

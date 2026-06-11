@@ -1,7 +1,6 @@
 .section {
   padding: 80px 24px;
-  background-color: var(--color-role-light-background);
-  border-top: 1px solid var(--color-role-light-outlineVariant);
+  background-color: #ffffff;
 }
 
 .container {
@@ -52,19 +51,20 @@
 }
 
 .card {
-  background-color: var(--color-role-light-surfaceContainerLowest);
-  border: 1px solid var(--color-role-light-outlineVariant);
+  background-color: #ffffff;
+  border: none;
   border-radius: 24px;
   padding: 40px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
 }
 
 .cardHighlight {
-  background-color: var(--color-role-light-surfaceContainerLow);
+  background-color: #ffffff;
   border: 2px solid var(--color-role-light-secondary);
   border-radius: 24px;
   padding: 40px;
   position: relative;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
 }
 
 .iconWrapper {

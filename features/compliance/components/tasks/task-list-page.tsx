@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { TaskCard } from "./task-card";
 import { TaskCreateModal } from "./task-create-modal";
 import { TaskDetailModal } from "./task-detail-modal";
@@ -104,11 +105,7 @@ export function TaskListPage() {
             <button key={f.key} className={`${styles.filterBtn} ${filter === f.key ? styles.filterActive : ""}`} onClick={() => setFilter(f.key)}>{f.label}</button>
           ))}
         </div>
-        <select className={styles.sourceSelect} value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value as SourceFilter)}>
-          <option value="all">All Sources</option>
-          <option value="manual">Manual Tasks</option>
-          <option value="suggested">Suggested Tasks</option>
-        </select>
+        <Select className={styles.sourceSelect} value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value as SourceFilter)} options={[{value:"all", label:"All Sources"}, {value:"manual", label:"Manual Tasks"}, {value:"suggested", label:"Suggested Tasks"}]} />
       </div>
 
       {isLoading ? (

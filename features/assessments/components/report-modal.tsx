@@ -44,39 +44,22 @@ export function ReportModal({ reportId, isOpen, onClose }: { reportId: string | 
   async function downloadPdf() {
     setDownloading(true);
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      const { jsPDF } = await import("jspdf");
+      const html2pdfModule = await import("html2pdf.js");
+      const html2pdf = html2pdfModule.default || html2pdfModule;
 
       const element = reportRef.current;
       if (!element) return;
 
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-      });
+      const opt = {
+        margin:       [10, 10, 10, 10],
+        filename:     "LaunchSafe-Compliance-Report.pdf",
+        image:        { type: "jpeg", quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        jsPDF:        { unit: "mm", format: "a4", orientation: "portrait" },
+        pagebreak:    { mode: ["css", "legacy"] }
+      };
 
-      const imgData = canvas.toDataURL("image/png");
-      const imgWidth = 210;
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      const pdf = new jsPDF("p", "mm", "a4");
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      pdf.save("LaunchSafe-Compliance-Report.pdf");
+      await html2pdf().set(opt).from(element).save();
     } catch {
       // Ignored
     } finally {
@@ -169,7 +152,7 @@ export function ReportModal({ reportId, isOpen, onClose }: { reportId: string | 
 
           {report && (
             <div ref={reportRef} style={{ padding: "0 8px" }}>
-              <div style={{ background: "rgba(255,255,255,0.75)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 8px 32px rgba(0,0,0,0.04)", borderRadius: 24, overflow: "hidden", marginBottom: 24 }}>
+              <div style={{ background: "rgba(255,255,255,0.75)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 8px 32px rgba(0,0,0,0.04)", borderRadius: 24, overflow: "hidden", marginBottom: 24, pageBreakInside: "avoid" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px", borderBottom: "1px solid var(--color-role-light-outlineVariant)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <FileText size={20} style={{ color: "var(--color-role-light-primary)" }} />
@@ -191,7 +174,7 @@ export function ReportModal({ reportId, isOpen, onClose }: { reportId: string | 
                 <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
                   <h4 style={{ fontFamily: "var(--font-title-title-large-fontFamily)", fontSize: 18, fontWeight: 600, color: "var(--color-role-light-onSurface)", margin: 0 }}>Requirements & Obligations</h4>
                   {report.requirements.map((req, idx) => (
-                    <div key={idx} style={{ background: "rgba(255,255,255,0.75)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 8px 32px rgba(0,0,0,0.04)", borderRadius: 24, padding: 20 }}>
+                    <div key={idx} style={{ background: "rgba(255,255,255,0.75)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 8px 32px rgba(0,0,0,0.04)", borderRadius: 24, padding: 20, pageBreakInside: "avoid" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                         <h5 style={{ fontFamily: "var(--font-label-label-large-fontFamily)", fontSize: 16, fontWeight: 600, color: "var(--color-role-light-onSurface)", margin: 0 }}>{req.name}</h5>
                         <span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 11, fontWeight: 600, background: req.confidenceLevel === "verified" ? "#eef2ff" : req.confidenceLevel === "estimated" ? "#fefce8" : "#f5f5f5", color: req.confidenceLevel === "verified" ? "#2563eb" : req.confidenceLevel === "estimated" ? "#d97706" : "#666" }}>
@@ -216,7 +199,7 @@ export function ReportModal({ reportId, isOpen, onClose }: { reportId: string | 
               )}
 
               {report.riskFactors && report.riskFactors.length > 0 && (
-                <div style={{ background: "rgba(255,255,255,0.75)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 8px 32px rgba(0,0,0,0.04)", borderRadius: 24, padding: 20 }}>
+                <div style={{ background: "rgba(255,255,255,0.75)", border: "1px solid rgba(255,255,255,0.9)", boxShadow: "0 8px 32px rgba(0,0,0,0.04)", borderRadius: 24, padding: 20, pageBreakInside: "avoid" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                     <AlertTriangle size={16} style={{ color: "#d97706" }} />
                     <h4 style={{ fontFamily: "var(--font-label-label-large-fontFamily)", fontSize: 16, fontWeight: 600, color: "var(--color-role-light-onSurface)", margin: 0 }}>Risk Analysis</h4>

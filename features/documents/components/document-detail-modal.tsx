@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Download, FileText, Trash2, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils/cn";
 import { formatFileSize, updateDocument } from "../api/documents-api";
 import { DOC_TYPE_LABELS } from "../types/documents.types";
@@ -61,9 +62,7 @@ export function DocumentDetailModal({ doc, onUpdate, onDelete, onDownload, onClo
               </div>
               <div className={styles.field}>
                 <label className={styles.label}>Type</label>
-                <select className={styles.select} value={docType} onChange={(e) => setDocType(e.target.value as DocType)}>
-                  {DOC_TYPES.map((k) => <option key={k} value={k}>{DOC_TYPE_LABELS[k]}</option>)}
-                </select>
+                <Select value={docType} onChange={(e) => setDocType(e.target.value as DocType)} options={DOC_TYPES.map((k) => ({ value: k, label: DOC_TYPE_LABELS[k] }))} />
               </div>
               <div className={styles.field}>
                 <label className={styles.label}>Description</label>

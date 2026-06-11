@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, FileCheck, Building2, MapPin, Search, CheckCircle2 } from "lucide-react";
@@ -8,34 +9,17 @@ export function HeroSection() {
     <section className={styles.hero}>
       <div className={styles.background}>
         <div className={styles.glow} />
-        {/* Orbital rings */}
-        <div className={styles.ring} style={{ width: '800px', height: '800px' }} />
-        <div className={styles.ring} style={{ width: '1200px', height: '1200px' }} />
-        <div className={styles.ring} style={{ width: '1600px', height: '1600px' }} />
-
-        {/* Floating Icons representing agencies, rules, businesses */}
-        <div className={`${styles.floatingElement} ${styles.float1}`}>
-          <div className={styles.iconContainer}><Building2 size={24} /></div>
-        </div>
-        <div className={`${styles.floatingElement} ${styles.float2}`}>
-          <div className={styles.iconContainer}><FileCheck size={24} /></div>
-        </div>
-        <div className={`${styles.floatingElement} ${styles.float3}`}>
-          <div className={styles.iconContainer}><ShieldCheck size={24} /></div>
-        </div>
-        <div className={`${styles.floatingElement} ${styles.float4}`}>
-          <div className={styles.iconContainer}><MapPin size={24} /></div>
-        </div>
       </div>
 
       <div className={styles.container}>
         <div className={styles.badge}>
-          <span className={styles.badgeLabel}>LaunchSafe</span>
-          <span className={styles.badgeText}>The compliance operating system</span>
+          <span className={styles.badgeLabel}>&lt;</span>
+          <span className={styles.badgeText}>THE COMPLIANCE OPERATING SYSTEM</span>
         </div>
 
         <h1 className={styles.title}>
-          Compliance intelligence<br />for African businesses
+          Compliance intelligence<br />
+          for <span className={styles.titleHighlight}>African businesses</span>
         </h1>
         
         <p className={styles.subtitle}>
@@ -44,34 +28,51 @@ export function HeroSection() {
 
         <div className={styles.actions}>
           <Link href="/assessment" tabIndex={-1}>
-            <Button variant="primary" size="lg">
+            <Button variant="primary" size="lg" className={styles.button}>
               Start Free Assessment
             </Button>
           </Link>
           <Link href="/pricing" tabIndex={-1}>
-            <Button variant="outline" size="lg">
+            <Button variant="outline" size="lg" className={styles.button}>
               View Plans
             </Button>
           </Link>
         </div>
 
-        {/* Abstract central UI preview (like the one in the reference image) */}
-        <div className={styles.previewContainer}>
+        <div className={styles.previewWrapper}>
+          <div className={`${styles.floatingIcon} ${styles.floatingLeft}`}>
+            <MapPin size={20} className={styles.iconBlue} />
+          </div>
+          <div className={`${styles.floatingIcon} ${styles.floatingRight}`}>
+            <ShieldCheck size={20} className={styles.iconBlue} />
+          </div>
+          
           <div className={styles.previewCard}>
             <div className={styles.previewHeader}>
-              <Search size={16} className={styles.previewIcon} />
-              <span>Analyzing business profile...</span>
+              <div className={styles.previewHeaderLeft}>
+                <Search size={16} className={styles.previewIcon} />
+                <span>Analyzing business profile...</span>
+              </div>
+              <div className={styles.previewHeaderRight}>
+                <span className={`${styles.dot} ${styles.dotRed}`} />
+                <span className={`${styles.dot} ${styles.dotYellow}`} />
+                <span className={`${styles.dot} ${styles.dotGreen}`} />
+              </div>
             </div>
             <div className={styles.previewBody}>
               <div className={styles.previewItem}>
-                <CheckCircle2 size={20} className={styles.previewItemIcon} />
+                <div className={styles.previewItemIconWrapper}>
+                  <Building2 size={20} className={styles.previewItemIcon} />
+                </div>
                 <div className={styles.previewItemText}>
                   <strong>Requirements Found: 8</strong>
                   <span>Agencies Involved: 4</span>
                 </div>
               </div>
               <div className={styles.previewItem}>
-                <CheckCircle2 size={20} className={styles.previewItemIcon} />
+                <div className={styles.previewItemIconWrapper}>
+                  <FileCheck size={20} className={styles.previewItemIcon} />
+                </div>
                 <div className={styles.previewItemText}>
                   <strong>Compliance Complexity: Medium</strong>
                   <span>Estimated Cost: ₦85,000 – ₦120,000</span>
@@ -80,16 +81,17 @@ export function HeroSection() {
             </div>
           </div>
         </div>
+      </div>
 
-        <div className={styles.trustedBy}>
-          <p className={styles.trustedText}>Built using verified regulatory intelligence from:</p>
+      <div className={styles.trustedBySection}>
+        <div className={styles.trustedContainer}>
+          <p className={styles.trustedText}>BUILT USING VERIFIED REGULATORY DATA FROM:</p>
           <div className={styles.trustedLogos}>
-            {/* These would be real logos, using text placeholders for now */}
-            <span className={styles.logoPlaceholder}>CAC</span>
-            <span className={styles.logoPlaceholder}>FIRS</span>
-            <span className={styles.logoPlaceholder}>NAFDAC</span>
-            <span className={styles.logoPlaceholder}>SON</span>
-            <span className={styles.logoPlaceholder}>NDPC</span>
+            <Image src="/images/regulators/cac.png" alt="CAC" width={120} height={48} className={styles.regulatorLogo} />
+            <Image src="/images/regulators/firs.png" alt="FIRS" width={120} height={48} className={styles.regulatorLogo} />
+            <Image src="/images/regulators/nafdac.png" alt="NAFDAC" width={120} height={48} className={styles.regulatorLogo} />
+            <Image src="/images/regulators/son.png" alt="SON" width={120} height={48} className={styles.regulatorLogo} />
+            <Image src="/images/regulators/ndpc.png" alt="NDPC" width={120} height={48} className={styles.regulatorLogo} />
           </div>
         </div>
       </div>

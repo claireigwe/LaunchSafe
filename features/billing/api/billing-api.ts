@@ -130,7 +130,7 @@ const PLAN_FEATURES: Record<string, string[]> = {
 export function getPlanFeatures(planId: string): string[] { return PLAN_FEATURES[planId] || PLAN_FEATURES.starter; }
 
 export function getPlanPrice(planId: string, isAnnual: boolean): number {
-  const prices: Record<string, { m: number; a: number }> = { starter: { m: 10000, a: 8500 }, growth: { m: 20000, a: 18000 }, enterprise: { m: 35000, a: 32000 } };
+  const prices: Record<string, { m: number; a: number }> = { starter: { m: 10000, a: 8500 }, growth: { m: 20000, a: 18000 } };
   const p = prices[planId]; return p ? (isAnnual ? p.a : p.m) : 0;
 }
 

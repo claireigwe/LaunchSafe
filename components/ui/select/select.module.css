@@ -1,0 +1,5 @@
+.wrapper { position: relative; display: inline-flex; width: 100%; }
+.select { appearance: none; -webkit-appearance: none; padding: 10px 40px 10px 14px; border-radius: 10px; border: 1px solid var(--color-role-light-outlineVariant); background: var(--color-role-light-surfaceContainerLowest); font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurface); outline: none; transition: border-color .15s; width: 100%; cursor: pointer; }
+.select:focus { border-color: var(--color-role-light-primary); }
+.select:disabled { opacity: .5; cursor: not-allowed; }
+.chevron { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--color-role-light-onSurfaceVariant); }

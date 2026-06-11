@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import styles from "./faq-section.module.css";
 
 export function FAQSection() {
@@ -29,7 +30,10 @@ export function FAQSection() {
         <div className={styles.list}>
           {faqs.map((faq, index) => (
             <div key={index} className={styles.item}>
-              <h3 className={styles.question}>{faq.question}</h3>
+              <div className={styles.questionWrapper}>
+                <h3 className={styles.question}>{faq.question}</h3>
+                <Plus className={styles.icon} size={24} />
+              </div>
               <p className={styles.answer}>{faq.answer}</p>
             </div>
           ))}

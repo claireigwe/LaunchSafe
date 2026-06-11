@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { getIndustries, getIndustriesSync, type IndustryOption } from "@/features/assessments/api/industries-api";
 import { ASSESSMENT_COUNTRIES } from "@/features/assessments/data/countries-data";
 import styles from "./edit-business-modal.module.css";
@@ -78,10 +79,7 @@ export function EditBusinessModal({ initial, onSave, onClose }: Props) {
 
           <div className={styles.field}>
             <label className={styles.label}>Industry</label>
-            <select className={styles.select} value={form.industry} onChange={(e) => update({ industry: e.target.value })}>
-              <option value="">Select industry</option>
-              {industries.map((i) => <option key={i.id} value={i.slug}>{i.name}</option>)}
-            </select>
+            <Select placeholder="Select industry" value={form.industry} onChange={(e) => update({ industry: e.target.value })} options={industries.map((i) => ({ value: i.slug, label: i.name }))} />
           </div>
 
           <div className={styles.field}>
@@ -91,10 +89,7 @@ export function EditBusinessModal({ initial, onSave, onClose }: Props) {
 
           <div className={styles.field}>
             <label className={styles.label}>State</label>
-            <select className={styles.select} value={form.state} onChange={(e) => update({ state: e.target.value })}>
-              <option value="">Select state</option>
-              {ASSESSMENT_COUNTRIES[0]?.states.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
+            <Select placeholder="Select state" value={form.state} onChange={(e) => update({ state: e.target.value })} options={ASSESSMENT_COUNTRIES[0]?.states.map((s) => ({ value: s.id, label: s.name })) || []} />
           </div>
 
           <div className={styles.field}>
@@ -111,10 +106,7 @@ export function EditBusinessModal({ initial, onSave, onClose }: Props) {
 
           <div className={styles.field}>
             <label className={styles.label}>Employees</label>
-            <select className={styles.select} value={form.employeeCount} onChange={(e) => update({ employeeCount: e.target.value })}>
-              <option value="">Select range</option>
-              {EMPLOYEE_RANGES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-            </select>
+            <Select placeholder="Select range" value={form.employeeCount} onChange={(e) => update({ employeeCount: e.target.value })} options={EMPLOYEE_RANGES.map((r) => ({ value: r.value, label: r.label }))} />
           </div>
 
           <BoolToggle label="Registered with CAC?" value={form.isRegistered} onChange={(v) => update({ isRegistered: v })} />

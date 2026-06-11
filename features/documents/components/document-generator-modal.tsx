@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { generateDocument, DOC_TYPE_LABELS_GEN, DOC_TYPE_DESCRIPTIONS } from "../api/document-generation";
 import { getBusinessData, getBusinessDataById } from "@/features/businesses/api/onboarding-api";
 import { getActiveBusinessId } from "@/lib/stores/app-store";
@@ -84,9 +85,7 @@ export function DocumentGeneratorModal({ onClose, onComplete }: Props) {
           <p className={styles.info}>Generate a compliance document from a template. Fill in optional context to customize it.</p>
           <div className={styles.field}>
             <label className={styles.label}>Document Type</label>
-            <select className={styles.select} value={docType} onChange={(e) => setDocType(e.target.value as DocumentType)}>
-              {DOC_TYPES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
-            </select>
+            <Select value={docType} onChange={(e) => setDocType(e.target.value as DocumentType)} options={DOC_TYPES.map(([key, label]) => ({ value: key, label }))} />
             <p className={styles.hint}>{DOC_TYPE_DESCRIPTIONS[docType]}</p>
           </div>
           <div className={styles.field}>

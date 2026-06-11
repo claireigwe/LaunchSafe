@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { InfoTooltip } from "../tooltip";
 import type { LocationOperationsData } from "../../types/wizard.types";
 import { ASSESSMENT_COUNTRIES } from "../../data/countries-data";
@@ -96,36 +97,13 @@ export function LocationOperations({
         <div className={styles.field}>
           <label htmlFor="country" className={styles.label}>Country</label>
           {errors.country && <p className={styles.errorText} role="alert">{errors.country}</p>}
-          <select
-            id="country"
-            className={styles.select}
-            value={data.country}
-            onChange={(e) => {
-              onUpdate({ country: e.target.value, state: "" });
-            }}
-          >
-            <option value="">Select country</option>
-            {ASSESSMENT_COUNTRIES.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+          <Select id="country" placeholder="Select country" value={data.country} onChange={(e) => { onUpdate({ country: e.target.value, state: "" }); }} options={ASSESSMENT_COUNTRIES.map((c) => ({ value: c.id, label: c.name }))} />
         </div>
 
         <div className={styles.field}>
           <label htmlFor="state" className={styles.label}>State</label>
           {errors.state && <p className={styles.errorText} role="alert">{errors.state}</p>}
-          <select
-            id="state"
-            className={styles.select}
-            value={data.state}
-            onChange={(e) => onUpdate({ state: e.target.value })}
-            disabled={!data.country}
-          >
-            <option value="">Select state</option>
-            {selectedCountry?.states.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
+          <Select id="state" placeholder="Select state" value={data.state} onChange={(e) => onUpdate({ state: e.target.value })} disabled={!data.country} options={selectedCountry?.states.map((s) => ({ value: s.id, label: s.name })) || []} />
         </div>
       </div>
 

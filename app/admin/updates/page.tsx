@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 
 interface Update { id: string; title: string; summary: string; source: string; impact_level: string; is_published: boolean; }
 
@@ -33,9 +34,7 @@ export default function AdminUpdatesPage() {
         <div style={{ display: "flex", gap: 8 }}>
           <input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inp, flex: 2 }} />
           <input placeholder="Source" value={source} onChange={(e) => setSource(e.target.value)} style={{ ...inp, flex: 1 }} />
-          <select value={impact} onChange={(e) => setImpact(e.target.value)} style={inp}>
-            <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
-          </select>
+          <Select value={impact} onChange={(e) => setImpact(e.target.value)} options={["low", "medium", "high"]} />
         </div>
         <textarea placeholder="Summary" value={summary} onChange={(e) => setSummary(e.target.value)} rows={2} style={{ ...inp, resize: "vertical" }} />
         <div style={{ display: "flex", gap: 8 }}>

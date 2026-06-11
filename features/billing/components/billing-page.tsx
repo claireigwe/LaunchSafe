@@ -18,6 +18,7 @@ import {
   type SavedSubscription,
 } from "../api/billing-api";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { ContactSalesModal } from "./contact-sales-modal";
 import styles from "./billing-page.module.css";
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
@@ -29,10 +30,19 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   suspended: { label: "Suspended", className: "statusError" },
 };
 
-const PLANS = [
+interface PlanInfo {
+  id: string;
+  name: string;
+  monthly?: number;
+  annual?: number;
+  annualTotal?: number;
+  badge: string | null;
+}
+
+const PLANS: PlanInfo[] = [
   { id: "starter", name: "Starter", monthly: 10000, annual: 8500, annualTotal: 102000, badge: null },
   { id: "growth", name: "Growth", monthly: 20000, annual: 18000, annualTotal: 216000, badge: "Most Popular" },
-  { id: "enterprise", name: "Enterprise", monthly: 35000, annual: 32000, annualTotal: 384000, badge: null },
+  { id: "enterprise", name: "Enterprise", badge: null },
 ];
 
 export function BillingPage() {
@@ -41,6 +51,7 @@ export function BillingPage() {
   const [payments, setPayments] = useState<any[]>([]);
   const [purchases, setPurchases] = useState<any[]>([]);
   const [showCancel, setShowCancel] = useState(false);
+  const [showContactSales, setShowContactSales] = useState(false);
 
   useEffect(() => {
     setSub(getSubscription());
@@ -156,15 +167,24 @@ export function BillingPage() {
               <div key={plan.id} className={`${styles.planCard} ${isCurrent ? styles.planCurrent : ""}`}>
                 {plan.badge && <span className={styles.planBadge}>{plan.badge}</span>}
                 <h3 className={styles.planName}>{plan.name}</h3>
-                <div className={styles.planPrice}>
-                  <span className={styles.priceValue}>{formatCurrency(plan.monthly)}</span>
-                  <span className={styles.pricePeriod}>/month</span>
-                </div>
-                <div className={styles.planAnnual}>
-                  {formatCurrency(plan.annual)}/month · {formatCurrency(plan.annualTotal)} billed annually
-                </div>
+                {plan.monthly ? (
+                  <>
+                    <div className={styles.planPrice}>
+                      <span className={styles.priceValue}>{formatCurrency(plan.monthly)}</span>
+                      <span className={styles.pricePeriod}>/month</span>
+                    </div>
+                    <div className={styles.planAnnual}>
+                      {formatCurrency(plan.annual!)}/month · {formatCurrency(plan.annualTotal!)} billed annually
+                    </div>
+                  </>
+                ) : (
+                  <div className={styles.planPrice}>
+                    <span className={styles.priceValue} style={{ fontSize: 18 }}>Contact Sales</span>
+                  </div>
+                )}
                 {isCurrent && <span className={styles.currentBadge}>Current Plan</span>}
-                {!isCurrent && isActive && <Button variant="outline" size="sm" fullWidth onClick={() => router.push("/business-onboarding?mode=change-plan")}>Switch Plan</Button>}
+                {!isCurrent && isActive && plan.monthly && <Button variant="outline" size="sm" fullWidth onClick={() => router.push("/business-onboarding?mode=change-plan")}>Switch Plan</Button>}
+                {!isCurrent && isActive && !plan.monthly && <Button variant="outline" size="sm" fullWidth onClick={() => setShowContactSales(true)}>Contact Sales</Button>}
               </div>
             );
           })}
@@ -252,6 +272,8 @@ export function BillingPage() {
           </div>
         )}
       </section>
+
+      {showContactSales && <ContactSalesModal onClose={() => setShowContactSales(false)} />}
     </div>
   );
 }

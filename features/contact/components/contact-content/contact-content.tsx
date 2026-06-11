@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import styles from "./contact-content.module.css";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 
 export function ContactContent() {
   const router = useRouter();
   const [formStatus, setFormStatus] = useState<"idle" | "submitting" | "success">("idle");
+  const [category, setCategory] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,15 +114,7 @@ export function ContactContent() {
                 </div>
                 <div className={styles.formGroup}>
                   <label htmlFor="category" className={styles.label}>Category</label>
-                  <select id="category" required className={styles.select}>
-                    <option value="">Select a category</option>
-                    <option value="assessments">Assessments & Reports</option>
-                    <option value="billing">Billing & Subscriptions</option>
-                    <option value="dashboard">Compliance Dashboard</option>
-                    <option value="technical">Technical Support</option>
-                    <option value="partnerships">Partnerships</option>
-                    <option value="general">General Question</option>
-                  </select>
+                  <Select id="category" value={category} onChange={(e) => setCategory(e.target.value)} options={[{value:"", label:"Select a category"}, {value:"assessments", label:"Assessments & Reports"}, {value:"billing", label:"Billing & Subscriptions"}, {value:"dashboard", label:"Compliance Dashboard"}, {value:"technical", label:"Technical Support"}, {value:"partnerships", label:"Partnerships"}, {value:"general", label:"General Question"}]} />
                 </div>
                 <div className={styles.formGroup}>
                   <label htmlFor="message" className={styles.label}>Message</label>

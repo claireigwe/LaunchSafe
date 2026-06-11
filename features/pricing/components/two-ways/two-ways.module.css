@@ -1,7 +1,6 @@
 .section {
   padding: 80px 24px;
-  background-color: var(--color-role-light-background);
-  border-top: 1px solid var(--color-role-light-outlineVariant);
+  background-color: #ffffff;
 }
 
 .container {
@@ -23,12 +22,13 @@
 }
 
 .card {
-  background-color: var(--color-role-light-surfaceContainerLowest);
-  border: 1px solid var(--color-role-light-outlineVariant);
+  background-color: #ffffff;
+  border: none;
   border-radius: 24px;
   padding: 40px;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
 }
 
 .badgeWrapper {
@@ -110,11 +110,11 @@
 }
 
 .unlockGroup {
-  background-color: var(--color-role-light-surfaceContainerLow);
+  background-color: #f8faff;
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 32px;
-  border: 1px solid var(--color-role-light-outlineVariant);
+  border: none;
 }
 
 .priceHeader {

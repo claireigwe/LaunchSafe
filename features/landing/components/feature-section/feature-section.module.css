@@ -1,7 +1,6 @@
 .section {
   padding: 120px 24px;
-  background-color: var(--color-role-light-surfaceContainerLowest);
-  border-top: 1px solid var(--color-role-light-outlineVariant);
+  background-color: #f8faff;
 }
 
 .container {
@@ -17,21 +16,16 @@
 
 .title {
   font-family: var(--font-headline-headline-large-fontFamily);
-  font-weight: 600;
-  font-size: var(--font-headline-headline-medium-fontSize);
+  font-weight: 700;
+  font-size: clamp(32px, 5vw, 40px);
   color: var(--color-role-light-onSurface);
   margin-bottom: 16px;
-}
-
-@media (min-width: 768px) {
-  .title {
-    font-size: var(--font-headline-headline-large-fontSize);
-  }
+  letter-spacing: -1px;
 }
 
 .subtitle {
   font-family: var(--font-body-body-large-fontFamily);
-  font-size: var(--font-body-body-large-fontSize);
+  font-size: clamp(16px, 2.5vw, 18px);
   line-height: var(--font-body-body-large-lineHeight);
   color: var(--color-role-light-onSurfaceVariant);
 }
@@ -45,7 +39,12 @@
 @media (min-width: 768px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
@@ -53,11 +52,14 @@
   display: flex;
   flex-direction: column;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.04);
 }
 
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
 }
 
 .iconWrapper {
@@ -66,7 +68,7 @@
   justify-content: center;
   width: 48px;
   height: 48px;
-  background-color: var(--color-role-light-surfaceContainerHigh);
+  background-color: #e6efff;
   border-radius: 12px;
   color: var(--color-role-light-primary);
   margin-bottom: 24px;
@@ -74,7 +76,7 @@
 
 .cardTitle {
   font-family: var(--font-title-title-large-fontFamily);
-  font-size: var(--font-title-title-large-fontSize);
+  font-size: 18px;
   font-weight: 600;
   color: var(--color-role-light-onSurface);
   margin-bottom: 12px;
@@ -82,7 +84,7 @@
 
 .cardText {
   font-family: var(--font-body-body-large-fontFamily);
-  font-size: var(--font-body-body-medium-fontSize);
-  line-height: var(--font-body-body-medium-lineHeight);
+  font-size: 14px;
+  line-height: 1.6;
   color: var(--color-role-light-onSurfaceVariant);
 }

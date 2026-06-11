@@ -4,12 +4,26 @@ import { useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ContactSalesModal } from "@/features/billing/components/contact-sales-modal";
 import styles from "./autopilot-plans.module.css";
+
+interface PricingPlan {
+  name: string;
+  monthlyPrice?: string;
+  annualPrice?: string;
+  annualTotal?: string;
+  bestFor: string[];
+  features: string[];
+  ctaText: string;
+  ctaHref: string;
+  highlight: boolean;
+}
 
 export function AutopilotPlans() {
   const [isAnnual, setIsAnnual] = useState(true);
+  const [showContactSales, setShowContactSales] = useState(false);
 
-  const plans = [
+  const plans: PricingPlan[] = [
     {
       name: "Starter",
       monthlyPrice: "₦10,000",
@@ -22,13 +36,13 @@ export function AutopilotPlans() {
       ],
       features: [
         "1 Business",
+        "Generate up to 2 Compliance Documents/Month",
         "Compliance Dashboard",
         "Compliance Calendar",
         "Deadline Tracking",
         "Notifications",
         "Regulatory Updates",
-        "Evidence Management",
-        "Document Generation"
+        "Evidence Management"
       ],
       ctaText: "Start Starter Plan",
       ctaHref: "/signup?plan=starter",
@@ -46,6 +60,7 @@ export function AutopilotPlans() {
       ],
       features: [
         "Up to 5 Businesses",
+        "Generate up to 15 Compliance Documents/Month",
         "Everything in Starter",
         "Multi-Business Management",
         "Advanced Compliance Tracking",
@@ -57,9 +72,6 @@ export function AutopilotPlans() {
     },
     {
       name: "Enterprise",
-      monthlyPrice: "₦35,000",
-      annualPrice: "₦32,000",
-      annualTotal: "₦384,000",
       bestFor: [
         "Larger organizations",
         "Compliance teams",
@@ -67,6 +79,7 @@ export function AutopilotPlans() {
       ],
       features: [
         "Up to 20 Businesses",
+        "Generate up to 100 Compliance Documents/Month",
         "Team Collaboration",
         "Advanced Reporting",
         "Priority Support",
@@ -74,7 +87,7 @@ export function AutopilotPlans() {
         "Enterprise Features"
       ],
       ctaText: "Contact Sales",
-      ctaHref: "/contact",
+      ctaHref: "",
       highlight: false
     }
   ];
@@ -114,15 +127,23 @@ export function AutopilotPlans() {
               
               <div className={styles.cardHeader}>
                 <h3 className={styles.planName}>{plan.name}</h3>
-                <div className={styles.priceContainer}>
-                  <span className={styles.priceValue}>
-                    {isAnnual ? plan.annualPrice : plan.monthlyPrice}
-                  </span>
-                  <span className={styles.pricePeriod}>/month</span>
-                </div>
-                {isAnnual && (
-                  <div className={styles.billedAnnually}>
-                    {plan.annualTotal} billed annually
+                {plan.monthlyPrice ? (
+                  <>
+                    <div className={styles.priceContainer}>
+                      <span className={styles.priceValue}>
+                        {isAnnual ? plan.annualPrice : plan.monthlyPrice}
+                      </span>
+                      <span className={styles.pricePeriod}>/month</span>
+                    </div>
+                    {isAnnual && (
+                      <div className={styles.billedAnnually}>
+                        {plan.annualTotal} billed annually
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className={styles.priceContainer}>
+                    <span className={styles.priceValue} style={{ fontSize: 18 }}>Contact Sales</span>
                   </div>
                 )}
               </div>
@@ -149,20 +170,24 @@ export function AutopilotPlans() {
               </div>
 
               <div className={styles.cardAction}>
-                <Link href={plan.ctaHref} tabIndex={-1} className={styles.fullWidth}>
-                  <Button 
-                    className={styles.fullWidth} 
-                    variant={plan.highlight ? "primary" : "outline"} 
-                    size="lg"
-                  >
+                {plan.ctaHref ? (
+                  <Link href={plan.ctaHref} tabIndex={-1} className={styles.fullWidth}>
+                    <Button className={styles.fullWidth} variant={plan.highlight ? "primary" : "outline"} size="lg">
+                      {plan.ctaText}
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button className={styles.fullWidth} variant={plan.highlight ? "primary" : "outline"} size="lg" onClick={() => setShowContactSales(true)}>
                     {plan.ctaText}
                   </Button>
-                </Link>
+                )}
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {showContactSales && <ContactSalesModal onClose={() => setShowContactSales(false)} />}
     </section>
   );
 }

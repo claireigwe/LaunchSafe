@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils/cn";
 import { fetchProfileAndPrefs, updateProfile, updateNotificationPrefs } from "../api/settings-api";
 import { canManageTeam } from "../api/permissions";
@@ -412,10 +413,7 @@ function TeamSection() {
           {success && <p className={styles.success} role="status">{success}</p>}
           <div className={styles.inviteRow}>
             <input className={styles.input} placeholder="Email address" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
-            <select className={styles.select} value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}>
-              <option value="member">Member</option>
-              <option value="admin">Admin</option>
-            </select>
+            <Select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} options={["member", "admin"]} />
             <Button variant="primary" size="md" onClick={handleInvite}>Invite</Button>
           </div>
           <p className={styles.hint}>The user must already have a LaunchSafe account to be invited.</p>

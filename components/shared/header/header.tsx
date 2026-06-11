@@ -55,6 +55,12 @@ export function Header() {
           >
             FAQ
           </Link>
+          <Link 
+            href="/contact" 
+            className={`${styles.navLink} ${pathname === "/contact" ? styles.navLinkActive : ""}`}
+          >
+            Contact
+          </Link>
         </nav>
 
         <div className={styles.actions}>

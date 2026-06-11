@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { InfoTooltip } from "../tooltip";
 import type { BusinessBasicsData } from "../../types/wizard.types";
 import { getIndustries, getIndustriesSync, type IndustryOption } from "@/features/assessments/api/industries-api";
@@ -99,19 +100,13 @@ export function BusinessBasics({ data, onUpdate, onNext }: BusinessBasicsProps) 
           <InfoTooltip text="Select the industry that best matches your primary business activity. This helps us identify the right regulatory requirements for your business." />
         </div>
         {errors.industry && <p className={styles.errorText} role="alert">{errors.industry}</p>}
-        <select
+        <Select
           id="industry"
-          className={styles.select}
+          placeholder="Select your industry"
           value={data.industry}
           onChange={(e) => onUpdate({ industry: e.target.value })}
-        >
-            <option value="">Select your industry</option>
-          {industries.map((ind) => (
-            <option key={ind.id} value={ind.slug}>
-              {ind.name}
-            </option>
-          ))}
-        </select>
+          options={industries.map((ind) => ({ value: ind.slug, label: ind.name }))}
+        />
       </div>
 
       <div className={styles.field}>

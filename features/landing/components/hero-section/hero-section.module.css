@@ -1,11 +1,10 @@
 .hero {
   position: relative;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
   overflow: hidden;
-  padding: 100px 24px 64px;
-  background-color: var(--color-role-light-background);
+  background: linear-gradient(180deg, #f8faff 0%, #ffffff 100%);
+  padding-top: 140px;
 }
 
 .background {
@@ -21,136 +20,72 @@
 
 .glow {
   position: absolute;
-  top: 50%;
+  top: 30%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 800px;
-  height: 800px;
-  background: radial-gradient(circle, rgba(230, 239, 255, 0.8) 0%, rgba(255, 255, 255, 0) 70%);
+  width: 1000px;
+  height: 600px;
+  background: radial-gradient(ellipse at center, rgba(230, 239, 255, 0.6) 0%, rgba(255, 255, 255, 0) 70%);
   z-index: 0;
-}
-
-.ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  border-radius: 50%;
-  z-index: 0;
-}
-
-.floatingElement {
-  position: absolute;
-  background: white;
-  border-radius: 50%;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-  animation: float 6s ease-in-out infinite;
-}
-
-.iconContainer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  color: var(--color-role-light-primary);
-}
-
-/* Position floating elements around the center */
-.float1 {
-  top: 15%;
-  left: 15%;
-  animation-delay: 0s;
-}
-
-.float2 {
-  top: 40%;
-  left: 10%;
-  animation-delay: 1.5s;
-}
-
-.float3 {
-  top: 10%;
-  right: 15%;
-  animation-delay: 3s;
-}
-
-.float4 {
-  top: 35%;
-  right: 10%;
-  animation-delay: 4.5s;
-}
-
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
-  100% { transform: translateY(0px); }
 }
 
 .container {
   position: relative;
   z-index: 10;
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 0 24px;
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
-  background-color: var(--color-role-light-surfaceContainerHigh);
+  padding: 6px 16px;
+  background-color: #f0f4ff;
   border-radius: 24px;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .badgeLabel {
-  background-color: var(--color-role-light-primary);
-  color: white;
+  color: var(--color-role-light-primary);
   font-family: var(--font-label-label-small-fontFamily);
   font-weight: 700;
   font-size: 10px;
   text-transform: uppercase;
-  padding: 2px 6px;
-  border-radius: 12px;
 }
 
 .badgeText {
   font-family: var(--font-label-label-small-fontFamily);
-  font-weight: 500;
-  font-size: var(--font-label-label-small-fontSize);
-  color: var(--color-role-light-onSurface);
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--color-role-light-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .title {
   font-family: var(--font-display-display-medium-fontFamily);
-  font-weight: 600;
-  font-size: 48px;
+  font-weight: 700;
+  font-size: clamp(40px, 8vw, 72px);
   line-height: 1.1;
   letter-spacing: -2px;
   color: var(--color-role-light-onSurface);
   margin-bottom: 24px;
 }
 
-@media (min-width: 768px) {
-  .title {
-    font-size: 64px;
-    line-height: 1.05;
-  }
+.titleHighlight {
+  color: var(--color-role-light-primary);
+  font-style: italic;
 }
 
 .subtitle {
   font-family: var(--font-body-body-large-fontFamily);
-  font-size: 18px;
+  font-size: clamp(16px, 2.5vw, 18px);
   line-height: 1.6;
   color: var(--color-role-light-onSurfaceVariant);
   max-width: 600px;
@@ -166,57 +101,114 @@
   margin: 0 auto 64px;
 }
 
+.button {
+  width: 100%;
+  border-radius: 32px;
+}
+
 @media (min-width: 640px) {
   .actions {
     flex-direction: row;
     justify-content: center;
     max-width: none;
   }
+  .button {
+    width: auto;
+    padding: 0 32px;
+  }
 }
 
-/* Abstract UI Preview */
-.previewContainer {
-  margin-top: 32px;
-  margin-bottom: 64px;
-  perspective: 1000px;
+.previewWrapper {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto 64px;
+}
+
+.floatingIcon {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  animation: float 4s ease-in-out infinite;
+}
+
+.floatingLeft {
+  bottom: -24px;
+  left: -24px;
+}
+
+.floatingRight {
+  top: -24px;
+  right: -24px;
+  animation-delay: 1.5s;
+}
+
+.iconBlue {
+  color: var(--color-role-light-primary);
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
 }
 
 .previewCard {
   background: white;
-  border-radius: 24px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(0, 0, 0, 0.04);
   width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
   text-align: left;
-  transform: rotateX(5deg) translateY(-10px);
-  transition: transform 0.3s ease;
-}
-
-.previewCard:hover {
-  transform: rotateX(0deg) translateY(-20px);
+  overflow: hidden;
 }
 
 .previewHeader {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
   padding: 16px 24px;
   border-bottom: 1px solid var(--color-role-light-outlineVariant);
+  background-color: #fafbfc;
+}
+
+.previewHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-family: var(--font-label-label-medium-fontFamily);
   font-size: 13px;
   color: var(--color-role-light-onSurfaceVariant);
-  background-color: var(--color-role-light-surfaceContainerLowest);
-  border-radius: 24px 24px 0 0;
 }
 
 .previewIcon {
   color: var(--color-role-light-primary);
 }
 
+.previewHeaderRight {
+  display: flex;
+  gap: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.dotRed { background-color: #ff5f56; }
+.dotYellow { background-color: #ffbd2e; }
+.dotGreen { background-color: #27c93f; }
+
 .previewBody {
-  padding: 24px;
+  padding: 24px 32px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -224,16 +216,22 @@
 
 .previewItem {
   display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 16px;
-  background-color: var(--color-role-light-surfaceContainerLowest);
+  align-items: center;
+  gap: 20px;
+  padding: 16px 24px;
+  background-color: #f8faff;
   border-radius: 12px;
-  border: 1px solid var(--color-role-light-outlineVariant);
 }
 
-.previewItemIcon {
-  color: var(--color-role-light-success);
+.previewItemIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: #e6efff;
+  border-radius: 8px;
+  color: var(--color-role-light-primary);
   flex-shrink: 0;
 }
 
@@ -246,27 +244,37 @@
 .previewItemText strong {
   font-family: var(--font-label-label-large-fontFamily);
   font-weight: 600;
-  font-size: var(--font-label-label-medium-fontSize);
+  font-size: 15px;
   color: var(--color-role-light-onSurface);
 }
 
 .previewItemText span {
   font-family: var(--font-body-body-medium-fontFamily);
-  font-size: var(--font-body-body-small-fontSize);
+  font-size: 13px;
   color: var(--color-role-light-onSurfaceVariant);
 }
 
-.trustedBy {
-  margin-top: 32px;
+.trustedBySection {
+  background-color: white;
+  width: 100%;
+  padding: 64px 24px;
+  position: relative;
+  z-index: 10;
+  border-top: 1px solid rgba(0,0,0,0.02);
+}
+
+.trustedContainer {
+  max-width: 1000px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 32px;
 }
 
 .trustedText {
   font-family: var(--font-label-label-small-fontFamily);
-  font-size: var(--font-label-label-small-fontSize);
+  font-size: 11px;
   font-weight: 600;
   color: var(--color-role-light-outline);
   text-transform: uppercase;
@@ -278,19 +286,29 @@
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 32px;
+  gap: 48px;
 }
 
 @media (min-width: 768px) {
   .trustedLogos {
-    gap: 64px;
+    gap: 80px;
   }
 }
 
 .logoPlaceholder {
   font-family: var(--font-headline-headline-small-fontFamily);
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--color-role-light-outlineVariant);
-  opacity: 0.6;
+  opacity: 0.5;
+}
+
+.regulatorLogo {
+  object-fit: contain;
+  opacity: 0.55;
+  transition: opacity 0.2s;
+}
+
+.regulatorLogo:hover {
+  opacity: 0.85;
 }

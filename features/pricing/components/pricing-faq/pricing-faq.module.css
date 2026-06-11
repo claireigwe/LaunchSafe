@@ -1,7 +1,6 @@
 .section {
   padding: 80px 24px;
-  background-color: var(--color-role-light-background);
-  border-top: 1px solid var(--color-role-light-outlineVariant);
+  background-color: #f8faff;
 }
 
 .container {
@@ -38,7 +37,7 @@
 }
 
 .faqItem {
-  background-color: var(--color-role-light-surfaceContainerLowest);
+  background-color: #ffffff;
   border: 1px solid var(--color-role-light-outlineVariant);
   border-radius: 16px;
   overflow: hidden;

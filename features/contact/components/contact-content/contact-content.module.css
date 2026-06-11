@@ -1,6 +1,6 @@
 .section {
-  padding: 64px 24px 120px;
-  background-color: var(--color-role-light-background);
+  padding: 120px 24px 120px;
+  background: linear-gradient(180deg, #f8faff 0%, #ffffff 100%);
 }
 
 .container {
@@ -70,14 +70,15 @@
 
 .card {
   flex: 1 1 100%;
-  background-color: var(--color-role-light-surfaceContainerLowest);
-  border: 1px solid var(--color-role-light-outlineVariant);
+  background-color: #ffffff;
+  border: none;
   border-radius: 24px;
   padding: 32px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 @media (min-width: 768px) {
@@ -95,8 +96,8 @@
 }
 
 .card:hover {
-  border-color: var(--color-role-light-outline);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
 }
 
 .cardTitle {
@@ -150,10 +151,11 @@
 
 /* Contact Form */
 .formContainer {
-  background-color: var(--color-role-light-surfaceContainerLowest);
-  border: 1px solid var(--color-role-light-outlineVariant);
+  background-color: #ffffff;
+  border: none;
   border-radius: 24px;
   padding: 32px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
 }
 
 .formContainer .sectionTitle {
@@ -271,10 +273,11 @@
 }
 
 .faqItem {
-  background-color: var(--color-role-light-surfaceContainerLowest);
-  border: 1px solid var(--color-role-light-outlineVariant);
+  background-color: #ffffff;
+  border: none;
   border-radius: 16px;
   padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .faqQuestion {
@@ -324,10 +327,11 @@
 }
 
 .expectationCard {
-  background-color: var(--color-role-light-surfaceContainerLowest);
-  border: 1px solid var(--color-role-light-outlineVariant);
+  background-color: #ffffff;
+  border: none;
   border-radius: 24px;
   padding: 32px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
 }
 
 .expectationTitle {
@@ -388,11 +392,12 @@
 /* CTA */
 .cta {
   text-align: center;
-  background-color: var(--color-role-light-surfaceContainerLowest);
-  border: 1px solid var(--color-role-light-outlineVariant);
+  background-color: #ffffff;
+  border: none;
   border-radius: 24px;
   padding: 64px 24px;
   margin-top: 24px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
 }
 
 .ctaActions {

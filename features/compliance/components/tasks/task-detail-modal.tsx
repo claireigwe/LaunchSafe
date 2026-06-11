@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils/cn";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { fetchEvidence, linkDocumentAsEvidenceAPI } from "@/features/compliance/api/evidence-api";
@@ -97,26 +98,12 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
                 </div>
                 <div className={styles.field}>
                   <label className={styles.label}>Priority</label>
-                  <select className={styles.select} value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)}>
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="critical">Critical</option>
-                  </select>
+                  <Select value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)} options={["low","medium","high","critical"]} />
                 </div>
               </div>
               <div className={styles.field}>
                 <label className={styles.label}>Status</label>
-                <select className={styles.select} value={status} onChange={(e) => setStatus(e.target.value as TaskStatus)}>
-                  <option value="pending">Pending</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="awaiting_submission">Awaiting Submission</option>
-                  <option value="submitted">Submitted</option>
-                  <option value="approved">Approved</option>
-                  <option value="due_soon">Due Soon</option>
-                  <option value="completed">Completed</option>
-                  <option value="overdue">Overdue</option>
-                </select>
+                <Select value={status} onChange={(e) => setStatus(e.target.value as TaskStatus)} options={["pending","in_progress","awaiting_submission","submitted","approved","due_soon","completed","overdue"]} />
               </div>
               <div className={styles.actions}>
                 <Button type="button" variant="ghost" size="md" onClick={() => setEditing(false)}>Cancel</Button>

@@ -1,6 +1,6 @@
 .section {
   padding: 120px 24px;
-  background-color: var(--color-role-light-surfaceContainerLowest);
+  background-color: #ffffff;
 }
 
 .container {
@@ -94,11 +94,7 @@
   gap: 24px;
 }
 
-@media (min-width: 640px) {
-  .questionList {
-    grid-template-columns: 1fr 1fr;
-  }
-}
+
 
 .questionItem {
   display: flex;

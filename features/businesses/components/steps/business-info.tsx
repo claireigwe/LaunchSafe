@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { getIndustries, getIndustriesSync, type IndustryOption } from "@/features/assessments/api/industries-api";
 import { ASSESSMENT_COUNTRIES } from "@/features/assessments/data/countries-data";
 import type { BusinessInfoData } from "../../types/onboarding.types";
@@ -52,10 +53,7 @@ export function BusinessInfo({ data, onUpdate, onNext }: BusinessInfoProps) {
       <div className={styles.field}>
         <label htmlFor="ind" className={styles.label}>Industry</label>
         {errors.industry && <p className={styles.error} role="alert">{errors.industry}</p>}
-        <select id="ind" className={styles.select} value={data.industry} onChange={(e) => onUpdate({ industry: e.target.value })}>
-          <option value="">Select your industry</option>
-          {industries.map((i) => <option key={i.id} value={i.slug}>{i.name}</option>)}
-        </select>
+        <Select id="ind" placeholder="Select your industry" value={data.industry} onChange={(e) => onUpdate({ industry: e.target.value })} options={industries.map((i) => ({ value: i.slug, label: i.name }))} />
       </div>
 
       <div className={styles.field}>
@@ -67,10 +65,7 @@ export function BusinessInfo({ data, onUpdate, onNext }: BusinessInfoProps) {
       <div className={styles.field}>
         <label htmlFor="state" className={styles.label}>State of Operation</label>
         {errors.state && <p className={styles.error} role="alert">{errors.state}</p>}
-        <select id="state" className={styles.select} value={data.state} onChange={(e) => onUpdate({ state: e.target.value })}>
-          <option value="">Select state</option>
-          {ASSESSMENT_COUNTRIES[0]?.states.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
+        <Select id="state" placeholder="Select state" value={data.state} onChange={(e) => onUpdate({ state: e.target.value })} options={ASSESSMENT_COUNTRIES[0]?.states.map((s) => ({ value: s.id, label: s.name })) || []} />
       </div>
 
       <div className={styles.field}>

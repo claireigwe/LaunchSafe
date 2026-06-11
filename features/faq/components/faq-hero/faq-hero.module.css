@@ -1,6 +1,6 @@
 .section {
   padding: 120px 24px 64px;
-  background-color: var(--color-role-light-surfaceContainerLowest);
+  background: linear-gradient(180deg, #f8faff 0%, #ffffff 100%);
 }
 
 .container {

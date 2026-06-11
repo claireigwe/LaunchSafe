@@ -58,6 +58,9 @@ export function AppSidebar() {
   }
 
   useEffect(() => {
+    if (window.innerWidth <= 768) {
+      setCollapsed(true);
+    }
     setSetupMode(isInSetupMode());
     setMounted(true);
 
@@ -73,6 +76,12 @@ export function AppSidebar() {
   useEffect(() => {
     refreshActiveBusiness();
   }, [storeBizId]);
+
+  const handleLinkClick = () => {
+    if (window.innerWidth <= 768) {
+      setCollapsed(true);
+    }
+  };
 
   return (
     <>
@@ -96,6 +105,7 @@ export function AppSidebar() {
               href="/onboarding"
               className={cn(styles.link, styles.setupLink, pathname === "/onboarding" && styles.active)}
               tabIndex={collapsed ? -1 : 0}
+              onClick={handleLinkClick}
             >
               <Compass size={18} className={styles.icon} />
               {!collapsed && <span>Setup</span>}
@@ -115,6 +125,7 @@ export function AppSidebar() {
                 href={href}
                 className={cn(styles.link, isActive && styles.active)}
                 tabIndex={collapsed ? -1 : 0}
+                onClick={handleLinkClick}
               >
                 <Icon size={18} className={styles.icon} />
                 {!collapsed && (
@@ -142,7 +153,7 @@ export function AppSidebar() {
         </button>
       </aside>
 
-      {collapsed && <div className={styles.overlay} onClick={() => setCollapsed(false)} />}
+      {!collapsed && <div className={styles.overlay} onClick={() => setCollapsed(true)} />}
     </>
   );
 }
