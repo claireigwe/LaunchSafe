@@ -5,6 +5,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Lightbulb, X, Check } from "lucide-react";
 import type { SuggestedTask } from "../../types/tasks.types";
 import { generateTaskSuggestions } from "../../data/task-suggestions";
+import { fetchAITaskSuggestions } from "../../api/ai-suggestions";
+import { canAccess } from "@/features/billing/api/feature-access";
 import { getBusinessData, fetchAllBusinesses } from "@/features/businesses/api/onboarding-api";
 import { addSuggestedTask, loadTasks } from "../../api/tasks-api";
 import { getActiveBusinessId, useAppStore } from "@/lib/stores/app-store";
@@ -69,7 +71,12 @@ export function SuggestedTasksWidget({ onTaskAdded }: SuggestedTasksWidgetProps)
         hasOnlineOperations: saved.operations?.hasOnlineOperations ?? null,
         hasCustomerLocation: saved.operations?.hasCustomerLocation ?? null,
       } : null;
-      const all = generateTaskSuggestions(profile);
+      const ruleBased = generateTaskSuggestions(profile);
+      let aiBased: typeof ruleBased = [];
+      if (canAccess("ai_compliance")) {
+        aiBased = await fetchAITaskSuggestions(profile);
+      }
+      const all = [...ruleBased, ...aiBased];
       const existingTitles = new Set(loadTasks().map((t) => t.title));
       const filtered = all.filter((s) => !existingTitles.has(s.title));
       setSuggestions(filtered);
@@ -118,6 +125,7 @@ export function SuggestedTasksWidget({ onTaskAdded }: SuggestedTasksWidgetProps)
             <div className={styles.itemBody}>
               <div className={styles.itemTitleRow}>
                 <span className={styles.itemTitle}>{s.title}</span>
+                {s.id.startsWith("sug-ai-") && <span className={styles.aiBadge}>AI</span>}
                 <span className={`${styles.priorityBadge} ${styles[`pr_${s.priority}`]}`}>{s.priority}</span>
               </div>
               <p className={styles.itemReason}>{s.reason}</p>

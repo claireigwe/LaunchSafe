@@ -8,14 +8,23 @@ export async function requireFeature(userId: string, feature: FeatureFlag): Prom
 
   const { data: sub } = await supabase
     .from("subscriptions")
-    .select("status, subscription_plans!inner(slug)")
+    .select("*")
     .eq("user_id", userId)
     .in("status", ["active", "trial"])
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  const planSlug = sub?.subscription_plans?.slug || null;
+  let planSlug: string | null = null;
+  if (sub?.plan_id) {
+    const { data: plan } = await supabase
+      .from("subscription_plans")
+      .select("slug")
+      .eq("id", sub.plan_id)
+      .maybeSingle();
+    if (plan) planSlug = plan.slug;
+  }
+
   const access = resolveAccess(planSlug, sub?.status || null);
 
   if (!access.features.includes(feature)) {

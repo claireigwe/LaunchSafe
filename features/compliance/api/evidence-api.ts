@@ -51,12 +51,13 @@ export async function uploadEvidence(
 export async function linkDocumentAsEvidenceAPI(
   documentId: string,
   documentTitle: string,
-  complianceTaskId: string
+  complianceTaskId: string,
+  businessId?: string
 ): Promise<EvidenceRecord> {
   const res = await fetch("/api/evidence/link", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ documentId, complianceTaskId }),
+    body: JSON.stringify({ documentId, complianceTaskId, businessId }),
   });
 
   const json = await res.json();

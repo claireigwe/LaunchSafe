@@ -15,6 +15,7 @@ export interface SavedSubscription {
   pendingPlanId: string | null;
   pendingPlanName: string | null;
   pendingBillingCycle: "monthly" | "annual" | null;
+  paystackSubscriptionCode?: string | null;
 }
 
 export interface SavedPayment {

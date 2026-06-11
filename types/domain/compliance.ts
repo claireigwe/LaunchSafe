@@ -25,8 +25,9 @@ export interface ComplianceTask {
 export interface ComplianceScore {
   id: string;
   businessId: string;
-  score: number; // 0-100
+  score: number;
   breakdown: ComplianceScoreBreakdown;
+  previousScore: number | null;
   calculatedAt: string;
 }
 
@@ -36,6 +37,7 @@ export interface ComplianceScoreBreakdown {
   overdueCount: number;
   missingEvidence: number;
   expiredDocuments: number;
+  upcomingDeadlineCount: number;
 }
 
 export interface UpdateComplianceTaskInput {

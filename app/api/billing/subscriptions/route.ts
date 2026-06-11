@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
+import { createAdminClient } from "@/lib/supabase/server";
 import type { ApiResponse } from "@/types/api.types";
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
@@ -8,11 +9,13 @@ const PAYSTACK_API = "https://api.paystack.co/transaction/initialize";
 const PLANS: Record<string, { monthly: number; annual: number }> = {
   starter: { monthly: 10000, annual: 102000 },
   growth: { monthly: 20000, annual: 216000 },
+  enterprise: { monthly: 35000, annual: 384000 },
 };
 
 export async function POST(request: Request) {
   try {
     const user = await getRequiredUser();
+    const supabase = createAdminClient() as any;
     const body = await request.json() as { planId?: string; billingCycle?: string };
     const { planId, billingCycle } = body;
 
@@ -21,6 +24,36 @@ export async function POST(request: Request) {
         { success: false, error: { message: "Invalid plan" } },
         { status: 400 }
       );
+    }
+
+    if (planId === "enterprise") {
+      const { data: entPlan } = await supabase
+        .from("subscription_plans")
+        .select("id")
+        .eq("slug", "enterprise")
+        .single();
+
+      if (!entPlan) {
+        return NextResponse.json<ApiResponse>(
+          { success: false, error: { message: "Enterprise plan not configured." } },
+          { status: 500 }
+        );
+      }
+
+      const { data: existingSub } = await supabase
+        .from("subscriptions")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("plan_id", entPlan.id)
+        .in("status", ["suspended", "active", "trial"])
+        .maybeSingle();
+
+      if (!existingSub) {
+        return NextResponse.json<ApiResponse>(
+          { success: false, error: { message: "Enterprise plan is not available for self-service. Contact sales." } },
+          { status: 403 }
+        );
+      }
     }
 
     if (!billingCycle || (billingCycle !== "monthly" && billingCycle !== "annual")) {

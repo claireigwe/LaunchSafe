@@ -4,11 +4,14 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils/cn";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2, Upload, Sparkles } from "lucide-react";
 import { fetchEvidence, linkDocumentAsEvidenceAPI } from "@/features/compliance/api/evidence-api";
-import { getDocuments } from "@/features/documents/api/documents-api";
+import { getDocuments, uploadDocument } from "@/features/documents/api/documents-api";
+import { DocumentUploadModal } from "@/features/documents/components/document-upload-modal";
+import { canAccess } from "@/features/billing/api/feature-access";
 import type { ComplianceTaskItem, UpdateTaskInput, TaskPriority, TaskStatus } from "../../types/tasks.types";
 import type { EvidenceRecord } from "@/features/compliance/api/evidence-api";
+import type { UploadDocumentInput } from "@/features/documents/api/documents-api";
 import styles from "./task-detail-modal.module.css";
 
 interface Props {
@@ -31,6 +34,35 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
   const [showEvidenceWarning, setShowEvidenceWarning] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  async function handleExplain() {
+    setAiLoading(true);
+    setAiError(null);
+    setAiExplanation(null);
+    try {
+      const res = await fetch("/api/ai/assist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `Explain this compliance requirement in simple language: ${task.title}. ${task.description ? `Details: ${task.description}` : ""}`,
+        }),
+      });
+      const json = await res.json();
+      if (json.success && json.data?.content) {
+        setAiExplanation(json.data.content);
+      } else {
+        setAiError(json.error?.message || "Failed to get explanation.");
+      }
+    } catch {
+      setAiError("Failed to get explanation.");
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   useEffect(() => {
     async function loadData() {
@@ -42,16 +74,25 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
     loadData();
   }, [task.id]);
 
+  async function handleUploadDoc(input: UploadDocumentInput) {
+    try {
+      await uploadDocument(input);
+      setShowUploadModal(false);
+      const docs = await getDocuments();
+      setAvailableDocs(docs);
+    } catch {}
+  }
+
   async function handleLinkDoc(docId: string, docTitle: string) {
     try {
       setIsLinking(true);
-      await linkDocumentAsEvidenceAPI(docId, docTitle, task.id);
+      await linkDocumentAsEvidenceAPI(docId, docTitle, task.id, task.businessId);
       const allEvidence = await fetchEvidence();
       setEvidence(allEvidence.filter(e => e.complianceTaskId === task.id));
       setShowLinkDoc(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to link document", err);
-      alert("Failed to link document as evidence.");
+      alert(err?.message || "Failed to link document as evidence.");
     } finally {
       setIsLinking(false);
     }
@@ -140,6 +181,39 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
                 </div>
               </div>
 
+              {canAccess("ai_compliance") && (
+                <div className={styles.aiSection}>
+                  {!aiExplanation && !aiLoading && !aiError && (
+                    <button type="button" className={styles.explainBtn} onClick={handleExplain}>
+                      <Sparkles size={14} />
+                      Explain this requirement
+                    </button>
+                  )}
+                  {aiLoading && (
+                    <div className={styles.aiLoading}>
+                      <Loader2 size={14} className="animate-spin" />
+                      Getting explanation...
+                    </div>
+                  )}
+                  {aiError && (
+                    <div className={styles.aiError}>
+                      <AlertTriangle size={14} />
+                      {aiError}
+                    </div>
+                  )}
+                  {aiExplanation && (
+                    <div className={styles.aiExplanation}>
+                      <div className={styles.aiExplanationHeader}>
+                        <Sparkles size={14} />
+                        <span>AI Explanation</span>
+                        <button type="button" className={styles.aiDismiss} onClick={() => setAiExplanation(null)}>×</button>
+                      </div>
+                      <p className={styles.aiExplanationText}>{aiExplanation}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {evidence.length > 0 && (
                 <div className={styles.section}>
                   <h4 className={styles.sectionTitle}>Evidence ({evidence.length})</h4>
@@ -157,7 +231,10 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
                   <div className={styles.linkDocDropdown}>
                     <p className={styles.linkDocLabel}>Select a document to link as evidence:</p>
                     {availableDocs.length === 0 ? (
-                      <p className={styles.linkDocEmpty}>No documents available. Upload a document first.</p>
+                      <button type="button" className={styles.uploadFromLinkBtn} onClick={() => setShowUploadModal(true)}>
+                        <Upload size={14} />
+                        Upload a Document
+                      </button>
                     ) : (
                       availableDocs.map((d) => (
                         <button key={d.id} type="button" className={styles.linkDocItem} onClick={() => handleLinkDoc(d.id, d.title)}>
@@ -195,6 +272,10 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
                   <strong>Suggested Because:</strong>
                   <p>{task.suggestionReason}</p>
                 </div>
+              )}
+
+              {showUploadModal && (
+                <DocumentUploadModal onSave={handleUploadDoc} onClose={() => setShowUploadModal(false)} />
               )}
 
               {showDeleteConfirm && (

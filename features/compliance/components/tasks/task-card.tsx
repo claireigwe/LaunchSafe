@@ -11,7 +11,6 @@ interface Props {
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Pending",
-  not_started: "Pending",
   in_progress: "In Progress",
   awaiting_submission: "Awaiting Submission",
   submitted: "Submitted",

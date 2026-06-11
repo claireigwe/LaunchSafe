@@ -1,5 +1,14 @@
 .wrapper { position: relative; display: inline-flex; width: 100%; }
-.select { appearance: none; -webkit-appearance: none; padding: 10px 40px 10px 14px; border-radius: 10px; border: 1px solid var(--color-role-light-outlineVariant); background: var(--color-role-light-surfaceContainerLowest); font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurface); outline: none; transition: border-color .15s; width: 100%; cursor: pointer; }
-.select:focus { border-color: var(--color-role-light-primary); }
-.select:disabled { opacity: .5; cursor: not-allowed; }
-.chevron { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--color-role-light-onSurfaceVariant); }
+.trigger { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--color-role-light-outlineVariant); background: var(--color-role-light-surfaceContainerLowest); font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurface); cursor: pointer; transition: border-color .15s; text-align: left; }
+.trigger:hover { border-color: var(--color-role-light-outline); }
+.trigger:focus-visible { outline: 2px solid var(--color-role-light-primary); outline-offset: 2px; }
+.triggerOpen { border-color: var(--color-role-light-primary); }
+.trigger:disabled { opacity: .5; cursor: not-allowed; }
+.triggerText { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.placeholder { flex: 1; color: var(--color-role-light-onSurfaceVariant); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chevron { flex-shrink: 0; color: var(--color-role-light-onSurfaceVariant); transition: transform .2s; }
+.chevronOpen { transform: rotate(180deg); }
+.menu { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 200; background: var(--color-role-light-surfaceBright); border: 1px solid var(--color-role-light-outlineVariant); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.08); max-height: 240px; overflow-y: auto; padding: 4px; }
+.item { display: block; width: 100%; padding: 10px 14px; border: none; border-radius: 8px; background: none; font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurface); cursor: pointer; text-align: left; transition: background .1s; }
+.item:hover { background: var(--color-role-light-surfaceContainer); }
+.itemActive { background: var(--color-role-light-primaryContainer); color: var(--color-role-light-primary); font-weight: 500; }

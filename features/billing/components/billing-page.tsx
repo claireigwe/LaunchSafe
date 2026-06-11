@@ -7,6 +7,7 @@ import { CreditCard, Check, ChevronRight, ExternalLink, AlertCircle, Clock } fro
 import { Button } from "@/components/ui/button";
 import {
   getSubscription,
+  saveSubscription,
   getPayments,
   getAssessmentPurchases,
   cancelSubscription,
@@ -18,6 +19,7 @@ import {
   type SavedSubscription,
 } from "../api/billing-api";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { initiateSubscriptionPayment } from "@/features/businesses/api/onboarding-api";
 import { ContactSalesModal } from "./contact-sales-modal";
 import styles from "./billing-page.module.css";
 
@@ -54,9 +56,19 @@ export function BillingPage() {
   const [showContactSales, setShowContactSales] = useState(false);
 
   useEffect(() => {
-    setSub(getSubscription());
-    setPayments(getPayments());
-    setPurchases(getAssessmentPurchases());
+    async function load() {
+      const res = await fetch("/api/billing/data");
+      const json = await res.json();
+      if (json.success && json.data) {
+        if (json.data.subscription) {
+          saveSubscription(json.data.subscription);
+          setSub(json.data.subscription);
+        }
+        if (json.data.payments) setPayments(json.data.payments);
+        if (json.data.purchases) setPurchases(json.data.purchases);
+      }
+    }
+    load().catch(() => {});
     trackEvent("Billing Page Viewed");
   }, []);
 
@@ -183,6 +195,18 @@ export function BillingPage() {
                   </div>
                 )}
                 {isCurrent && <span className={styles.currentBadge}>Current Plan</span>}
+                {isCurrent && plan.id === "enterprise" && !sub?.paystackSubscriptionCode && (
+                  <Button variant="primary" size="sm" fullWidth onClick={async () => {
+                    try {
+                      const { authorizationUrl } = await initiateSubscriptionPayment("enterprise", "monthly");
+                      window.location.href = authorizationUrl;
+                    } catch {
+                      alert("Failed to initiate payment. Please try again.");
+                    }
+                  }}>
+                    Set up Payment
+                  </Button>
+                )}
                 {!isCurrent && isActive && plan.monthly && <Button variant="outline" size="sm" fullWidth onClick={() => router.push("/business-onboarding?mode=change-plan")}>Switch Plan</Button>}
                 {!isCurrent && isActive && !plan.monthly && <Button variant="outline" size="sm" fullWidth onClick={() => setShowContactSales(true)}>Contact Sales</Button>}
               </div>

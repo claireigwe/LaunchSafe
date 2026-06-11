@@ -56,7 +56,7 @@ async function fetchRegulatoryContext(supabase: any, userId: string): Promise<st
 export async function POST(request: Request) {
   try {
     const user = await getRequiredUser();
-    const { allowed, response: denied } = await requireFeature(user.id, "priority_support");
+    const { allowed, response: denied } = await requireFeature(user.id, "ai_compliance");
     if (!allowed) return denied;
 
     const body = await request.json();

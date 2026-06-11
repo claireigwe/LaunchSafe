@@ -1,7 +1,7 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
-import type { SelectHTMLAttributes, ReactNode } from "react";
 import styles from "./select.module.css";
 
 interface Option {
@@ -9,26 +9,69 @@ interface Option {
   label: string;
 }
 
-export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, "children"> {
+export interface SelectProps {
   options: (Option | string)[];
   placeholder?: string;
+  value?: string;
+  onChange?: (e: any) => void;
+  disabled?: boolean;
+  id?: string;
+  className?: string;
+  name?: string;
 }
 
 function toOption(o: Option | string): Option {
   return typeof o === "string" ? { value: o, label: o } : o;
 }
 
-export function Select({ options, placeholder, className, value, ...props }: SelectProps) {
+export function Select({ options, placeholder, value, onChange, disabled, id, className, name }: SelectProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const all = options.map(toOption);
+  const selected = all.find((o) => o.value === value);
+  const display = selected?.label || placeholder || "";
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
-    <div className={styles.wrapper}>
-      <select className={`${styles.select} ${className || ""}`} value={value} {...props}>
-        {placeholder && <option value="" disabled>{placeholder}</option>}
-        {options.map((o) => {
-          const opt = toOption(o);
-          return <option key={opt.value} value={opt.value}>{opt.label}</option>;
-        })}
-      </select>
-      <ChevronDown size={16} className={styles.chevron} />
+    <div className={`${styles.wrapper} ${className || ""}`} ref={ref}>
+      <button
+        type="button"
+        className={`${styles.trigger} ${open ? styles.triggerOpen : ""}`}
+        onClick={() => { if (!disabled) setOpen(!open); }}
+        disabled={disabled}
+        id={id}
+        name={name}
+      >
+        <span className={value ? styles.triggerText : styles.placeholder}>{display}</span>
+        <ChevronDown size={16} className={`${styles.chevron} ${open ? styles.chevronOpen : ""}`} />
+      </button>
+
+      {open && (
+        <div className={styles.menu}>
+          {all.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              className={`${styles.item} ${opt.value === value ? styles.itemActive : ""}`}
+              onClick={() => {
+                onChange?.({ target: { value: opt.value } } as any);
+                setOpen(false);
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

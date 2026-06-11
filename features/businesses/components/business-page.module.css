@@ -64,3 +64,5 @@
 .confirmDelete { padding: 10px 20px; border-radius: 10px; border: none; background: var(--color-role-light-error); color: var(--color-role-light-onError); font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; font-weight: 600; cursor: pointer; }
 .confirmDelete:hover { background: var(--color-palette-error-30); }
 .confirmDelete:disabled { background: var(--color-role-light-surfaceContainer); color: var(--color-role-light-onSurfaceVariant); cursor: not-allowed; }
+.limitBanner { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; background: var(--color-role-light-warningContainer); color: var(--color-role-light-onWarningContainer); font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; margin-bottom: 16px; }
+.limitBannerClose { margin-left: auto; background: none; border: none; cursor: pointer; font-size: 18px; color: inherit; padding: 0; line-height: 1; flex-shrink: 0; }

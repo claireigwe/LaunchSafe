@@ -28,14 +28,25 @@ export function HealthScore({ score }: Props) {
     ? "Some compliance items require your attention. Review upcoming deadlines and overdue items below."
     : "Your compliance profile has critical issues. Address overdue items immediately.";
 
+  const trendDiff = score.previousScore != null ? score.score - score.previousScore : null;
+  const trendUp = trendDiff != null && trendDiff > 0;
+  const trendDown = trendDiff != null && trendDiff < 0;
+
   return (
     <div className={styles.card}>
       <div className={styles.header}>
         <h2 className={styles.title}>Compliance Health</h2>
       </div>
       <div className={styles.body}>
-        <div className={`${styles.scoreCircle} ${styles[level]}`}>
-          <span className={styles.scoreValue}>{score.score}%</span>
+        <div className={styles.scoreCol}>
+          <div className={`${styles.scoreCircle} ${styles[level]}`}>
+            <span className={styles.scoreValue}>{score.score}%</span>
+          </div>
+          {trendDiff != null && (
+            <span className={`${styles.trend} ${trendUp ? styles.trendUp : trendDown ? styles.trendDown : ""}`}>
+              {trendUp ? "↑" : trendDown ? "↓" : "–"} {trendDiff !== 0 ? Math.abs(trendDiff) + " pts" : "No change"}
+            </span>
+          )}
         </div>
         <div className={styles.details}>
           <p className={styles.message}>{message}</p>
@@ -51,6 +62,10 @@ export function HealthScore({ score }: Props) {
             <div className={styles.stat}>
               <span className={styles.statValue}>{score.breakdown.missingEvidence}</span>
               <span className={styles.statLabel}>Missing evidence</span>
+            </div>
+            <div className={styles.stat}>
+              <span className={styles.statValue}>{score.breakdown.upcomingDeadlineCount}</span>
+              <span className={styles.statLabel}>Due soon</span>
             </div>
           </div>
         </div>

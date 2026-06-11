@@ -42,7 +42,8 @@
 .linkDocBtn:hover { border-color: var(--color-role-light-primary); background: var(--color-role-light-primaryContainer); }
 .linkDocDropdown { padding: 12px; background: var(--color-role-light-surfaceContainerLow); border-radius: 10px; display: flex; flex-direction: column; gap: 4px; }
 .linkDocLabel { font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); margin: 0 0 4px; }
-.linkDocEmpty { font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); margin: 0; font-style: italic; }
+.uploadFromLinkBtn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px dashed var(--color-role-light-primary); border-radius: 8px; background: var(--color-role-light-primaryContainer); font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 500; color: var(--color-role-light-primary); cursor: pointer; transition: all .15s; }
+.uploadFromLinkBtn:hover { background: var(--color-role-light-primary); color: var(--color-role-light-onPrimary); }
 .linkDocItem { display: block; width: 100%; padding: 8px 10px; border: none; background: none; border-radius: 6px; cursor: pointer; text-align: left; font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onSurface); transition: background .1s; }
 .linkDocItem:hover { background: var(--color-role-light-surfaceContainer); }
 .linkDocCancel { align-self: flex-start; background: none; border: none; font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; padding: 4px 0; margin-top: 4px; }
@@ -61,6 +62,15 @@
 .reason { padding: 14px; background: var(--color-role-light-primaryContainer); border-radius: 12px; font-family: var(--font-body-body-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onPrimaryContainer); line-height: 1.5; }
 .reason strong { display: block; margin-bottom: 4px; }
 .reason p { margin: 0; }
+.aiSection { margin-bottom: 16px; }
+.explainBtn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px dashed var(--color-role-light-primary); border-radius: 8px; background: none; font-family: var(--font-label-label-medium-fontFamily); font-size: 12px; color: var(--color-role-light-primary); cursor: pointer; transition: all .15s; }
+.explainBtn:hover { background: var(--color-role-light-primaryContainer); }
+.aiLoading { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-radius: 10px; background: var(--color-role-light-surfaceContainerLow); font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onSurfaceVariant); }
+.aiError { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-radius: 10px; background: var(--color-role-light-errorContainer); font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onErrorContainer); }
+.aiExplanation { padding: 14px; background: var(--color-role-light-primaryContainer); border-radius: 12px; border: 1px solid var(--color-role-light-primary); }
+.aiExplanationHeader { display: flex; align-items: center; gap: 6px; font-family: var(--font-label-label-medium-fontFamily); font-size: 12px; font-weight: 600; color: var(--color-role-light-primary); margin-bottom: 8px; }
+.aiDismiss { margin-left: auto; background: none; border: none; cursor: pointer; font-size: 16px; color: var(--color-role-light-primary); padding: 0; line-height: 1; }
+.aiExplanationText { font-family: var(--font-body-body-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onPrimaryContainer); margin: 0; line-height: 1.6; white-space: pre-wrap; }
 .actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 4px; }
 .right { display: flex; gap: 8px; }
 @media (max-width: 480px) { .row { flex-direction: column; gap: 0; } }

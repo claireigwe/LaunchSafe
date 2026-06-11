@@ -62,16 +62,38 @@ export async function POST(request: Request) {
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.id);
 
+    const { data: suspendedSub } = await adminSupabase
+      .from("subscriptions")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "suspended")
+      .maybeSingle();
+
+    if (suspendedSub) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: "Payment required. Please set up payment for your Enterprise plan before adding a business.", code: "payment_required" } },
+        { status: 402 }
+      );
+    }
+
     const { data: sub } = await adminSupabase
       .from("subscriptions")
-      .select("subscription_plans!inner(slug)")
+      .select("plan_id")
       .eq("user_id", user.id)
       .in("status", ["active", "trial"])
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    const planSlug = sub?.subscription_plans?.slug || null;
+    let planSlug: string | null = null;
+    if (sub?.plan_id) {
+      const { data: plan } = await adminSupabase
+        .from("subscription_plans")
+        .select("slug")
+        .eq("id", sub.plan_id)
+        .maybeSingle();
+      if (plan) planSlug = plan.slug;
+    }
     const { limits } = require("@/lib/billing/features").resolveAccess(planSlug, "active");
     const limit = limits.businesses || 1;
 

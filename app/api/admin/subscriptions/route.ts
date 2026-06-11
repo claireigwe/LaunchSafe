@@ -71,7 +71,8 @@ export async function POST(request: Request) {
         .from("subscriptions")
         .update({
           plan_id: plan.id,
-          status: "active",
+          status: "suspended",
+          paystack_subscription_code: null,
           current_period_start: now.toISOString(),
           current_period_end: end.toISOString(),
           updated_at: now.toISOString(),
@@ -83,7 +84,7 @@ export async function POST(request: Request) {
         .insert({
           user_id: targetUserId,
           plan_id: plan.id,
-          status: "active",
+          status: "suspended",
           current_period_start: now.toISOString(),
           current_period_end: end.toISOString(),
         });

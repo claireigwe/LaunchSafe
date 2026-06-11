@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import type { ApiResponse } from "@/types/api.types";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const user = await getRequiredUser();
-    const supabase = await createClient() as any;
+    const supabase = createAdminClient() as any;
     const body = await request.json();
     const { id, title, description, dueDate, priority, businessId, source, suggestionReason } = body;
 
@@ -50,7 +50,23 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data, error } = await (supabase as any)
+    console.log("[LaunchSafe] Task POST: creating task", { title, businessId, userId: user.id });
+
+    const { data: biz } = await supabase
+      .from("businesses")
+      .select("id")
+      .eq("id", businessId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!biz) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: "Business not found or access denied" } },
+        { status: 403 }
+      );
+    }
+
+    const { data, error } = await supabase
       .from("compliance_tasks")
       .insert({
         id: id || undefined,
@@ -65,17 +81,21 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
+      console.error("[LaunchSafe] Task POST insert error:", error);
       return NextResponse.json<ApiResponse>(
         { success: false, error: { message: error.message } },
         { status: 500 }
       );
     }
 
+    console.log("[LaunchSafe] Task POST: success", { taskId: data.id, title: data.requirement_name });
+
     return NextResponse.json<ApiResponse>(
       { success: true, data: mapTask(data) },
       { status: 201 }
     );
   } catch (error) {
+    console.error("[LaunchSafe] Task POST catch:", error);
     return NextResponse.json<ApiResponse>(
       { success: false, error: { message: "Unauthorized" } },
       { status: 401 }

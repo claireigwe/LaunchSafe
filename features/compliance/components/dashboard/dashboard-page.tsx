@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ClipboardList, Plus, AlertTriangle, FileText, BarChart } from "lucide-react";
+import { ClipboardList, Plus, AlertTriangle, FileText, BarChart, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDashboard } from "../../hooks/use-dashboard";
 import { useHasBusiness } from "@/features/businesses/hooks/use-has-business";
@@ -21,11 +21,13 @@ import { getActiveBusinessId } from "@/lib/stores/app-store";
 import { formatFileSize, type UploadDocumentInput } from "@/features/documents/api/documents-api";
 import { DOC_TYPE_LABELS } from "@/features/documents/types/documents.types";
 import { getSubscription, formatCurrency } from "@/features/billing/api/billing-api";
+import { canAccess } from "@/features/billing/api/feature-access";
 import { SetupOverlay } from "@/features/billing/components/setup-overlay";
 import { isInSetupMode } from "@/features/billing/api/setup-check";
 import { getRegulatoryUpdates } from "@/features/regulatory-updates/api/regulatory-updates-api";
 import { getRecentActivity, type ActivityEntry } from "@/features/activity/api/activity-api";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { addBusiness } from "@/features/businesses/api/onboarding-api";
 import type { ComplianceTaskItem, CreateTaskInput } from "../../types/tasks.types";
 import type { AppDocument } from "@/features/documents/types/documents.types";
 import { useDocuments, useUploadDocument } from "@/features/documents/hooks/use-documents-query";
@@ -43,6 +45,81 @@ export function DashboardPage() {
   const { data: uploadedDocs = [] } = useDocuments();
   const uploadMutation = useUploadDocument();
   const recentDocs = uploadedDocs.slice(0, 4);
+  const [setupMsg, setSetupMsg] = useState<string | null>(null);
+  const [aiInsight, setAiInsight] = useState<string | null>(null);
+  const [aiInsightLoading, setAiInsightLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const reference = params.get("reference");
+    if (params.get("subscription") === "success" && reference) {
+      window.history.replaceState({}, "", "/dashboard");
+
+      const pendingRaw = localStorage.getItem("launchsafe-pending-business");
+      if (!pendingRaw) return;
+
+      localStorage.removeItem("launchsafe-pending-business");
+      setSetupMsg("Completing your setup...");
+
+      fetch("/api/billing/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reference }),
+      })
+      .then(res => res.json())
+      .then(async (json) => {
+        if (json.success) {
+          try {
+            const pending = JSON.parse(pendingRaw);
+            const biz = await addBusiness(pending);
+            if (biz?.id) {
+              localStorage.setItem("launchsafe-active-business", biz.id);
+              localStorage.setItem("launchsafe-business-data", JSON.stringify(pending));
+            }
+          } catch {}
+        }
+        window.location.reload();
+      })
+      .catch(() => {
+        window.location.reload();
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!canAccess("ai_compliance")) return;
+    setAiInsightLoading(true);
+
+    const completedCount = savedTasks.filter(t => t.status === "completed").length;
+    const overdueTasks = savedTasks.filter(t => t.status === "overdue");
+    const pendingTasks = savedTasks.filter(t => t.status !== "completed" && t.status !== "overdue");
+    const industry = data?.business?.industryId || "";
+
+    let details = `I run a business in the ${industry} industry. I have ${savedTasks.length} compliance task(s): ${completedCount} completed, ${overdueTasks.length} overdue, ${pendingTasks.length} pending.`;
+    if (overdueTasks.length > 0) {
+      details += ` Overdue tasks: ${overdueTasks.map(t => t.title).join(", ")}.`;
+    }
+    if (pendingTasks.length > 0) {
+      details += ` Pending tasks: ${pendingTasks.map(t => t.title).join(", ")}.`;
+    }
+
+    fetch("/api/ai/assist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `Based on this compliance status, give me one brief, actionable insight or observation: ${details}`,
+      }),
+    })
+    .then(res => res.json())
+    .then(json => {
+      if (json.success && json.data?.content) {
+        const cleaned = json.data.content.replace(/\*\*/g, "").replace(/\*/g, "");
+        setAiInsight(cleaned);
+      }
+    })
+    .catch(() => {})
+    .finally(() => setAiInsightLoading(false));
+  }, [savedTasks]);
 
   async function refreshDashboard() {
     await reconcileTaskStatuses();
@@ -69,27 +146,77 @@ export function DashboardPage() {
       overdueCount: 0,
       missingEvidence: 0,
       expiredDocuments: 0,
+      upcomingDeadlineCount: 0,
     },
+    previousScore: null,
     calculatedAt: new Date().toISOString(),
   });
 
   useEffect(() => {
-    if (savedTasks.length > 0) {
-      const businessId = getActiveBusinessId();
+    const tasks = savedTasks;
+    if (tasks.length === 0) return;
+
+    const now = Date.now();
+    const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+
+    let completedTasks = 0;
+    let overdueCount = 0;
+    let upcomingDeadlineCount = 0;
+
+    for (const t of tasks) {
+      const isCompleted = t.status === "completed";
+      const isOverdue = t.status === "overdue";
+      const dueDate = t.dueDate ? new Date(t.dueDate).getTime() : null;
+
+      if (isCompleted) {
+        completedTasks++;
+      } else if (isOverdue || (dueDate && dueDate < now)) {
+        overdueCount++;
+      } else if (dueDate && dueDate >= now && dueDate - now <= SEVEN_DAYS) {
+        upcomingDeadlineCount++;
+      }
+    }
+
+    const completionRatio = tasks.length > 0 ? completedTasks / tasks.length : 0;
+    let score = Math.round(completionRatio * 70);
+    score -= overdueCount * 10;
+    score -= upcomingDeadlineCount * 3;
+    score = Math.max(0, Math.min(100, score));
+
+    const breakdown = {
+      completedTasks,
+      totalTasks: tasks.length,
+      overdueCount,
+      missingEvidence: 0,
+      expiredDocuments: 0,
+      upcomingDeadlineCount,
+    };
+
+    setComputedScore({
+      id: "computed",
+      businessId: getActiveBusinessId() || "",
+      score,
+      breakdown,
+      previousScore: null,
+      calculatedAt: new Date().toISOString(),
+    });
+
+    const businessId = getActiveBusinessId();
+    if (businessId) {
       fetch("/api/compliance/score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ businessId }),
+        body: JSON.stringify({ businessId, score, breakdown }),
       })
       .then(res => res.json())
       .then(json => {
-        if (json.success && json.data) {
-          setComputedScore(json.data);
+        if (json.success && json.data && json.data.previousScore != null) {
+          setComputedScore((prev: any) => ({ ...prev, previousScore: json.data.previousScore }));
         }
       })
       .catch(() => {});
     }
-  }, [savedTasks.length]);
+  }, [savedTasks]);
 
   const upcoming = savedTasks
     .filter((t) => t.status !== "completed" && t.dueDate)
@@ -262,6 +389,15 @@ function EmptyTasks({ onAddTask }: { onAddTask: () => void }) {
   );
 }
 
+  if (setupMsg) {
+    return (
+      <div className={styles.loading}>
+        <div className={styles.spinner} />
+        <p>{setupMsg}</p>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className={styles.loading}>
@@ -297,6 +433,20 @@ function EmptyTasks({ onAddTask }: { onAddTask: () => void }) {
         </section>
         <aside className={styles.secondary}>
           <QuickActions onAddTask={() => setShowCreate(true)} onUploadDocument={() => setShowUploadDoc(true)} />
+          {aiInsight && (
+            <div className={styles.aiInsightCard}>
+              <div className={styles.aiInsightHeader}>
+                <Sparkles size={14} />
+                <span>AI Insight</span>
+              </div>
+              <p className={styles.aiInsightText}>{aiInsight}</p>
+            </div>
+          )}
+          {aiInsightLoading && (
+            <div className={styles.aiInsightCard}>
+              <p className={styles.aiInsightText} style={{ opacity: 0.5 }}>Loading insight...</p>
+            </div>
+          )}
           <PastReportsWidget />
           {subscription && <SubscriptionStatus sub={subscription} />}
           <BusinessOverview business={data.business} />

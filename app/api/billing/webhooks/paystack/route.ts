@@ -120,14 +120,34 @@ async function handleChargeSuccess(supabase: any, eventData: any, rawEvent: any)
         const end = new Date(now);
         end.setMonth(end.getMonth() + (billingCycle === "annual" ? 12 : 1));
 
-        await supabase.from("subscriptions").insert({
-          user_id: userId,
-          plan_id: plans.id,
-          status: "active",
-          paystack_subscription_code: eventData.subscription_code || null,
-          current_period_start: now.toISOString(),
-          current_period_end: end.toISOString(),
-        });
+        const { data: existingSub } = await supabase
+          .from("subscriptions")
+          .select("id")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (existingSub) {
+          await supabase
+            .from("subscriptions")
+            .update({
+              plan_id: plans.id,
+              status: "active",
+              paystack_subscription_code: eventData.subscription_code || null,
+              current_period_start: now.toISOString(),
+              current_period_end: end.toISOString(),
+              updated_at: now.toISOString(),
+            })
+            .eq("id", existingSub.id);
+        } else {
+          await supabase.from("subscriptions").insert({
+            user_id: userId,
+            plan_id: plans.id,
+            status: "active",
+            paystack_subscription_code: eventData.subscription_code || null,
+            current_period_start: now.toISOString(),
+            current_period_end: end.toISOString(),
+          });
+        }
       }
     }
 

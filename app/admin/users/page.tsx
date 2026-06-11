@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 
 interface UserRow {
   id: string;
@@ -19,38 +18,35 @@ export default function AdminUsersPage() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      try {
-        const supabase = createClient();
-        const { data: profiles } = await supabase
-          .from("user_profiles")
-          .select("id, user_id, email, full_name, created_at")
-          .order("created_at", { ascending: false });
-
-        const { data: subs } = await supabase
-          .from("subscriptions")
-          .select("user_id, subscription_plans!inner(slug)")
-          .in("status", ["active", "trial"]);
-
-        const planMap: Record<string, string> = {};
-        (subs || []).forEach((s: any) => {
-          planMap[s.user_id] = s.subscription_plans?.slug || null;
-        });
-
-        setUsers((profiles || []).map((p: any) => ({
-          id: p.id,
-          userId: p.user_id,
-          email: p.email,
-          fullName: p.full_name,
-          createdAt: p.created_at,
-          currentPlan: planMap[p.user_id] || null,
-        })));
-      } catch {}
-      setLoading(false);
+  async function loadUsers() {
+    setLoading(true);
+    try {
+      const adminPassword = sessionStorage.getItem("admin_pw");
+      if (!adminPassword) {
+        setMessage("Admin password not found. Please log out and log back in.");
+        setLoading(false);
+        return;
+      }
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: adminPassword }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setUsers(json.data);
+        if (json.data.length === 0) setMessage("No users found in the database.");
+      } else {
+        setMessage(json.error?.message || "Failed to load users.");
+      }
+    } catch (e) {
+      setMessage("Network error loading users.");
     }
-    load();
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    loadUsers();
   }, []);
 
   async function handleGrantEnterprise(userId: string) {
@@ -67,25 +63,7 @@ export default function AdminUsersPage() {
         setMessage("Enterprise access granted successfully.");
         setGrantingId(null);
         setPassword("");
-        const supabase = createClient();
-        const { data: profiles } = await supabase
-          .from("user_profiles")
-          .select("id, user_id, email, full_name, created_at")
-          .order("created_at", { ascending: false });
-        const { data: subs } = await supabase
-          .from("subscriptions")
-          .select("user_id, subscription_plans!inner(slug)")
-          .in("status", ["active", "trial"]);
-        const planMap: Record<string, string> = {};
-        (subs || []).forEach((s: any) => { planMap[s.user_id] = s.subscription_plans?.slug || null; });
-        setUsers((profiles || []).map((p: any) => ({
-          id: p.id,
-          userId: p.user_id,
-          email: p.email,
-          fullName: p.full_name,
-          createdAt: p.created_at,
-          currentPlan: planMap[p.user_id] || null,
-        })));
+        loadUsers();
       } else {
         setMessage(json.error?.message || "Failed to grant enterprise access.");
       }

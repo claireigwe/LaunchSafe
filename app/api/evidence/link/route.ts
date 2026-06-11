@@ -18,6 +18,32 @@ export async function POST(request: Request) {
       );
     }
 
+    let resolvedBusinessId = businessId;
+
+    // Ensure the compliance task exists in the DB (FK constraint)
+    const { data: existingTask } = await supabase
+      .from("compliance_tasks")
+      .select("business_id")
+      .eq("id", complianceTaskId)
+      .maybeSingle();
+
+    if (!existingTask) {
+      const { error: taskInsertError } = await supabase.from("compliance_tasks").insert({
+        id: complianceTaskId,
+        business_id: resolvedBusinessId || "",
+        requirement_name: "Compliance Task",
+        agency_name: "",
+        status: "not_started",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      if (taskInsertError) {
+        console.error("[LaunchSafe] Stub task insert error:", taskInsertError);
+      }
+    } else if (!resolvedBusinessId) {
+      resolvedBusinessId = existingTask.business_id;
+    }
+
     // 1. Fetch the document details
     const { data: doc, error: docError } = await supabase
       .from("compliance_documents")
@@ -46,7 +72,7 @@ export async function POST(request: Request) {
       .insert({
         id: evidenceId,
         user_id: user.id,
-        business_id: businessId,
+        business_id: resolvedBusinessId,
         compliance_task_id: complianceTaskId,
         requirement_id: doc.requirement_id,
         title: doc.title,
@@ -60,8 +86,9 @@ export async function POST(request: Request) {
       .single();
 
     if (insertError || !ev) {
+      console.error("[LaunchSafe] Link evidence insert error:", insertError);
       return NextResponse.json<ApiResponse>(
-        { success: false, error: { message: "Failed to link document as evidence" } },
+        { success: false, error: { message: insertError?.message || "Failed to link document as evidence" } },
         { status: 500 }
       );
     }

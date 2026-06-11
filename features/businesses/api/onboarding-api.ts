@@ -124,31 +124,42 @@ export async function fetchAllBusinesses(): Promise<StoredBusiness[]> {
   }
 }
 
-export async function addBusiness(data: Record<string, unknown>): Promise<StoredBusiness | null> {
+export async function addBusiness(data: Record<string, unknown>): Promise<StoredBusiness> {
   const info: any = data.info || {};
   const name = info.businessName || "Unnamed Business";
 
   const ops: any = data.operations || {};
   const st: any = data.status || {};
-  const result: any = await apiPost("/api/businesses", {
-    name,
-    description: JSON.stringify({ industry: info.industry || "", type: info.businessType || "", state: info.state || "", fullData: data }),
-    industrySlug: info.industry || "",
-    stateSlug: info.state || "",
-    website: info.website || null,
-    employeeCount: ops.employeeCount || null,
-    details: {
-      businessType: info.businessType || "",
-      isRegistered: st.isRegistered ?? null,
-      hasCAC: st.hasCAC ?? null,
-      cacNumber: st.cacNumber || null,
-      hasPhysicalLocation: ops.hasPhysicalLocation ?? null,
-      hasOnlineOperations: ops.hasOnlineOperations ?? null,
-    },
+  const res = await fetch("/api/businesses", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name,
+      description: JSON.stringify({ industry: info.industry || "", type: info.businessType || "", state: info.state || "", fullData: data }),
+      industrySlug: info.industry || "",
+      stateSlug: info.state || "",
+      website: info.website || null,
+      employeeCount: ops.employeeCount || null,
+      details: {
+        businessType: info.businessType || "",
+        isRegistered: st.isRegistered ?? null,
+        hasCAC: st.hasCAC ?? null,
+        cacNumber: st.cacNumber || null,
+        hasPhysicalLocation: ops.hasPhysicalLocation ?? null,
+        hasOnlineOperations: ops.hasOnlineOperations ?? null,
+      },
+    }),
   });
+  const json = await res.json();
 
-  if (!result || !result.id) return null;
+  if (!json.success) {
+    const err = new Error(json.error?.message || "Failed to create business") as any;
+    err.code = json.error?.code;
+    err.status = res.status;
+    throw err;
+  }
 
+  const result = json.data;
   const biz: StoredBusiness = {
     id: result.id,
     name: result.name,

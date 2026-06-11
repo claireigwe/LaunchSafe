@@ -2,7 +2,8 @@ export type FeatureFlag =
   | "multi_business"
   | "advanced_reporting"
   | "team_collaboration"
-  | "priority_support";
+  | "priority_support"
+  | "ai_compliance";
 
 export interface AccessInfo {
   planId: string;
@@ -30,7 +31,7 @@ export const PLAN_TO_DB: Record<string, string> = {
 const PLAN_FEATURES: Record<string, FeatureFlag[]> = {
   starter: [],
   growth: ["multi_business", "advanced_reporting"],
-  enterprise: ["multi_business", "advanced_reporting", "team_collaboration", "priority_support"],
+  enterprise: ["multi_business", "advanced_reporting", "team_collaboration", "priority_support", "ai_compliance"],
 };
 
 const PLAN_LIMITS: Record<string, Record<string, number>> = {

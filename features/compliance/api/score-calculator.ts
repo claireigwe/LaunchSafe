@@ -6,27 +6,33 @@ export interface ScoreBreakdown {
   overdueCount: number;
   missingEvidence: number;
   expiredDocuments: number;
+  upcomingDeadlineCount: number;
 }
 
 export interface ScoreCalculationResult {
   score: number;
   breakdown: ScoreBreakdown;
+  previousScore: number | null;
 }
 
 export async function calculateComplianceScore(userId: string, businessId: string): Promise<ScoreCalculationResult> {
   const supabase = createAdminClient() as any;
 
-  // 1. Fetch all tasks for the business
-  const { data: tasks, error: tasksError } = await supabase
+  const { data: tasks, error: tasksError, count: tasksCount } = await supabase
     .from("compliance_tasks")
-    .select("*")
+    .select("*", { count: "exact" })
     .eq("business_id", businessId);
+
+  console.log("[LaunchSafe] Score calc: tasks query result", {
+    businessId,
+    count: (tasks || []).length,
+    error: tasksError?.message,
+  });
 
   if (tasksError) {
     throw new Error("Failed to fetch compliance tasks for score calculation");
   }
 
-  // 2. Fetch all evidence to check for missing evidence on completed tasks
   const { data: evidence, error: evidenceError } = await supabase
     .from("evidence")
     .select("compliance_task_id")
@@ -36,30 +42,50 @@ export async function calculateComplianceScore(userId: string, businessId: strin
     throw new Error("Failed to fetch evidence for score calculation");
   }
 
+  const { data: documents, error: docsError } = await supabase
+    .from("documents")
+    .select("expiry_date")
+    .eq("business_id", businessId)
+    .not("expiry_date", "is", null);
+
+  if (docsError) {
+    throw new Error("Failed to fetch documents for score calculation");
+  }
+
+  const { data: previousScores } = await supabase
+    .from("compliance_scores")
+    .select("score")
+    .eq("user_id", userId)
+    .eq("business_id", businessId)
+    .order("calculated_at", { ascending: false })
+    .limit(1);
+
   const allTasks = tasks || [];
   const allEvidence = evidence || [];
-  
-  const evidenceTaskIds = new Set(allEvidence.map((e: any) => e.compliance_task_id).filter(Boolean));
+  const allDocuments = documents || [];
 
-  let score = 100;
-  let completedTasks = 0;
-  let overdueCount = 0;
-  let missingEvidence = 0;
+  const evidenceTaskIds = new Set(allEvidence.map((e: any) => e.compliance_task_id).filter(Boolean));
 
   if (allTasks.length === 0) {
     return {
       score: 0,
-      breakdown: { completedTasks: 0, totalTasks: 0, overdueCount: 0, missingEvidence: 0, expiredDocuments: 0 },
+      breakdown: { completedTasks: 0, totalTasks: 0, overdueCount: 0, missingEvidence: 0, expiredDocuments: 0, upcomingDeadlineCount: 0 },
+      previousScore: previousScores?.[0]?.score ?? null,
     };
   }
 
-  const now = new Date().getTime();
+  const now = Date.now();
+  const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+
+  let completedTasks = 0;
+  let overdueCount = 0;
+  let missingEvidence = 0;
+  let upcomingDeadlineCount = 0;
 
   for (const task of allTasks) {
     const isCompleted = task.status === "completed";
     const hasEvidence = evidenceTaskIds.has(task.id);
-    
-    // Check if truly overdue
+
     let isOverdue = task.status === "overdue";
     if (!isCompleted && task.due_date) {
       const dueDate = new Date(task.due_date).getTime();
@@ -70,45 +96,57 @@ export async function calculateComplianceScore(userId: string, businessId: strin
 
     if (isCompleted) {
       completedTasks++;
-      // If completed but no evidence, apply a small penalty
       if (!hasEvidence) {
         missingEvidence++;
-        score -= 5;
       }
-    } else {
-      // Incomplete tasks
-      if (isOverdue) {
-        overdueCount++;
-        score -= 10;
-      } else {
-        // Pending task deduction based on priority (if field exists, assuming it doesn't from schema, but let's deduct generic amount)
-        // Deduct 2 points for incomplete tasks that are not overdue yet.
-        score -= 2;
+    } else if (isOverdue) {
+      overdueCount++;
+    } else if (task.due_date) {
+      const dueDate = new Date(task.due_date).getTime();
+      const diff = dueDate - now;
+      if (diff >= 0 && diff <= SEVEN_DAYS) {
+        upcomingDeadlineCount++;
       }
     }
   }
 
-  // Calculate base ratio for reward
+  const expiredDocuments = allDocuments.filter((d: any) => {
+    const expiry = new Date(d.expiry_date).getTime();
+    return expiry < now;
+  }).length;
+
   const completionRatio = completedTasks / allTasks.length;
-  // Let's blend a perfect 100 with the ratio, then subtract penalties
-  // E.g. if you have 10 tasks, 0 completed, you start at 0? 
-  // Wait, if base score is 100, then incomplete tasks deduct points.
-  // If we have 1 task and it is pending, score = 100 - 2 = 98. This is fine.
-  
-  // Ensure score is within 0-100 range
+  let score = Math.round(completionRatio * 70);
+
+  score -= overdueCount * 10;
+  score -= missingEvidence * 5;
+  score -= expiredDocuments * 5;
+  score -= upcomingDeadlineCount * 3;
+
+  const tasksDueToday = allTasks.filter((t: any) => {
+    if (t.status === "completed") return false;
+    if (!t.due_date) return false;
+    const due = new Date(t.due_date);
+    const today = new Date();
+    return due.getFullYear() === today.getFullYear() &&
+           due.getMonth() === today.getMonth() &&
+           due.getDate() === today.getDate();
+  }).length;
+
+  score -= tasksDueToday * 2;
+
   score = Math.max(0, Math.min(100, score));
 
-  // Note: We'll calculate expired documents in the future if document expiry is tracked.
-  const expiredDocuments = 0;
-
   return {
-    score: Math.round(score),
+    score,
     breakdown: {
       completedTasks,
       totalTasks: allTasks.length,
       overdueCount,
       missingEvidence,
       expiredDocuments,
+      upcomingDeadlineCount,
     },
+    previousScore: previousScores?.[0]?.score ?? null,
   };
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Building2, Pencil, Plus, ArrowUp, Trash2, X, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getBusinessData, getBusinessDataById, fetchAllBusinesses, loadCachedBusinesses, saveBusinessData, saveBusinessDataForBusiness, removeBusiness, type StoredBusiness } from "@/features/businesses/api/onboarding-api";
@@ -118,6 +118,8 @@ export function BusinessPage() {
   const sub = getSubscription();
   const planName = getCurrentPlanName();
   const planLimit = getPlanLimit("businesses");
+  const searchParams = useSearchParams();
+  const [showLimitBanner, setShowLimitBanner] = useState(searchParams.get("limit_reached") === "true");
   const canAddBiz = canAccess("multi_business");
   const count = businesses.length;
   const atLimit = canAddBiz && count >= planLimit;
@@ -228,6 +230,13 @@ export function BusinessPage() {
           )}
         </div>
       </div>
+
+      {showLimitBanner && (
+        <div className={styles.limitBanner}>
+          <span>Your {getCurrentPlanName()} plan allows up to {getPlanLimit("businesses")} businesses. Please upgrade to add more.</span>
+          <button type="button" className={styles.limitBannerClose} onClick={() => setShowLimitBanner(false)}>×</button>
+        </div>
+      )}
 
       <div className={styles.layout}>
         <aside className={styles.sidebarList}>

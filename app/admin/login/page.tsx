@@ -23,6 +23,7 @@ export default function AdminLoginPage() {
       const json = await res.json();
       if (json.success) {
         sessionStorage.setItem("admin_auth", "true");
+        sessionStorage.setItem("admin_pw", password);
         router.push("/admin");
       } else {
         setError(json.error?.message || "Invalid password");

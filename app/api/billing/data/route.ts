@@ -11,7 +11,7 @@ export async function GET() {
 
     const { data: subs } = await supabase
       .from("subscriptions")
-      .select("*, subscription_plans!inner(slug, name), pending_plan:subscription_plans!pending_plan_id(slug, name)")
+      .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -29,7 +29,30 @@ export async function GET() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    const rawPlanSlug = subs?.subscription_plans?.slug || "starter";
+    let rawPlanSlug = "starter";
+    if (subs?.plan_id) {
+      const { data: plan } = await supabase
+        .from("subscription_plans")
+        .select("slug")
+        .eq("id", subs.plan_id)
+        .maybeSingle();
+      if (plan) rawPlanSlug = plan.slug;
+    }
+
+    let pendingSlug: string | null = null;
+    let pendingName: string | null = null;
+    if ((subs as any)?.pending_plan_id) {
+      const { data: pendingPlan } = await supabase
+        .from("subscription_plans")
+        .select("slug, name")
+        .eq("id", (subs as any).pending_plan_id)
+        .maybeSingle();
+      if (pendingPlan) {
+        pendingSlug = pendingPlan.slug;
+        pendingName = pendingPlan.name;
+      }
+    }
+
     const resolved = resolveAccess(rawPlanSlug, subs?.status || "trial");
 
     const subscription = subs ? {
@@ -40,8 +63,9 @@ export async function GET() {
       startDate: subs.current_period_start,
       nextRenewal: subs.current_period_end,
       cancelledAt: subs.cancelled_at,
-      pendingPlanId: (subs as any).pending_plan?.slug || null,
-      pendingPlanName: (subs as any).pending_plan?.name || null,
+      paystackSubscriptionCode: subs.paystack_subscription_code,
+      pendingPlanId: pendingSlug,
+      pendingPlanName: pendingName,
       pendingBillingCycle: null,
     } : null;
 

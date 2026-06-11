@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { TrendingUp, TrendingDown, Minus, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, CheckCircle, XCircle } from "lucide-react";
 import { loadTasks } from "@/features/compliance/api/tasks-api";
 import { useDocuments } from "@/features/documents/hooks/use-documents-query";
 import type { HealthTrendPoint } from "../types/reporting.types";
@@ -51,8 +51,7 @@ export function HealthTrendChart({ data }: Props) {
   const docsUploaded = documents.length;
   const pendingTasks = tasks.filter((t) => t.status === "pending" || t.status === "in_progress" || t.status === "awaiting_submission" || t.status === "submitted" || t.status === "due_soon").length;
 
-  const riskLevel = current.score >= 80 ? "low" : current.score >= 50 ? "medium" : "high";
-  const riskLabel = riskLevel === "low" ? "Low Risk" : riskLevel === "medium" ? "Medium Risk" : "High Risk";
+
 
   const w = 600;
   const h = 200;
@@ -82,8 +81,8 @@ export function HealthTrendChart({ data }: Props) {
     <div className={styles.card}>
       <div className={styles.headerRow}>
         <div>
-          <h2 className={styles.title}>Compliance Health Trends</h2>
-          <p className={styles.subtitle}>Monitor how your compliance performance changes over time.</p>
+          <h2 className={styles.title}>Compliance Completion Rate</h2>
+          <p className={styles.subtitle}>Track how your task completion percentage changes over time.</p>
         </div>
         <div className={styles.timeToggle}>
           <span className={`${styles.timeBtn} ${timeRange === "30d" ? styles.timeActive : ""}`} onClick={() => { setTimeRange("30d"); setHovered(null); }}>30 Days</span>
@@ -107,13 +106,6 @@ export function HealthTrendChart({ data }: Props) {
             ) : (
               <><Minus size={14} /> 0%</>
             )}
-          </span>
-        </div>
-        <div className={styles.kpiCard}>
-          <span className={styles.kpiLabel}>Risk Level</span>
-          <span className={`${styles.riskBadge} ${styles[`risk_${riskLevel}`]}`}>
-            <AlertTriangle size={12} />
-            {riskLabel}
           </span>
         </div>
       </div>
@@ -187,11 +179,11 @@ export function HealthTrendChart({ data }: Props) {
           <h3 className={styles.insightsTitle}>Key Insights</h3>
           <p className={styles.insight}>
             {periodChange < 0
-              ? `Compliance health declined ${Math.abs(periodChange)}% over the last period.`
+              ? `Completion rate declined ${Math.abs(periodChange)}% over the last period.`
               : periodChange > 0
-              ? `Compliance health improved ${periodChange}% over the last period.`
-              : `Compliance health remained stable over the last period.`}
-            {overdueTasks > 0 && ` ${overdueTasks} overdue task${overdueTasks > 1 ? "s" : ""} contributed to the current score.`}
+              ? `Completion rate improved ${periodChange}% over the last period.`
+              : `Completion rate remained stable over the last period.`}
+            {overdueTasks > 0 && ` ${overdueTasks} overdue task${overdueTasks > 1 ? "s" : ""} are affecting the rate.`}
             {pendingTasks > 0 && ` Completing ${pendingTasks} pending task${pendingTasks > 1 ? "s" : ""} could improve your score.`}
           </p>
 

@@ -1,4 +1,5 @@
-.card { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); border-radius: 24px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04); margin-top: 24px; }
+.card { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); border-radius: 24px; overflow: hidden; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04); margin-top: 24px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05); }
 .header { display: flex; align-items: center; gap: 10px; padding: 20px 24px; border-bottom: 1px solid var(--color-role-light-outlineVariant); }
 .icon { color: var(--color-key-warning); }
 .title { font-family: var(--font-title-title-large-fontFamily); font-size: 16px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0; }
@@ -9,6 +10,7 @@
 .itemTitleRow { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
 .itemTitle { font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; font-weight: 500; color: var(--color-role-light-onSurface); }
 .priorityBadge { font-family: var(--font-label-label-small-fontFamily); font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; }
+.aiBadge { font-family: var(--font-label-label-small-fontFamily); font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: var(--color-role-light-primary); color: var(--color-role-light-onPrimary); text-transform: uppercase; letter-spacing: 0.3px; }
 .pr_low { background: var(--color-role-light-surfaceContainer); color: var(--color-role-light-onSurfaceVariant); }
 .pr_medium { background: var(--color-role-light-warningContainer); color: var(--color-role-light-onWarningContainer); }
 .pr_high { background: var(--color-palette-error-80); color: var(--color-palette-error-10); }

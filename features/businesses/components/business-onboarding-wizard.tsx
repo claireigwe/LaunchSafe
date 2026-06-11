@@ -10,7 +10,7 @@ import { ProcessingProfile } from "./steps/processing-profile";
 import { SubscriptionSelect } from "./steps/subscription-select";
 import { PaymentProcessing } from "./steps/payment-processing";
 import { DashboardRedirect } from "./steps/dashboard-redirect";
-import { clearUserIntent, saveUserIntent, addBusiness, getBusinessCount } from "../api/onboarding-api";
+import { clearUserIntent, saveUserIntent, addBusiness, getBusinessCount, initiateSubscriptionPayment } from "../api/onboarding-api";
 import { getSubscription } from "@/features/billing/api/billing-api";
 import { schedulePlanChange } from "@/features/billing/api/billing-api";
 import { getPlanLimit } from "@/features/billing/api/feature-access";
@@ -45,7 +45,7 @@ export function BusinessOnboardingWizard() {
         const count = await getBusinessCount();
         const limit = getPlanLimit("businesses");
         if (count >= limit) {
-          router.push("/business");
+          router.push("/business?limit_reached=true");
         }
       }
     });
@@ -90,15 +90,30 @@ export function BusinessOnboardingWizard() {
         return <BusinessOperations data={data.operations} onUpdate={(v) => updateStepData("operations", v)} onNext={goNext} onBack={goBack} />;
       case 4:
         return <ProcessingProfile onComplete={async () => {
-          const sub = getSubscription();
-          const bizCount = await getBusinessCount();
-          const hasActiveSub = sub && sub.status === "active";
-          if (hasActiveSub || (isAddBusiness && bizCount > 0)) {
+          try {
             await addBusiness(data as any);
             clearUserIntent();
             router.push("/dashboard");
-          } else {
-            goNext();
+          } catch (err: any) {
+            if (err.code === "payment_required") {
+              localStorage.setItem("launchsafe-pending-business", JSON.stringify(data));
+              clearUserIntent();
+              try {
+                const { authorizationUrl } = await initiateSubscriptionPayment("enterprise", "monthly");
+                window.location.href = authorizationUrl;
+              } catch {
+                alert("Failed to initiate payment. Please visit the Billing page.");
+                router.push("/settings/billing");
+              }
+            } else {
+              const bizCount = await getBusinessCount();
+              if (isAddBusiness && bizCount > 0) {
+                alert(err.message || "Failed to create business.");
+                router.push("/dashboard");
+              } else {
+                goNext();
+              }
+            }
           }
         }} />;
       case 5:
