@@ -29,7 +29,6 @@ export function ProcessingProfile({ onComplete }: Props) {
         setCompleted((prev) => {
           const next = new Set(prev);
           next.add(i);
-          if (next.size === STEPS.length) setTimeout(() => cbRef.current(), 400);
           return next;
         });
       }, elapsed);
@@ -38,6 +37,16 @@ export function ProcessingProfile({ onComplete }: Props) {
     });
     return () => timers.forEach(clearTimeout);
   }, []);
+
+  const calledRef = useRef(false);
+
+  useEffect(() => {
+    if (completed.size === STEPS.length && !calledRef.current) {
+      calledRef.current = true;
+      const t = setTimeout(() => cbRef.current(), 400);
+      return () => clearTimeout(t);
+    }
+  }, [completed.size]);
 
   const pct = Math.round((completed.size / STEPS.length) * 100);
 

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, Pencil, Plus, ArrowUp, Trash2, X, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getBusinessData, getBusinessDataById, fetchAllBusinesses, saveBusinessData, saveBusinessDataForBusiness, removeBusiness, type StoredBusiness } from "@/features/businesses/api/onboarding-api";
+import { getBusinessData, getBusinessDataById, fetchAllBusinesses, loadCachedBusinesses, saveBusinessData, saveBusinessDataForBusiness, removeBusiness, type StoredBusiness } from "@/features/businesses/api/onboarding-api";
 import { useAppStore } from "@/lib/stores/app-store";
 import { audit } from "@/features/audit/api/audit-api";
 import { getSubscription } from "@/features/billing/api/billing-api";
@@ -15,15 +15,25 @@ import styles from "./business-page.module.css";
 
 export function BusinessPage() {
   const router = useRouter();
-  const [businesses, setBusinesses] = useState<StoredBusiness[]>([]);
+  const cached = useMemo(() => loadCachedBusinesses(), []);
+  const [businesses, setBusinesses] = useState<StoredBusiness[]>(cached);
   const [showEdit, setShowEdit] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<StoredBusiness | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(() => {
+    const firstId = cached.length > 0 ? cached[0].id : null;
+    return firstId;
+  });
 
   const activeBusinessId = useAppStore((s) => s.activeBusinessId);
   const setActiveBusinessId = useAppStore((s) => s.setActiveBusinessId);
 
-  const [saved, setSaved] = useState<any>(null);
+  const [saved, setSaved] = useState<any>(() => {
+    if (cached.length === 0) return null;
+    const firstId = cached[0].id;
+    localStorage.setItem("launchsafe-active-business", firstId);
+    return getBusinessDataById(firstId) as any;
+  });
 
   async function loadBusinessFromServer(id: string): Promise<any> {
     try {
@@ -32,6 +42,16 @@ export function BusinessPage() {
       if (json.success && json.data) {
         const d = json.data;
         const det: any = d.details || {};
+        
+        if (d.description) {
+          try {
+            const parsed = JSON.parse(d.description);
+            if (parsed.fullData) {
+              return parsed.fullData;
+            }
+          } catch {}
+        }
+
         return {
           info: {
             businessName: d.name || "",
@@ -39,7 +59,7 @@ export function BusinessPage() {
             industry: d.industryId || "",
             state: d.stateId || "",
             website: d.website || "",
-            description: d.description || "",
+            description: "",
           },
           status: {
             isRegistered: det.isRegistered ?? null,
@@ -51,7 +71,6 @@ export function BusinessPage() {
             hasPhysicalLocation: det.hasPhysicalLocation ?? null,
             hasOnlineOperations: det.hasOnlineOperations ?? null,
           },
-          _serverId: id,
         };
       }
     } catch {}
@@ -90,6 +109,8 @@ export function BusinessPage() {
       });
     }
   }, [selectedId]);
+
+  useEffect(() => { setDeleteConfirmName(""); }, [deleteTarget]);
 
   const info = saved?.info || null;
   const status = saved?.status || null;
@@ -289,10 +310,33 @@ export function BusinessPage() {
         <div className={styles.overlay} onClick={() => setDeleteTarget(null)}>
           <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
             <h3 className={styles.confirmTitle}>Delete Business?</h3>
-            <p className={styles.confirmText}>This will permanently remove <strong>{deleteTarget.name}</strong> and its associated compliance data. This action cannot be undone.</p>
+            <p className={styles.confirmText}>
+              This action <strong>cannot be undone</strong>. All associated compliance data, documents, and records will be permanently removed.
+            </p>
+            <p className={styles.confirmText}>
+              Type <strong>{deleteTarget.name}</strong> below to confirm deletion:
+            </p>
+            <input
+              className={styles.confirmInput}
+              type="text"
+              placeholder={deleteTarget.name}
+              value={deleteConfirmName}
+              onChange={(e) => setDeleteConfirmName(e.target.value)}
+              autoFocus
+            />
             <div className={styles.confirmActions}>
               <button type="button" className={styles.confirmCancel} onClick={() => setDeleteTarget(null)}>Cancel</button>
-              <button type="button" className={styles.confirmDelete} onClick={async () => { await removeBusiness(deleteTarget.id); audit.businessDeleted(deleteTarget.id, deleteTarget.name); window.location.reload(); }}>Delete Business</button>
+              <button
+                type="button"
+                className={styles.confirmDelete}
+                disabled={deleteConfirmName !== deleteTarget.name}
+                onClick={async () => {
+                  if (deleteConfirmName !== deleteTarget.name) return;
+                  await removeBusiness(deleteTarget.id);
+                  audit.businessDeleted(deleteTarget.id, deleteTarget.name);
+                  window.location.reload();
+                }}
+              >Delete Business</button>
             </div>
           </div>
         </div>

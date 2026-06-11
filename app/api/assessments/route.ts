@@ -5,6 +5,8 @@ import { AssessmentEngine } from "@/features/assessments/services/assessment-eng
 import type { ApiResponse } from "@/types/api.types";
 import type { Assessment } from "@/types/domain/assessment";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const user = await getRequiredUser();
@@ -12,15 +14,23 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("assessments")
-      .select("id, status, summary_json, created_at")
+      .select("id, status, summary_json, results_json, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
 
+    const list = (data || []).map((a: any) => ({
+      id: a.id,
+      status: a.status,
+      summary: a.summary_json,
+      hasReport: a.results_json !== null,
+      createdAt: a.created_at,
+    }));
+
     return NextResponse.json<ApiResponse>({
       success: true,
-      data: data || [],
+      data: list,
     });
   } catch {
     return NextResponse.json<ApiResponse>(

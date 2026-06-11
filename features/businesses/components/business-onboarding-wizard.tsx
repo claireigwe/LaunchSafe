@@ -91,7 +91,9 @@ export function BusinessOnboardingWizard() {
       case 4:
         return <ProcessingProfile onComplete={async () => {
           const sub = getSubscription();
-          if (isAddBusiness || (sub && sub.status === "active")) {
+          const bizCount = await getBusinessCount();
+          const hasActiveSub = sub && sub.status === "active";
+          if (hasActiveSub || (isAddBusiness && bizCount > 0)) {
             await addBusiness(data as any);
             clearUserIntent();
             router.push("/dashboard");

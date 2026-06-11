@@ -3,6 +3,10 @@ import { getRequiredUser } from "@/lib/auth/get-session";
 import { createClient } from "@/lib/supabase/server";
 import type { ApiResponse } from "@/types/api.types";
 
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
+
 export async function GET(request: Request) {
   try {
     const user = await getRequiredUser();
@@ -37,7 +41,7 @@ export async function POST(request: Request) {
     const user = await getRequiredUser();
     const supabase = await createClient() as any;
     const body = await request.json();
-    const { id, title, description, dueDate, priority, businessId } = body;
+    const { id, title, description, dueDate, priority, businessId, source, suggestionReason } = body;
 
     if (!title || !businessId) {
       return NextResponse.json<ApiResponse>(
@@ -50,13 +54,12 @@ export async function POST(request: Request) {
       .from("compliance_tasks")
       .insert({
         id: id || undefined,
-        user_id: user.id,
         business_id: businessId,
         requirement_name: title,
         agency_name: description || "",
         status: computeStatus(dueDate),
         due_date: dueDate || null,
-        notes: JSON.stringify({ description, priority, source: "manual" }),
+        notes: JSON.stringify({ description, priority, source: source || "manual", suggestionReason: suggestionReason || null }),
       })
       .select()
       .single();
@@ -198,9 +201,9 @@ function mapTask(row: any): any {
     description: notesObj.description || row.agency_name || "",
     dueDate: row.due_date || null,
     priority: notesObj.priority || "medium",
-    status: row.status === "completed" ? "completed" : row.status === "overdue" ? "overdue" : row.status === "in_progress" ? "in_progress" : row.status === "not_started" ? "pending" : "pending",
+    status: row.status === "not_started" ? "pending" : row.status,
     source: notesObj.source || "manual",
-    suggestionReason: null,
+    suggestionReason: notesObj.suggestionReason || null,
     reminderDate: null,
     reminderEnabled: false,
     createdBy: "user",

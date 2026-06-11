@@ -6,7 +6,8 @@ import { ClipboardList, Plus, AlertTriangle, FileText, BarChart } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { useDashboard } from "../../hooks/use-dashboard";
 import { useHasBusiness } from "@/features/businesses/hooks/use-has-business";
-import { EmptyBusinessState } from "@/features/businesses/components/empty-business-state";
+import { BusinessRequiredOverlay } from "@/features/businesses/components/business-required-overlay";
+import { PastReportsWidget } from "@/features/assessments/components/past-reports-widget";
 import { HealthScore } from "./health-score";
 import { RegulatoryUpdates } from "./regulatory-updates";
 import { BusinessOverview } from "./business-overview";
@@ -98,7 +99,7 @@ export function DashboardPage() {
   const overdue = savedTasks.filter((t) => t.status === "overdue");
 
   async function handleCreateTask(input: CreateTaskInput) {
-    await createTask(input);
+    await createTask(input, getActiveBusinessId() || undefined);
     trackEvent("Task Created", { title: input.title });
     setSavedTasks(loadTasks());
     setShowCreate(false);
@@ -270,68 +271,47 @@ function EmptyTasks({ onAddTask }: { onAddTask: () => void }) {
     );
   }
 
-  const isSetup = isInSetupMode();
+  const pageContent = (
+    <div className={styles.page}>
+      <div className={styles.header}>
+        <div>
+          <h1 className={styles.title}>Welcome back, {data.userProfile?.fullName || data.business?.name || "Founder"}</h1>
+          <p className={styles.subtitle}>Here is your compliance overview for today.</p>
+        </div>
+      </div>
 
-  if (!isSetup && hasBusiness === false) {
-    return <EmptyBusinessState />;
-  }
+      <div className={styles.grid}>
+        <section className={styles.primary}>
+          <HealthScore score={computedScore} />
+          {overdue.length > 0 && <OverdueCards items={overdue} />}
+          <SuggestedTasksWidget onTaskAdded={() => setSavedTasks(loadTasks())} />
+          {upcoming.length > 0 && <UpcomingSection items={upcoming} />}
+          {recentDocs.length > 0 && <DocumentsSection docs={recentDocs} />}
+          {savedTasks.length > 0 ? (
+            <TasksSection tasks={savedTasks} onAddTask={() => setShowCreate(true)} />
+          ) : (
+            <EmptyTasks onAddTask={() => setShowCreate(true)} />
+          )}
+          <ReportsPreview />
+          <RegulatoryUpdates updates={regUpdates} />
+        </section>
+        <aside className={styles.secondary}>
+          <QuickActions onAddTask={() => setShowCreate(true)} onUploadDocument={() => setShowUploadDoc(true)} />
+          <PastReportsWidget />
+          {subscription && <SubscriptionStatus sub={subscription} />}
+          <BusinessOverview business={data.business} />
+          <RecentActivity activities={recentActivity} />
+        </aside>
+      </div>
+
+      {showCreate && <TaskCreateModal onSave={handleCreateTask} onClose={() => setShowCreate(false)} />}
+      {showUploadDoc && <DocumentUploadModal onSave={handleUploadDocument} onClose={() => setShowUploadDoc(false)} />}
+    </div>
+  );
 
   return (
-    <SetupOverlay>
-      <div className={styles.page}>
-        <div className={styles.header}>
-          <div>
-            <h1 className={styles.title}>Welcome back, {data.userProfile?.fullName || data.business?.name || "Founder"}</h1>
-            <p className={styles.subtitle}>Here is your compliance overview for today.</p>
-          </div>
-        </div>
-
-        <div className={styles.grid}>
-          <section className={styles.primary}>
-            <HealthScore score={computedScore} />
-            {overdue.length > 0 && <OverdueCards items={overdue} />}
-            <SuggestedTasksWidget />
-            {upcoming.length > 0 && <UpcomingSection items={upcoming} />}
-            {recentDocs.length > 0 && <DocumentsSection docs={recentDocs} />}
-            {savedTasks.length > 0 ? (
-              <TasksSection 
-                tasks={savedTasks} 
-                onAddTask={() => {
-                  if (!data.business) alert("Please add a business first to create tasks.");
-                  else setShowCreate(true);
-                }} 
-              />
-            ) : (
-              <EmptyTasks 
-                onAddTask={() => {
-                  if (!data.business) alert("Please add a business first to create tasks.");
-                  else setShowCreate(true);
-                }} 
-              />
-            )}
-            <ReportsPreview />
-            <RegulatoryUpdates updates={regUpdates} />
-          </section>
-          <aside className={styles.secondary}>
-            <QuickActions 
-              onAddTask={() => {
-                if (!data.business) alert("Please add a business first to create tasks.");
-                else setShowCreate(true);
-              }} 
-              onUploadDocument={() => {
-                if (!data.business) alert("Please add a business first to upload documents.");
-                else setShowUploadDoc(true);
-              }} 
-            />
-            {subscription && <SubscriptionStatus sub={subscription} />}
-            <BusinessOverview business={data.business} />
-            <RecentActivity activities={recentActivity} />
-          </aside>
-        </div>
-
-        {showCreate && <TaskCreateModal onSave={handleCreateTask} onClose={() => setShowCreate(false)} />}
-        {showUploadDoc && <DocumentUploadModal onSave={handleUploadDocument} onClose={() => setShowUploadDoc(false)} />}
-      </div>
-    </SetupOverlay>
+    <BusinessRequiredOverlay hasBusiness={hasBusiness}>
+      {hasBusiness === false ? pageContent : <SetupOverlay>{pageContent}</SetupOverlay>}
+    </BusinessRequiredOverlay>
   );
 }

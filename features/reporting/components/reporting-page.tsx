@@ -8,7 +8,7 @@ import { getSubscription } from "@/features/billing/api/billing-api";
 import { generateReportData, canAccessReporting, canExport } from "../api/reporting-engine";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import { useHasBusiness } from "@/features/businesses/hooks/use-has-business";
-import { EmptyBusinessState } from "@/features/businesses/components/empty-business-state";
+import { BusinessRequiredOverlay } from "@/features/businesses/components/business-required-overlay";
 import { HealthTrendChart } from "./health-trend-chart";
 import { ComplianceExecutionSection } from "./compliance-execution";
 import { RiskAssessmentSection } from "./risk-assessment";
@@ -32,10 +32,6 @@ export function ReportingPage() {
     trackEvent("Advanced Reporting Viewed");
   }, []);
 
-  if (hasBusiness === false) {
-    return <EmptyBusinessState />;
-  }
-
   if (!hasAccess) {
     return (
       <div className={styles.page}>
@@ -56,6 +52,7 @@ export function ReportingPage() {
   }
 
   return (
+    <BusinessRequiredOverlay hasBusiness={hasBusiness}>
     <div className={styles.page}>
       <div className={styles.header}>
         <div>
@@ -89,5 +86,6 @@ export function ReportingPage() {
         </div>
       )}
     </div>
+    </BusinessRequiredOverlay>
   );
 }

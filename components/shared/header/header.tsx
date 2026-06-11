@@ -59,7 +59,7 @@ export function Header() {
 
         <div className={styles.actions}>
           {session ? (
-            <Link href="/onboarding" tabIndex={-1}>
+            <Link href="/dashboard" tabIndex={-1}>
               <Button variant="primary" size="sm">
                 Dashboard
               </Button>

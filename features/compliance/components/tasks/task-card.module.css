@@ -66,6 +66,10 @@
 .s_in_progress { background: var(--color-role-light-primaryContainer); color: var(--color-role-light-onPrimaryContainer); }
 .s_completed { background: var(--color-role-light-successContainer); color: var(--color-role-light-onSuccessContainer); }
 .s_overdue { background: var(--color-role-light-errorContainer); color: var(--color-role-light-onErrorContainer); }
+.s_awaiting_submission { background: var(--color-role-light-tertiaryContainer); color: var(--color-role-light-onTertiaryContainer); }
+.s_submitted { background: var(--color-role-light-secondaryContainer); color: var(--color-role-light-onSecondaryContainer); }
+.s_approved { background: var(--color-role-light-successContainer); color: var(--color-role-light-onSuccessContainer); }
+.s_due_soon { background: #fef3c7; color: #92400e; }
 
 .meta {
   display: flex;

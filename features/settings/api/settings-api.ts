@@ -2,12 +2,9 @@ import type { ProfileData, NotificationPrefs } from "../types/settings.types";
 
 export async function fetchProfileAndPrefs(): Promise<{ profile: ProfileData, prefs: NotificationPrefs }> {
   const res = await fetch('/api/settings/profile');
-  if (!res.ok) {
-    throw new Error('Failed to fetch profile and preferences');
-  }
   const data = await res.json();
-  if (!data.success) {
-    throw new Error(data.error || 'Failed to fetch profile and preferences');
+  if (!res.ok || !data.success) {
+    throw new Error(data?.error || 'Failed to fetch profile and preferences');
   }
   return data.data;
 }

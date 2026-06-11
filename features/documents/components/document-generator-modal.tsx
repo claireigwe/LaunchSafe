@@ -22,6 +22,7 @@ export function DocumentGeneratorModal({ onClose, onComplete }: Props) {
   const [context, setContext] = useState("");
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<{ title: string; content: string } | null>(null);
+  const [error, setError] = useState("");
 
   const activeBusinessId = getActiveBusinessId();
   const saved = activeBusinessId && activeBusinessId !== "biz-migrated"
@@ -31,13 +32,14 @@ export function DocumentGeneratorModal({ onClose, onComplete }: Props) {
 
   async function handleGenerate() {
     setGenerating(true);
+    setError("");
     trackEvent("Document Generated", { docType });
     try {
       const doc = await generateDocument(docType, context, activeBusinessId || undefined);
       setResult({ title: doc.title, content: doc.content || "" });
       onComplete();
     } catch (err: any) {
-      alert(`Error generating document: ${err.message}`);
+      setError(err.message || "Failed to generate document");
     } finally {
       setGenerating(false);
     }
@@ -91,6 +93,7 @@ export function DocumentGeneratorModal({ onClose, onComplete }: Props) {
             <label className={styles.label}>Context <span className={styles.opt}>(optional)</span></label>
             <textarea className={styles.textarea} value={context} onChange={(e) => setContext(e.target.value)} placeholder="e.g. Business registration with CAC, Food safety certification application" rows={3} />
           </div>
+          {error && <div className={styles.error}>{error}</div>}
           <div className={styles.actions}>
             <Button type="button" variant="ghost" size="md" onClick={onClose}>Cancel</Button>
             <Button type="button" variant="primary" size="md" onClick={handleGenerate} isLoading={generating}>Generate Document</Button>

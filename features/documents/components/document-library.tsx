@@ -17,7 +17,7 @@ import { SetupOverlay } from "@/features/billing/components/setup-overlay";
 import { isInSetupMode } from "@/features/billing/api/setup-check";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import { useHasBusiness } from "@/features/businesses/hooks/use-has-business";
-import { EmptyBusinessState } from "@/features/businesses/components/empty-business-state";
+import { BusinessRequiredOverlay } from "@/features/businesses/components/business-required-overlay";
 import styles from "./document-library.module.css";
 
 /** Generates a PDF and triggers download directly */
@@ -186,14 +186,9 @@ export function DocumentLibrary() {
 
   const isLoading = isLoadingDocs || isLoadingGen;
 
-  return (
-    <SetupOverlay>
+  const pageContent = (
     <div className={styles.page}>
-      {!isInSetupMode() && hasBusiness === false ? (
-        <EmptyBusinessState />
-      ) : (
-        <>
-          <div className={styles.header}>
+      <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Documents</h1>
           <p className={styles.subtitle}>Manage your compliance documents and records.</p>
@@ -255,13 +250,11 @@ export function DocumentLibrary() {
               <Button variant="outline" size="md" onClick={() => setShowGenerate(true)}>Generate Document</Button>
             </div>
           )}
-              {allItems.length > 0 && <Button variant="ghost" size="sm" onClick={() => { setFilter("all"); setSearch(""); }}>Clear Filters</Button>}
+          {allItems.length > 0 && <Button variant="ghost" size="sm" onClick={() => { setFilter("all"); setSearch(""); }}>Clear Filters</Button>}
         </div>
       )}
 
-      <SuggestedDocumentsWidget onUpload={(title, docType) => {
-        setShowUpload(true);
-      }} />
+      <SuggestedDocumentsWidget onUpload={(title) => setShowUpload(true)} />
 
       {showUpload && <DocumentUploadModal onSave={handleUpload} onClose={() => setShowUpload(false)} />}
       {showGenerate && <DocumentGeneratorModal onClose={() => setShowGenerate(false)} onComplete={refresh} />}
@@ -275,9 +268,12 @@ export function DocumentLibrary() {
           isDeleting={deleteMutation.isPending && deleteMutation.variables === selectedDoc.id}
         />
       )}
-        </>
-      )}
     </div>
-    </SetupOverlay>
+  );
+
+  return (
+    <BusinessRequiredOverlay hasBusiness={hasBusiness}>
+      {hasBusiness === false ? pageContent : <SetupOverlay>{pageContent}</SetupOverlay>}
+    </BusinessRequiredOverlay>
   );
 }

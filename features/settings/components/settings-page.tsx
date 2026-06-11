@@ -9,8 +9,10 @@ import { fetchProfileAndPrefs, updateProfile, updateNotificationPrefs } from "..
 import { canManageTeam } from "../api/permissions";
 import { canAccess, getCurrentPlanName } from "@/features/billing/api/feature-access";
 import { getSubscription } from "@/features/billing/api/billing-api";
-import { getBusinessData } from "@/features/businesses/api/onboarding-api";
+import { getBusinessData, fetchAllBusinesses } from "@/features/businesses/api/onboarding-api";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { EmptyBusinessState } from "@/features/businesses/components/empty-business-state";
+import { audit } from "@/features/audit/api/audit-api";
 import type { NotificationPrefs, ProfileData } from "../types/settings.types";
 import styles from "./settings-page.module.css";
 
@@ -96,6 +98,7 @@ function ProfileSection() {
       setEditing(false);
       setError("");
       trackEvent("Profile Updated");
+      audit.profileUpdated("name");
     } catch (err: any) {
       setError(err.message || "Failed to update profile");
     }
@@ -202,12 +205,33 @@ function SecuritySection({ supabase }: { supabase: any }) {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
+  function validatePassword(password: string): string | null {
+    if (password.length < 8) return "Password must be at least 8 characters.";
+    if (!/[A-Z]/.test(password)) return "Password must contain at least one uppercase letter.";
+    if (!/[a-z]/.test(password)) return "Password must contain at least one lowercase letter.";
+    if (!/[0-9]/.test(password)) return "Password must contain at least one number.";
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return "Password must contain at least one special character.";
+    return null;
+  }
+
   async function handleChangePassword() {
     setError("");
     setSuccess("");
-    if (newPassword.length < 6) { setError("New password must be at least 6 characters"); return; }
+    if (!currentPassword) { setError("Enter your current password."); return; }
+    const pwError = validatePassword(newPassword);
+    if (pwError) { setError(pwError); return; }
     if (newPassword !== confirmPassword) { setError("Passwords do not match"); return; }
     setLoading(true);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.email) { setError("Could not verify your identity. Try signing in again."); setLoading(false); return; }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+    if (signInError) { setError("Current password is incorrect."); setLoading(false); return; }
+
     const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
     setLoading(false);
     if (updateError) { setError(updateError.message); return; }
@@ -216,6 +240,7 @@ function SecuritySection({ supabase }: { supabase: any }) {
     setNewPassword("");
     setConfirmPassword("");
     trackEvent("Password Changed");
+    audit.passwordChanged();
   }
 
   return (
@@ -236,7 +261,9 @@ function SecuritySection({ supabase }: { supabase: any }) {
           <label className={styles.label}>Confirm New Password</label>
           <input type="password" className={styles.input} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" minLength={6} />
         </div>
-        <Button variant="primary" size="md" onClick={handleChangePassword} isLoading={loading}>Update Password</Button>
+        <div className={styles.actions} style={{ marginTop: 24 }}>
+          <Button variant="primary" size="md" onClick={handleChangePassword} isLoading={loading}>Update Password</Button>
+        </div>
       </div>
 
       <div className={styles.subSection}>
@@ -255,6 +282,7 @@ function TeamSection() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(true);
+  const [noBusiness, setNoBusiness] = useState(false);
 
   interface Member {
     id: string;
@@ -286,19 +314,24 @@ function TeamSection() {
           setMembers(initialMembers);
           setMyRole(initialRole);
         } else {
-          const biz = getBusinessData() as any;
-          if (biz?.info?.businessName) {
-            await fetch("/api/businesses", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ name: biz.info.businessName }),
-            });
-            const retry = await fetch("/api/team/members");
-            const retryJson = await retry.json();
-            if (retryJson.success) {
-              const { members: retryMembers, myRole: retryRole } = parseData(retryJson.data);
-              setMembers(retryMembers);
-              setMyRole(retryRole);
+          const all = await fetchAllBusinesses();
+          if (all.length === 0) {
+            setNoBusiness(true);
+          } else {
+            const biz = getBusinessData() as any;
+            if (biz?.info?.businessName) {
+              await fetch("/api/businesses", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: biz.info.businessName }),
+              });
+              const retry = await fetch("/api/team/members");
+              const retryJson = await retry.json();
+              if (retryJson.success) {
+                const { members: retryMembers, myRole: retryRole } = parseData(retryJson.data);
+                setMembers(retryMembers);
+                setMyRole(retryRole);
+              }
             }
           }
         }
@@ -322,6 +355,7 @@ function TeamSection() {
       if (json.success) {
         setSuccess(`Invited ${inviteEmail} successfully.`);
         setInviteEmail("");
+        audit.teamInvited(inviteEmail);
         load();
       } else {
         setError(json.error?.message || "Invite failed");
@@ -348,6 +382,10 @@ function TeamSection() {
         <p className={styles.emptyText}>Loading team information...</p>
       </Section>
     );
+  }
+
+  if (noBusiness) {
+    return <EmptyBusinessState />;
   }
 
   if (!hasTeamAccess) {

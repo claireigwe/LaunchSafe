@@ -99,7 +99,7 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  request: Request,
   { params }: { params: Promise<{ businessId: string }> }
 ) {
   try {
@@ -122,19 +122,16 @@ export async function DELETE(
     }
 
     const adminSupabase = createAdminClient() as any;
-    const { error: deleteError } = await adminSupabase
+    const { error } = await adminSupabase
       .from("businesses")
       .delete()
       .eq("id", businessId);
 
-    if (deleteError) {
-      console.error("Delete Business Error:", deleteError);
-      throw deleteError;
-    }
+    if (error) throw error;
 
     return NextResponse.json<ApiResponse>({ success: true, data: { deleted: true } });
   } catch (error) {
-    console.error("Delete Business Catch:", error);
+    console.error("Delete Business Error:", error);
     return NextResponse.json<ApiResponse>(
       { success: false, error: { message: "Internal Error" } },
       { status: 500 }

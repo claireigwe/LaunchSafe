@@ -110,6 +110,10 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
                 <select className={styles.select} value={status} onChange={(e) => setStatus(e.target.value as TaskStatus)}>
                   <option value="pending">Pending</option>
                   <option value="in_progress">In Progress</option>
+                  <option value="awaiting_submission">Awaiting Submission</option>
+                  <option value="submitted">Submitted</option>
+                  <option value="approved">Approved</option>
+                  <option value="due_soon">Due Soon</option>
                   <option value="completed">Completed</option>
                   <option value="overdue">Overdue</option>
                 </select>

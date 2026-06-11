@@ -87,6 +87,7 @@ export async function updateDocument(id: string, updates: Partial<AppDocument>):
 
 export async function deleteDocument(id: string): Promise<void> {
   await apiDelete(`/api/documents/${id}`);
+  audit.documentDeleted(id, id);
 }
 
 export function formatFileSize(bytes: number): string {

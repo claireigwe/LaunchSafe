@@ -52,6 +52,46 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check monthly document generation limit
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("status, subscription_plans(slug)")
+      .eq("user_id", user.id)
+      .in("status", ["active", "trial"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const DB_TO_PLAN: Record<string, string> = {
+      free: "starter", pro: "starter", business: "starter", enterprise: "enterprise",
+    };
+    const planSlug = sub?.subscription_plans?.slug || null;
+    const planId = (planSlug && DB_TO_PLAN[planSlug]) || "starter";
+
+    const DOCUMENT_LIMITS: Record<string, number> = {
+      starter: 2, growth: 15, enterprise: 100,
+    };
+    const limit = DOCUMENT_LIMITS[planId] || 2;
+
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const { count } = await supabase
+      .from("compliance_documents")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .not("generated_at", "is", null)
+      .gte("created_at", monthStart.toISOString());
+
+    if (count !== null && count >= limit) {
+      const nextPlan = planId === "starter" ? "Growth" : "Enterprise";
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: `You've used all ${limit} document generations this month. Upgrade to ${nextPlan} for more.` } },
+        { status: 403 }
+      );
+    }
+
     // Generate the document via AI
     const result = await generateDocumentWithAI(docType, context || "", activeBusinessId);
 

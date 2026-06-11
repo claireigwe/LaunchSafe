@@ -1,0 +1,22 @@
+.card { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04); border-radius: 24px; padding: 20px; }
+.header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--color-role-light-onSurface); }
+.title { font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; font-weight: 600; }
+.list { display: flex; flex-direction: column; gap: 8px; }
+.item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 10px; background: var(--color-role-light-surfaceContainerLow); }
+.info { display: flex; flex-direction: column; gap: 2px; }
+.name { font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 500; color: var(--color-role-light-onSurface); }
+.date { font-family: var(--font-label-label-small-fontFamily); font-size: 11px; color: var(--color-role-light-onSurfaceVariant); }
+.viewBtn { width: 32px; height: 32px; border-radius: 8px; border: none; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--color-role-light-primary); }
+.viewBtn:hover { background: var(--color-role-light-primaryContainer); }
+.actions { display: flex; align-items: center; gap: 4px; }
+.deleteBtn { width: 32px; height: 32px; border-radius: 8px; border: none; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--color-role-light-error); opacity: 0.7; transition: all 0.2s ease; }
+.deleteBtn:hover:not(:disabled) { background: var(--color-role-light-errorContainer); opacity: 1; }
+.deleteBtn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.confirmWrapper { display: flex; align-items: center; gap: 6px; background: var(--color-role-light-errorContainer); padding: 4px 8px; border-radius: 8px; }
+.confirmText { font-family: var(--font-label-label-small-fontFamily); font-size: 11px; color: var(--color-role-light-onErrorContainer); font-weight: 500; }
+.confirmBtn { background: var(--color-role-light-error); color: var(--color-role-light-onError); border: none; border-radius: 4px; font-size: 11px; padding: 4px 8px; cursor: pointer; font-weight: 500; }
+.confirmBtn:hover:not(:disabled) { opacity: 0.9; }
+.confirmBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.cancelBtn { background: transparent; color: var(--color-role-light-onErrorContainer); border: 1px solid var(--color-role-light-error); border-radius: 4px; font-size: 11px; padding: 4px 8px; cursor: pointer; font-weight: 500; }
+.cancelBtn:hover:not(:disabled) { background: rgba(0,0,0,0.05); }

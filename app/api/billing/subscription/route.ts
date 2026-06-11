@@ -37,10 +37,11 @@ export async function PATCH(request: Request) {
         .maybeSingle();
 
       if (sub && planId) {
+        const dbSlug = require("@/lib/billing/features").PLAN_TO_DB[planId] || planId;
         const { data: plan } = await supabase
           .from("subscription_plans")
           .select("id")
-          .eq("slug", planId)
+          .eq("slug", dbSlug)
           .maybeSingle();
 
         if (plan) {

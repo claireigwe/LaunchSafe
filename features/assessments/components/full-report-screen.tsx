@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { loadAssessmentFromLocalStorage, trackEvent } from "../api/assessment-api";
+import { loadAssessmentFromLocalStorage, trackEvent, clearPendingUnlockIntent } from "../api/assessment-api";
 import type { AssessmentFullReport } from "@/types/domain/assessment";
 import styles from "./full-report-screen.module.css";
 
@@ -13,7 +13,7 @@ export function FullReportScreen() {
   const searchParams = useSearchParams();
   const reportRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
-  const assessmentId = searchParams.get("assessmentId");
+  const assessmentId = searchParams.get("assessmentId") || searchParams.get("paid");
   const trxref = searchParams.get("trxref") || searchParams.get("reference");
   const [report, setReport] = useState<AssessmentFullReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,9 +85,14 @@ export function FullReportScreen() {
           <div className={styles.errorCard}>
             <h2 className={styles.errorTitle}>Payment Verification Failed</h2>
             <p className={styles.errorText}>{error}</p>
-            <Button variant="primary" onClick={() => router.push("/assessment")}>
-              Try Again
-            </Button>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+              <Button variant="primary" onClick={() => { clearPendingUnlockIntent(); router.push("/assessment"); }}>
+                Try Again
+              </Button>
+              <Button variant="outline" onClick={() => { clearPendingUnlockIntent(); router.push("/dashboard"); }}>
+                Go to Dashboard
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -268,9 +273,9 @@ export function FullReportScreen() {
             variant="ghost"
             size="md"
             fullWidth
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/dashboard")}
           >
-            Back to Home
+            Go to Dashboard
           </Button>
         </div>
       </div>

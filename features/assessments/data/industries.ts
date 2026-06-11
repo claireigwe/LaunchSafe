@@ -286,5 +286,13 @@ export const INDUSTRIES: IndustryOption[] = [
 ];
 
 export function getIndustryById(id: string): IndustryOption | undefined {
-  return INDUSTRIES.find((i) => i.id === id);
+  // Map database slugs to local industry IDs
+  const aliases: Record<string, string> = {
+    "healthcare": "health-pharma",
+    "technology": "technology-saas",
+    "financial-services": "finance-fintech",
+    "general-business": "professional-services",
+  };
+  const resolvedId = aliases[id] || id;
+  return INDUSTRIES.find((i) => i.id === resolvedId);
 }

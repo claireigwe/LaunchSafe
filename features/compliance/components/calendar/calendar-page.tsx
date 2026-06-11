@@ -9,7 +9,8 @@ import { TaskDetailModal } from "../tasks/task-detail-modal";
 import { loadTasks, createTask, updateTask, deleteTask, reconcileTaskStatuses } from "../../api/tasks-api";
 import { SetupOverlay } from "@/features/billing/components/setup-overlay";
 import { useHasBusiness } from "@/features/businesses/hooks/use-has-business";
-import { EmptyBusinessState } from "@/features/businesses/components/empty-business-state";
+import { BusinessRequiredOverlay } from "@/features/businesses/components/business-required-overlay";
+import { getActiveBusinessId } from "@/lib/stores/app-store";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import type { ComplianceTaskItem, CreateTaskInput, UpdateTaskInput } from "../../types/tasks.types";
 import styles from "./calendar-page.module.css";
@@ -51,7 +52,7 @@ export function CalendarPage() {
   }, [tasks]);
 
   async function handleCreate(input: CreateTaskInput) {
-    await createTask(input);
+    await createTask(input, getActiveBusinessId() || undefined);
     trackEvent("Task Created", { title: input.title });
     setTasks(loadTasks());
     setShowCreate(false);
@@ -89,12 +90,7 @@ export function CalendarPage() {
       })
     : [];
 
-  if (hasBusiness === false) {
-    return <EmptyBusinessState />;
-  }
-
-  return (
-    <SetupOverlay>
+  const pageContent = (
     <div className={styles.page}>
       <div className={styles.header}>
         <div>
@@ -174,6 +170,11 @@ export function CalendarPage() {
       {showCreate && <TaskCreateModal onSave={handleCreate} onClose={() => setShowCreate(false)} />}
       {selectedTask && <TaskDetailModal task={selectedTask} onUpdate={handleUpdate} onDelete={handleDelete} onClose={() => setSelectedTask(null)} />}
     </div>
-    </SetupOverlay>
+  );
+
+  return (
+    <BusinessRequiredOverlay hasBusiness={hasBusiness}>
+      {hasBusiness === false ? pageContent : <SetupOverlay>{pageContent}</SetupOverlay>}
+    </BusinessRequiredOverlay>
   );
 }

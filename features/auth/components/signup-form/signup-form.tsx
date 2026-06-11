@@ -44,6 +44,18 @@ export function SignupForm() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setFieldErrors({});
+
+    const errs: Record<string, string> = {};
+    if (!fullName.trim()) errs.fullName = "Full name is required.";
+    if (!email.trim()) errs.email = "Email is required.";
+    const passwordError = validatePassword(password);
+    if (passwordError) errs.password = passwordError;
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      setIsLoading(false);
+      return;
+    }
 
     const { error: signUpError } = await supabase.auth.signUp({
       email,

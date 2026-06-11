@@ -2,10 +2,13 @@ const INTENT_KEY = "launchsafe-intent";
 const BUSINESS_DATA_KEY = "launchsafe-business-data";
 const ALL_BIZ_KEY = "launchsafe-all-businesses";
 
+import { audit } from "@/features/audit/api/audit-api";
+
 /* ----- API helpers ----- */
 async function apiGet<T>(url: string): Promise<T | null> {
   try {
-    const res = await fetch(url);
+    const cacheBuster = url.includes("?") ? `&t=${Date.now()}` : `?t=${Date.now()}`;
+    const res = await fetch(url + cacheBuster, { cache: "no-store" });
     const json = await res.json();
     return json.success ? json.data : null;
   } catch { return null; }
@@ -73,7 +76,7 @@ export interface StoredBusiness {
   fullData?: any;
 }
 
-function loadCachedBusinesses(): StoredBusiness[] {
+export function loadCachedBusinesses(): StoredBusiness[] {
   try {
     const raw = localStorage.getItem(ALL_BIZ_KEY);
     return raw ? JSON.parse(raw) : [];
@@ -156,6 +159,7 @@ export async function addBusiness(data: Record<string, unknown>): Promise<Stored
   };
 
   saveBusinessDataForBusiness(biz.id, data);
+  audit.businessCreated(biz.id, biz.name);
   return biz;
 }
 

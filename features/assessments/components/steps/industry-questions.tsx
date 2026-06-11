@@ -64,6 +64,7 @@ export function IndustryQuestions({
   onBack,
 }: IndustryQuestionsProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
   const industryData = getIndustryById(industry);
 
   function validate(): boolean {
@@ -82,6 +83,7 @@ export function IndustryQuestions({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (validate()) {
+      setSubmitting(true);
       onSubmit();
     }
   }
@@ -103,8 +105,8 @@ export function IndustryQuestions({
           <Button type="button" variant="ghost" size="md" onClick={onBack}>
             Back
           </Button>
-          <Button type="submit" variant="primary" size="lg">
-            Analyze My Business
+          <Button type="submit" variant="primary" size="lg" isLoading={submitting}>
+            {submitting ? "Analyzing..." : "Analyze My Business"}
           </Button>
         </div>
       </form>
@@ -134,8 +136,8 @@ export function IndustryQuestions({
         <Button type="button" variant="ghost" size="md" onClick={onBack}>
           Back
         </Button>
-        <Button type="submit" variant="primary" size="lg">
-          Analyze My Business
+        <Button type="submit" variant="primary" size="lg" isLoading={submitting}>
+          {submitting ? "Analyzing..." : "Analyze My Business"}
         </Button>
       </div>
     </form>

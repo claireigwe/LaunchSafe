@@ -53,7 +53,7 @@ function computeTaskAnalytics(): TaskAnalytics {
   const total = tasks.length;
   const completed = tasks.filter((t) => t.status === "completed").length;
   const overdue = tasks.filter((t) => t.status === "overdue").length;
-  const pending = tasks.filter((t) => t.status === "pending" || t.status === "in_progress").length;
+  const pending = tasks.filter((t) => t.status === "pending" || t.status === "in_progress" || t.status === "awaiting_submission" || t.status === "due_soon").length;
   const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return { totalTasks: total, completedTasks: completed, pendingTasks: pending, overdueTasks: overdue, completionRate: rate };

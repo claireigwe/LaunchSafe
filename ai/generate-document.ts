@@ -162,21 +162,20 @@ export async function generateDocumentWithAI(
     : null;
 
   // 5. Construct System Prompt
-  const systemPrompt = `You are the LaunchSafe Compliance AI, an expert regulatory assistant for businesses in ${countryName}.
-You must generate a precise, professional ${docType.replace(/_/g, " ")} specifically for a ${industryName} business operating in ${stateName}, ${countryName}.
+  const noData = requirements.length === 0;
+  const systemPrompt = `You are the LaunchSafe Compliance AI, a document generation assistant for businesses in ${countryName}.
+You must generate a ${docType.replace(/_/g, " ")} for a ${industryName} business operating in ${stateName}, ${countryName}.
 
 ### STRICT RULES:
 1. NEVER invent regulatory requirements, fees, timelines, or penalties.
-2. Ground your document strictly in the provided regulatory context below.
-3. If you do not know specific fees, costs, or exact dates, simply omit them or describe the step without mentioning a specific amount. NEVER use placeholder text like "[Insert Amount]" or "[Insert Date]".
-4. Output ONLY the document content. Do not include introductory conversational text.
-5. Write in a formal, professional tone suitable for submission to government or regulatory bodies.
-6. CRITICAL: ABSOLUTELY NO DISCLAIMERS, NOTES, OR WARNINGS at the end of the document. The document MUST end immediately after the final content item.
-7. FORMATTING: Output clean plain text. DO NOT use markdown bolding (**), italics, or hash (#) headers. Use standard plain text spacing, numbering, and UPPERCASE for section titles.
-8. Be SPECIFIC to ${countryName} (${countryCode}) and ${stateName}. Reference actual regulatory bodies, actual laws, and actual government agencies of ${countryName}. NEVER use generic phrases like "the appropriate corporate affairs commission" — use the actual name (e.g., "Corporate Affairs Commission (CAC)" for Nigeria).
-9. Include specific agency names, specific registration processes, and specific compliance steps that are relevant to ${stateName}, ${countryName}.
-10. NEVER include conditional or hedging language like "If your business involves...", "If applicable...", or "If the business operates in...". Every item in the document must be a definite, actionable requirement for a ${industryName} business. If you are unsure whether something applies, omit it entirely rather than adding a conditional.
-11. If generating a "compliance checklist", the checklist MUST be highly specific to the ${industryName} industry. It must include industry-specific facility standards, equipment compliance, health & safety protocols, and sector-specific permits (e.g., NAFDAC for food, PCN for pharmacy). Do NOT use generic business checklist items.
+2. ${noData
+  ? "No regulatory data is available for this industry. Generate a general document template with placeholder sections. Clearly state that the user should consult relevant government agencies for specific compliance requirements."
+  : "Ground your document strictly in the provided regulatory context below. If you do not know specific fees, costs, or exact dates, simply omit them or describe the step without mentioning a specific amount. NEVER use placeholder text like '[Insert Amount]' or '[Insert Date]'."
+}
+3. Output ONLY the document content. Do not include introductory conversational text.
+4. Write in a formal, professional tone suitable for submission to government or regulatory bodies.
+5. FORMATTING: Output clean plain text. DO NOT use markdown bolding (**), italics, or hash (#) headers. Use standard plain text spacing, numbering, and UPPERCASE for section titles.
+6. ${noData ? "End the document with: 'Note: This document is a template. Compliance requirements vary by industry and location. Please consult the relevant government agencies for your specific obligations.'" : "CRITICAL: ABSOLUTELY NO DISCLAIMERS, NOTES, OR WARNINGS at the end of the document. The document MUST end immediately after the final content item."}
 
 ### BUSINESS CONTEXT:
 Business Name: ${business.name}
@@ -187,12 +186,15 @@ Local Government Area: ${business.lgas?.name || "Not specified"}
 Description: ${business.description || "N/A"}
 
 ### REGULATORY REQUIREMENTS FROM LAUNCHSAFE DATABASE:
-${reqContext || `No specific requirements have been loaded into the LaunchSafe database for this industry yet. However, you MUST still generate a ${countryName}-specific and ${stateName}-specific document using your knowledge of ${countryName}'s regulatory framework. Reference real agencies, real laws, and real processes. Do NOT fall back to generic, country-agnostic content.`}`;
+${reqContext || "No regulatory requirements are available in the LaunchSafe database for this industry and location."}`;
 
   // 6. Construct User Prompt
-  const userPrompt = `Generate a ${docType.replace(/_/g, " ")} for this ${industryName} business in ${stateName}, ${countryName}.
+  const userPrompt = `${noData
+    ? `Generate a general ${docType.replace(/_/g, " ")} template for a ${industryName} business in ${stateName}, ${countryName}. Include common compliance categories and blank sections where the user can fill in specific regulatory details.`
+    : `Generate a ${docType.replace(/_/g, " ")} for this ${industryName} business in ${stateName}, ${countryName}.
 ${contextText ? `Additional user context:\n${contextText}` : ""}
-The document must be specific to ${countryName} regulations and ${stateName} state requirements. Reference actual agencies and laws by name.`;
+The document must be specific to ${countryName} regulations and ${stateName} state requirements. Reference actual agencies and laws by name.`
+  }`;
 
   // 7. Call DeepSeek
   const content = await callDeepSeek(systemPrompt, userPrompt);

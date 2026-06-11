@@ -49,7 +49,7 @@ export function HealthTrendChart({ data }: Props) {
   const missedDeadlines = tasks.filter((t) => t.status === "overdue" && t.dueDate).length;
   const { data: documents = [] } = useDocuments();
   const docsUploaded = documents.length;
-  const pendingTasks = tasks.filter((t) => t.status === "pending" || t.status === "in_progress").length;
+  const pendingTasks = tasks.filter((t) => t.status === "pending" || t.status === "in_progress" || t.status === "awaiting_submission" || t.status === "submitted" || t.status === "due_soon").length;
 
   const riskLevel = current.score >= 80 ? "low" : current.score >= 50 ? "medium" : "high";
   const riskLabel = riskLevel === "low" ? "Low Risk" : riskLevel === "medium" ? "Medium Risk" : "High Risk";

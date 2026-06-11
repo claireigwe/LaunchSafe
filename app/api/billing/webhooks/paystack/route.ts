@@ -41,35 +41,56 @@ async function handleChargeSuccess(supabase: any, eventData: any, rawEvent: any)
     return;
   }
 
-  await supabase.from("payments").insert({
-    user_id: userId,
-    amount: eventData.amount,
-    currency: eventData.currency || "NGN",
-    provider: "paystack",
-    payment_type: paymentType || "subscription",
-    reference: eventData.reference,
-    provider_reference: eventData.reference,
-    status: "paid",
-    metadata: { ...metadata, event_id: rawEvent.id },
-  });
+  const { data: existingPay } = await supabase
+    .from("payments")
+    .select("id")
+    .eq("reference", eventData.reference)
+    .maybeSingle();
+
+  if (!existingPay) {
+    await supabase.from("payments").insert({
+      user_id: userId,
+      amount: eventData.amount,
+      currency: eventData.currency || "NGN",
+      provider: "paystack",
+      payment_type: paymentType || "subscription",
+      reference: eventData.reference,
+      provider_reference: eventData.reference,
+      status: "paid",
+      metadata: { ...metadata, event_id: rawEvent.id },
+    });
+  }
 
   if (paymentType === "assessment") {
     const assessmentId = metadata.assessmentId;
-    if (assessmentId) {
+    if (assessmentId && assessmentId !== "pending") {
       const { data: payment } = await supabase
         .from("payments")
         .select("id")
         .eq("reference", eventData.reference)
-        .single();
+        .maybeSingle();
 
-      if (payment) {
-        await supabase.from("assessment_purchases").insert({
-          user_id: userId,
-          assessment_id: assessmentId,
-          payment_id: payment.id,
-          status: "paid",
-          unlocked_at: new Date().toISOString(),
-        });
+      if (payment?.id) {
+        const { data: existingPurchase } = await supabase
+          .from("assessment_purchases")
+          .select("id")
+          .eq("assessment_id", assessmentId)
+          .maybeSingle();
+
+        if (existingPurchase) {
+          await supabase
+            .from("assessment_purchases")
+            .update({ payment_id: payment.id, status: "paid" })
+            .eq("id", existingPurchase.id);
+        } else {
+          await supabase.from("assessment_purchases").insert({
+            user_id: userId,
+            assessment_id: assessmentId,
+            payment_id: payment.id,
+            status: "paid",
+            unlocked_at: new Date().toISOString(),
+          });
+        }
       }
     }
 
@@ -87,11 +108,12 @@ async function handleChargeSuccess(supabase: any, eventData: any, rawEvent: any)
     const billingCycle = metadata.billingCycle || "monthly";
 
     if (planId) {
+      const dbSlug = require("@/lib/billing/features").PLAN_TO_DB[planId] || planId;
       const { data: plans } = await supabase
         .from("subscription_plans")
         .select("id")
-        .eq("slug", planId)
-        .single();
+        .eq("slug", dbSlug)
+        .maybeSingle();
 
       if (plans) {
         const now = new Date();

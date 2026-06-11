@@ -3,7 +3,18 @@ import { resolveAccess } from "@/lib/billing/features";
 import { getSubscription } from "./billing-api";
 
 let cachedAccess: AccessInfo | null = null;
-let refreshPromise: Promise<AccessInfo> | null = null;
+let refreshPromise: Promise<AccessInfo | null> | null = null;
+
+function ensureAccess(): AccessInfo {
+  if (cachedAccess) return cachedAccess;
+  if (typeof window === "undefined") return resolveAccess(null, null);
+  const sub = getSubscription();
+  if (sub?.planId) {
+    cachedAccess = resolveAccess(sub.planId, sub.status);
+    return cachedAccess;
+  }
+  return resolveAccess(null, null);
+}
 
 async function fetchAccess(): Promise<AccessInfo | null> {
   try {
@@ -17,30 +28,25 @@ async function fetchAccess(): Promise<AccessInfo | null> {
 }
 
 export function getAccess(): AccessInfo {
-  if (cachedAccess) return cachedAccess;
-
-  // Try localStorage subscription as fallback
-  const sub = getSubscription();
-  if (sub) {
-    cachedAccess = resolveAccess(sub.planId, sub.status);
-    return cachedAccess;
-  }
-
-  return resolveAccess(null, null);
+  return ensureAccess();
 }
 
-export async function refreshAccess(): Promise<AccessInfo> {
+export async function refreshAccess(): Promise<AccessInfo | null> {
   if (refreshPromise) return refreshPromise;
   refreshPromise = (async () => {
     const server = await fetchAccess();
-    if (server) {
+    if (server && server.planId !== "starter") {
       cachedAccess = server;
-    } else {
+    } else if (!cachedAccess) {
       const sub = getSubscription();
-      cachedAccess = resolveAccess(sub?.planId || null, sub?.status || null);
+      if (sub?.planId) {
+        cachedAccess = resolveAccess(sub.planId, sub.status);
+      } else if (server) {
+        cachedAccess = server;
+      }
     }
     refreshPromise = null;
-    return cachedAccess!;
+    return cachedAccess;
   })();
   return refreshPromise;
 }

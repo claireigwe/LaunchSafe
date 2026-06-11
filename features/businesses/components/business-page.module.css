@@ -59,5 +59,8 @@
 .confirmCancel { padding: 10px 20px; border-radius: 10px; border: none;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05); background: none; font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; font-weight: 500; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; }
 .confirmCancel:hover { background: var(--color-role-light-surfaceContainer); }
+.confirmInput { display: block; width: 100%; margin: 0 0 20px; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--color-role-light-outlineVariant); background: var(--color-role-light-surfaceContainerLowest); font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurface); outline: none; box-sizing: border-box; }
+.confirmInput:focus { border-color: var(--color-role-light-primary); }
 .confirmDelete { padding: 10px 20px; border-radius: 10px; border: none; background: var(--color-role-light-error); color: var(--color-role-light-onError); font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; font-weight: 600; cursor: pointer; }
 .confirmDelete:hover { background: var(--color-palette-error-30); }
+.confirmDelete:disabled { background: var(--color-role-light-surfaceContainer); color: var(--color-role-light-onSurfaceVariant); cursor: not-allowed; }

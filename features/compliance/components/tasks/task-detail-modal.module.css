@@ -18,6 +18,10 @@
 .st_in_progress { background: var(--color-role-light-primaryContainer); color: var(--color-role-light-onPrimaryContainer); }
 .st_completed { background: var(--color-role-light-successContainer); color: var(--color-role-light-onSuccessContainer); }
 .st_overdue { background: var(--color-role-light-errorContainer); color: var(--color-role-light-onErrorContainer); }
+.st_awaiting_submission { background: var(--color-role-light-tertiaryContainer); color: var(--color-role-light-onTertiaryContainer); }
+.st_submitted { background: var(--color-role-light-secondaryContainer); color: var(--color-role-light-onSecondaryContainer); }
+.st_approved { background: var(--color-role-light-successContainer); color: var(--color-role-light-onSuccessContainer); }
+.st_due_soon { background: #fef3c7; color: #92400e; }
 .pr_low { background: var(--color-key-neutralVariant); color: var(--color-role-light-onSurfaceVariant); }
 .pr_medium { background: var(--color-role-light-warningContainer); color: var(--color-role-light-onWarningContainer); }
 .pr_high { background: var(--color-palette-error-80); color: var(--color-palette-error-10); }

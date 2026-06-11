@@ -1,63 +1,100 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Lightbulb, X, Check } from "lucide-react";
 import type { SuggestedTask } from "../../types/tasks.types";
 import { generateTaskSuggestions } from "../../data/task-suggestions";
-import { getBusinessData } from "@/features/businesses/api/onboarding-api";
+import { getBusinessData, fetchAllBusinesses } from "@/features/businesses/api/onboarding-api";
 import { addSuggestedTask, loadTasks } from "../../api/tasks-api";
+import { getActiveBusinessId, useAppStore } from "@/lib/stores/app-store";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import styles from "./suggested-tasks-widget.module.css";
 
-const DISMISSED_KEY = "launchsafe-dismissed-suggestions";
+function getDismissedKey(businessId: string | null): string {
+  return `launchsafe-dismissed-suggestions-${businessId || "default"}`;
+}
 
-function loadDismissed(): Set<string> {
+function loadDismissed(businessId: string | null): Set<string> {
   try {
-    const raw = localStorage.getItem(DISMISSED_KEY);
+    const raw = localStorage.getItem(getDismissedKey(businessId));
     return new Set<string>(raw ? JSON.parse(raw) : []);
   } catch {
     return new Set();
   }
 }
 
-function saveDismissed(ids: Set<string>): void {
+function saveDismissed(ids: Set<string>, businessId: string | null): void {
   try {
-    localStorage.setItem(DISMISSED_KEY, JSON.stringify([...ids]));
+    localStorage.setItem(getDismissedKey(businessId), JSON.stringify([...ids]));
   } catch {}
 }
 
-export function SuggestedTasksWidget() {
+interface SuggestedTasksWidgetProps {
+  onTaskAdded?: () => void;
+}
+
+export function SuggestedTasksWidget({ onTaskAdded }: SuggestedTasksWidgetProps) {
+  const queryClient = useQueryClient();
+  const activeBusinessId = useAppStore((s) => s.activeBusinessId);
   const [suggestions, setSuggestions] = useState<SuggestedTask[]>([]);
-  const [dismissed, setDismissed] = useState<Set<string>>(loadDismissed);
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const saved = getBusinessData() as any;
-    const profile = saved ? {
-      industry: saved.info?.industry || "",
-      isRegistered: saved.status?.isRegistered ?? null,
-      hasCAC: saved.status?.hasCAC ?? null,
-      employeeCount: saved.operations?.employeeCount || "",
-      hasPhysicalLocation: saved.operations?.hasPhysicalLocation ?? null,
-      hasOnlineOperations: saved.operations?.hasOnlineOperations ?? null,
-      hasCustomerLocation: saved.operations?.hasCustomerLocation ?? null,
-    } : null;
-    const all = generateTaskSuggestions(profile);
-    const existingTitles = new Set(loadTasks().map((t) => t.title));
-    const filtered = all.filter((s) => !existingTitles.has(s.title));
-    setSuggestions(filtered);
-  }, []);
+    setDismissed(loadDismissed(activeBusinessId));
+  }, [activeBusinessId]);
 
-  const visible = suggestions.filter((s) => !dismissed.has(s.id)).slice(0, 5);
+  useEffect(() => {
+    async function loadSuggestions() {
+      let saved: any = null;
+
+      if (activeBusinessId) {
+        const allBiz = await fetchAllBusinesses();
+        const biz = allBiz.find(b => b.id === activeBusinessId);
+        if (biz && biz.fullData) {
+          saved = biz.fullData;
+        }
+      }
+
+      if (!saved) {
+        saved = getBusinessData();
+      }
+
+      const profile = saved ? {
+        industry: saved.info?.industry || "",
+        isRegistered: saved.status?.isRegistered ?? null,
+        hasCAC: saved.status?.hasCAC ?? null,
+        employeeCount: saved.operations?.employeeCount || "",
+        hasPhysicalLocation: saved.operations?.hasPhysicalLocation ?? null,
+        hasOnlineOperations: saved.operations?.hasOnlineOperations ?? null,
+        hasCustomerLocation: saved.operations?.hasCustomerLocation ?? null,
+      } : null;
+      const all = generateTaskSuggestions(profile);
+      const existingTitles = new Set(loadTasks().map((t) => t.title));
+      const filtered = all.filter((s) => !existingTitles.has(s.title));
+      setSuggestions(filtered);
+    }
+    loadSuggestions();
+  }, [activeBusinessId]);
+
+  const visible = suggestions.filter((s) => !dismissed.has(s.id));
 
   if (visible.length === 0) return null;
 
-  function handleAccept(s: SuggestedTask) {
+  async function handleAccept(s: SuggestedTask) {
     trackEvent("Suggested Task Accepted", { title: s.title });
-    addSuggestedTask({ title: s.title, description: s.description, priority: s.priority, explanation: s.explanation });
-    const next = new Set(dismissed);
-    next.add(s.id);
-    setDismissed(next);
-    saveDismissed(next);
+    const activeBusinessId = getActiveBusinessId();
+    try {
+      await addSuggestedTask({ title: s.title, description: s.description, priority: s.priority, explanation: s.explanation });
+      await queryClient.invalidateQueries({ queryKey: ["tasks", activeBusinessId] });
+      onTaskAdded?.();
+      const next = new Set(dismissed);
+      next.add(s.id);
+      setDismissed(next);
+      saveDismissed(next, activeBusinessId);
+    } catch {
+      trackEvent("Suggested Task Accept Failed", { title: s.title });
+    }
   }
 
   function handleDismiss(id: string) {
@@ -65,7 +102,7 @@ export function SuggestedTasksWidget() {
     const next = new Set(dismissed);
     next.add(id);
     setDismissed(next);
-    saveDismissed(next);
+    saveDismissed(next, activeBusinessId);
   }
 
   return (
@@ -74,7 +111,7 @@ export function SuggestedTasksWidget() {
         <Lightbulb size={16} className={styles.icon} />
         <h2 className={styles.title}>Suggested Compliance Tasks</h2>
       </div>
-      <p className={styles.info}>Based on your business profile, consider adding these compliance tasks.</p>
+      <p className={styles.info}>Based on your business profile, consider adding these compliance tasks. If you've already completed any, you can upload evidence in the task details.</p>
       <div className={styles.list}>
         {visible.map((s) => (
           <div key={s.id} className={styles.item}>

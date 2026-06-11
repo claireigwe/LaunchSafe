@@ -58,18 +58,26 @@ export const audit = {
     sendAudit("subscription.activated", "subscription", undefined, { plan }),
   subscriptionCancelled: () =>
     sendAudit("subscription.cancelled", "subscription"),
+  subscriptionChanged: (from: string, to: string) =>
+    sendAudit("subscription.changed", "subscription", undefined, { from, to }),
   paymentProcessed: (ref: string, amount: number) =>
     sendAudit("payment.processed", "payment", ref, { amount }),
   businessCreated: (id: string, name: string) =>
     sendAudit("business.created", "business", id, { name }),
+  businessUpdated: (id: string, name: string) =>
+    sendAudit("business.updated", "business", id, { name }),
   businessDeleted: (id: string, name: string) =>
     sendAudit("business.deleted", "business", id, { name }),
   profileUpdated: (field: string) =>
     sendAudit("profile.updated", "profile", undefined, { field }),
   passwordChanged: () =>
     sendAudit("password.changed", "session"),
+  login: (method: string) =>
+    sendAudit("login", "session", undefined, { method }),
   teamInvited: (email: string) =>
     sendAudit("team.invited", "team", undefined, { email }),
+  teamRemoved: (memberId: string) =>
+    sendAudit("team.removed", "team", memberId),
   reportExported: (reportType: string) =>
     sendAudit("report.exported", "report", undefined, { reportType }),
 };

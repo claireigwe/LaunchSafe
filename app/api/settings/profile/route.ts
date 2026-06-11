@@ -11,18 +11,18 @@ export async function GET() {
     }
 
     // Fetch Profile
-    const { data: profileData, error: profileError } = await supabase
+    const { data: profileData } = await supabase
       .from("user_profiles")
       .select("*")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     // Fetch Notification Prefs
-    const { data: prefsData, error: prefsError } = await supabase
+    const { data: prefsData } = await supabase
       .from("notification_preferences")
       .select("*")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     // Default response structure
     return NextResponse.json({

@@ -1,29 +1,23 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Sparkles, Send, X, Loader2 } from "lucide-react";
+import { useState, useRef } from "react";
+import { Sparkles, X, Loader2, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   context?: string;
   placeholder?: string;
 }
 
-export function AIAssistant({ context, placeholder = "Ask about compliance requirements..." }: Props) {
+export function AIAssistant({ context, placeholder = "e.g. What are the compliance requirements for registering a food business in Lagos?" }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [response, setResponse] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    if (open && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [open]);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit() {
     if (!query.trim()) return;
     setLoading(true);
     setError("");
@@ -48,6 +42,13 @@ export function AIAssistant({ context, placeholder = "Ask about compliance requi
     }
   }
 
+  function handleClose() {
+    setOpen(false);
+    setResponse(null);
+    setError("");
+    setQuery("");
+  }
+
   return (
     <>
       <button
@@ -64,7 +65,7 @@ export function AIAssistant({ context, placeholder = "Ask about compliance requi
           boxShadow: "0 4px 16px rgba(37,99,235,0.3)",
           zIndex: 80,
         }}
-        aria-label="Open AI assistant"
+        aria-label="Open compliance inquiry"
       >
         <Sparkles size={20} />
       </button>
@@ -73,12 +74,12 @@ export function AIAssistant({ context, placeholder = "Ask about compliance requi
         <div
           style={{
             position: "fixed", bottom: 84, right: 24,
-            width: 380, maxWidth: "calc(100vw - 48px)",
+            width: 420, maxWidth: "calc(100vw - 48px)",
             background: "white", borderRadius: 16,
             boxShadow: "0 16px 48px rgba(0,0,0,0.15)",
             border: "1px solid #e5e7eb",
             zIndex: 80, display: "flex", flexDirection: "column",
-            maxHeight: "60vh", overflow: "hidden",
+            maxHeight: "70vh",
           }}
         >
           <div style={{
@@ -87,68 +88,63 @@ export function AIAssistant({ context, placeholder = "Ask about compliance requi
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <Sparkles size={16} style={{ color: "#2563eb" }} />
-              <span style={{ fontWeight: 600, fontSize: 14 }}>AI Compliance Assistant</span>
+              <span style={{ fontWeight: 600, fontSize: 14 }}>Compliance Inquiry</span>
             </div>
-            <button type="button" onClick={() => setOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#999", padding: 4 }}>
+            <button type="button" onClick={handleClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#999", padding: 4 }}>
               <X size={16} />
             </button>
           </div>
 
-          <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
-            <p style={{ fontSize: 12, color: "#999", margin: "0 0 12px", lineHeight: 1.4 }}>
-              Ask about compliance requirements, regulations, or get help understanding obligations. AI responses should be verified with official sources.
-            </p>
+          <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12, flex: 1, overflowY: "auto" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px", borderRadius: 8, background: "#fefce8", border: "1px solid #fde68a" }}>
+              <AlertTriangle size={14} style={{ color: "#d97706", flexShrink: 0, marginTop: 1 }} />
+              <p style={{ fontSize: 11, color: "#92400e", margin: 0, lineHeight: 1.4 }}>
+                AI responses are for informational purposes only. Always verify compliance requirements with the relevant regulatory agency before taking action.
+              </p>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <label style={{ fontSize: 13, fontWeight: 500, color: "#374151" }}>Your Question</label>
+              <textarea
+                ref={inputRef}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={placeholder}
+                disabled={loading}
+                rows={3}
+                style={{
+                  width: "100%", padding: "10px 12px", borderRadius: 8,
+                  border: "1.5px solid #ddd", fontSize: 13,
+                  outline: "none", resize: "vertical", fontFamily: "inherit", boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <Button variant="primary" size="md" onClick={handleSubmit} isLoading={loading} fullWidth>
+              {loading ? "Getting answer..." : "Get Answer"}
+            </Button>
 
             {error && (
-              <div style={{ padding: "10px 12px", borderRadius: 8, background: "#fef2f2", color: "#dc2626", fontSize: 13, marginBottom: 12 }}>{error}</div>
-            )}
-
-            {loading && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: 12, color: "#666", fontSize: 13 }}>
-                <Loader2 size={14} className="spin" />
-                Getting answer...
-              </div>
+              <div style={{ padding: "10px 12px", borderRadius: 8, background: "#fef2f2", color: "#dc2626", fontSize: 13 }}>{error}</div>
             )}
 
             {response && (
-              <div style={{
-                padding: "12px 14px", borderRadius: 10,
-                background: "#f0f5ff", border: "1px solid #dbeafe",
-                fontSize: 13, lineHeight: 1.6, color: "#1e293b",
-                whiteSpace: "pre-wrap", marginBottom: 12,
-              }}>
-                {response}
+              <div style={{ padding: 0 }}>
+                <label style={{ fontSize: 13, fontWeight: 500, color: "#374151", display: "block", marginBottom: 8 }}>Answer</label>
+                <div style={{
+                  padding: "12px 14px", borderRadius: 10,
+                  background: "#f0f5ff", border: "1px solid #dbeafe",
+                  fontSize: 13, lineHeight: 1.6, color: "#1e293b",
+                  whiteSpace: "pre-wrap",
+                }}>
+                  {response}
+                  <p style={{ fontSize: 11, color: "#6b7280", margin: "16px 0 0", padding: "8px 0 0", borderTop: "1px solid #dbeafe" }}>
+                    Verify this information with the relevant regulatory agency before acting.
+                  </p>
+                </div>
               </div>
             )}
           </div>
-
-          <form onSubmit={handleSubmit} style={{ padding: "12px 16px", borderTop: "1px solid #e5e7eb", display: "flex", gap: 8 }}>
-            <input
-              ref={inputRef}
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={placeholder}
-              disabled={loading}
-              style={{
-                flex: 1, padding: "10px 12px", borderRadius: 8,
-                border: "1.5px solid #ddd", fontSize: 13,
-                outline: "none",
-              }}
-            />
-            <button
-              type="submit"
-              disabled={loading || !query.trim()}
-              style={{
-                width: 36, height: 36, borderRadius: 8,
-                background: loading ? "#ddd" : "#2563eb",
-                color: "white", border: "none", cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}
-            >
-              {loading ? <Loader2 size={14} className="spin" /> : <Send size={14} />}
-            </button>
-          </form>
         </div>
       )}
     </>

@@ -71,6 +71,53 @@ export function generateDocumentSuggestions(profile: DocProfile | null): Suggest
     });
   }
 
+  if (profile.industry === "finance-fintech") {
+    suggestions.push({
+      id: "sug-aml-policy",
+      title: "Anti-Money Laundering (AML) Policy",
+      docType: "policy_document" as DocType,
+      reason: "Financial services must have strict AML compliance policies.",
+      description: "Internal AML and KYC compliance guidelines.",
+    });
+    suggestions.push({
+      id: "sug-cbn-license",
+      title: "CBN Operating License",
+      docType: "operating_license" as DocType,
+      reason: "Financial institutions require Central Bank licensing.",
+      description: "Operating license from the Central Bank or equivalent financial regulator.",
+    });
+  }
+
+  if (profile.industry === "manufacturing" || profile.industry === "energy-mining" || profile.industry === "agriculture") {
+    suggestions.push({
+      id: "sug-eia",
+      title: "Environmental Impact Assessment (EIA)",
+      docType: "compliance_certificate" as DocType,
+      reason: "Industrial and agricultural activities often require environmental clearance.",
+      description: "Approved EIA report from the Ministry of Environment.",
+    });
+  }
+
+  if (profile.industry === "education") {
+    suggestions.push({
+      id: "sug-min-ed",
+      title: "Ministry of Education Approval",
+      docType: "operating_license" as DocType,
+      reason: "Educational institutions require government approval to operate.",
+      description: "Approval letter or certificate from the Ministry of Education.",
+    });
+  }
+
+  if (profile.industry === "transportation-logistics") {
+    suggestions.push({
+      id: "sug-fleet-insurance",
+      title: "Commercial Fleet Insurance",
+      docType: "insurance_policy" as DocType,
+      reason: "Transport businesses must insure commercial vehicles.",
+      description: "Comprehensive insurance coverage for commercial vehicles.",
+    });
+  }
+
   suggestions.push({
     id: "sug-compliance-policy",
     title: "Compliance Policy Document",

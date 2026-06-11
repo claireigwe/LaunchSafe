@@ -1,5 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import type { AssessmentSummary, AssessmentFullReport, AssessmentRequirement, AssessmentAgency, RoadmapItem } from "@/types/domain/assessment";
+import { generateAssessmentSummary } from "../data/summary-generator";
+import { generateFullReport } from "./report-generator";
 
 export class AssessmentEngine {
   /**
@@ -214,71 +216,10 @@ export class AssessmentEngine {
     return roadmap.filter(r => r.requirements.length > 0);
   }
 
-  // Fallback mock engine if database lacks regulatory data
+  // Fallback engine if database lacks regulatory data (uses robust local generation)
   private static generateMockAssessment(formData: any): { summary: AssessmentSummary, report: AssessmentFullReport } {
-    const { basics = {}, activities = {}, location = {} } = formData;
-    
-    let reqCount = 10;
-    if (activities.willManufacture) reqCount += 4;
-    
-    let complexity = 30;
-    if (activities.willManufacture) complexity += 15;
-
-    const summary: AssessmentSummary = {
-      businessType: basics.industry || "Business",
-      location: location.country || "Location not specified",
-      requirementCount: reqCount,
-      agencyCount: 4,
-      complexityScore: complexity,
-      categories: ["Business Registration", "Tax Compliance"]
-    };
-
-    const agencies: AssessmentAgency[] = [
-      { id: "cac", name: "Corporate Affairs Commission", acronym: "CAC", requirementCount: 2 },
-      { id: "firs", name: "Federal Inland Revenue Service", acronym: "FIRS", requirementCount: 3 }
-    ];
-
-    const requirements: AssessmentRequirement[] = [
-      {
-        id: "cac-1",
-        name: "Company Incorporation",
-        description: "Register as an entity with CAC",
-        agencyName: "Corporate Affairs Commission",
-        requirementType: "registration",
-        officialCost: 5000000,
-        estimatedCost: null,
-        communityReportedCost: null,
-        deadline: null,
-        frequency: "one_time",
-        confidenceLevel: "verified",
-        sourceUrl: "https://cac.gov.ng"
-      },
-      {
-        id: "firs-1",
-        name: "Tax Identification Number (TIN)",
-        description: "Register for tax purposes",
-        agencyName: "Federal Inland Revenue Service",
-        requirementType: "tax",
-        officialCost: 0,
-        estimatedCost: null,
-        communityReportedCost: null,
-        deadline: null,
-        frequency: "one_time",
-        confidenceLevel: "verified",
-        sourceUrl: "https://firs.gov.ng"
-      }
-    ];
-
-    const report: AssessmentFullReport = {
-      requirements,
-      agencies,
-      totalOfficialCost: 5000000,
-      totalEstimatedCost: 0,
-      riskLevel: "low",
-      riskFactors: [],
-      roadmap: this.generateRoadmap(requirements),
-      generatedAt: new Date().toISOString()
-    };
+    const summary = generateAssessmentSummary(formData);
+    const report = generateFullReport(formData);
 
     return { summary, report };
   }

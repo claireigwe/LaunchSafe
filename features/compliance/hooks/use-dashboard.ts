@@ -18,14 +18,18 @@ export function useDashboard() {
 
   useEffect(() => {
     trackEvent("Dashboard Viewed");
-    reconcileTaskStatuses().catch(() => {});
+    setTimeout(() => reconcileTaskStatuses().catch(() => {}), 500);
     const all = loadTasks();
     setTasks(all);
 
     async function loadDashBusiness() {
       const activeId = getActiveBusinessId();
       try {
-        const bizList = await fetchAllBusinesses();
+        const [bizList, profileData] = await Promise.all([
+          fetchAllBusinesses(),
+          fetchProfileAndPrefs().catch(() => null),
+        ]);
+
         let target = bizList.find((b) => b.id === activeId);
         if (!target && bizList.length > 0) target = bizList[0];
         
@@ -49,8 +53,6 @@ export function useDashboard() {
             updatedAt: target.createdAt,
           };
         }
-
-        const profileData = await fetchProfileAndPrefs().catch(() => null);
 
         setData((prev) => ({
           ...prev,

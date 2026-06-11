@@ -14,7 +14,7 @@ import { SetupOverlay } from "@/features/billing/components/setup-overlay";
 import { isInSetupMode } from "@/features/billing/api/setup-check";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import { useHasBusiness } from "@/features/businesses/hooks/use-has-business";
-import { EmptyBusinessState } from "@/features/businesses/components/empty-business-state";
+import { BusinessRequiredOverlay } from "@/features/businesses/components/business-required-overlay";
 import type { ComplianceTaskItem, CreateTaskInput, UpdateTaskInput } from "../../types/tasks.types";
 import styles from "./task-list-page.module.css";
 
@@ -49,9 +49,9 @@ export function TaskListPage() {
   const filtered = useMemo(() => {
     let result = [...tasks];
     if (filter === "overdue") result = result.filter((t) => t.status === "overdue");
-    else if (filter === "pending") result = result.filter((t) => t.status === "pending");
-    else if (filter === "in_progress") result = result.filter((t) => t.status === "in_progress");
-    else if (filter === "completed") result = result.filter((t) => t.status === "completed");
+    else if (filter === "pending") result = result.filter((t) => t.status === "pending" || t.status === "due_soon");
+    else if (filter === "in_progress") result = result.filter((t) => t.status === "in_progress" || t.status === "awaiting_submission");
+    else if (filter === "completed") result = result.filter((t) => t.status === "completed" || t.status === "approved");
     if (sourceFilter === "manual") result = result.filter((t) => t.source === "manual");
     else if (sourceFilter === "suggested") result = result.filter((t) => t.source === "suggested");
     if (search.trim()) {
@@ -81,14 +81,9 @@ export function TaskListPage() {
     setSelectedTask(null);
   }
 
-  return (
-    <SetupOverlay>
+  const pageContent = (
     <div className={styles.page}>
-      {!isInSetupMode() && hasBusiness === false ? (
-        <EmptyBusinessState />
-      ) : (
-        <>
-          <div className={styles.header}>
+      <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Compliance Tasks</h1>
           <p className={styles.subtitle}>Track and manage your compliance obligations.</p>
@@ -98,8 +93,6 @@ export function TaskListPage() {
           New Task
         </Button>
       </div>
-
-      <SuggestedTasksWidget />
 
       <div className={styles.toolbar}>
         <div className={styles.searchWrap}>
@@ -133,11 +126,16 @@ export function TaskListPage() {
         </div>
       )}
 
+      <SuggestedTasksWidget />
+
       {showCreate && <TaskCreateModal onSave={handleCreate} onClose={() => setShowCreate(false)} />}
       {selectedTask && <TaskDetailModal task={selectedTask} onUpdate={handleUpdate} onDelete={handleDelete} onClose={() => setSelectedTask(null)} />}
-        </>
-      )}
     </div>
-    </SetupOverlay>
+  );
+
+  return (
+    <BusinessRequiredOverlay hasBusiness={hasBusiness}>
+      {hasBusiness === false ? pageContent : <SetupOverlay>{pageContent}</SetupOverlay>}
+    </BusinessRequiredOverlay>
   );
 }

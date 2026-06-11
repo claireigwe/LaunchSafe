@@ -3,6 +3,10 @@ import { getRequiredUser } from "@/lib/auth/get-session";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import type { ApiResponse } from "@/types/api.types";
 
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const user = await getRequiredUser();
@@ -53,9 +57,9 @@ export async function POST(request: Request) {
     }
 
     const adminSupabase = createAdminClient() as any;
-    const { data: bizCount } = await adminSupabase
+    const { count: bizCount } = await adminSupabase
       .from("businesses")
-      .select("id", { count: "exact", head: true })
+      .select("*", { count: "exact", head: true })
       .eq("user_id", user.id);
 
     const { data: sub } = await adminSupabase
@@ -67,12 +71,11 @@ export async function POST(request: Request) {
       .limit(1)
       .maybeSingle();
 
-    const planSlug = sub?.subscription_plans?.slug || "starter";
-    const limits: Record<string, number> = { starter: 1, enterprise: 20 };
-    const limit = limits[planSlug] || 1;
-    const count = bizCount?.length || 0;
+    const planSlug = sub?.subscription_plans?.slug || null;
+    const { limits } = require("@/lib/billing/features").resolveAccess(planSlug, "active");
+    const limit = limits.businesses || 1;
 
-    if (count >= limit) {
+    if (bizCount !== null && bizCount !== undefined && bizCount >= limit) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: { message: `Your plan allows up to ${limit} business${limit > 1 ? "es" : ""}. Upgrade to add more.` } },
         { status: 403 }

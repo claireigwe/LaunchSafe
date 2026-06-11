@@ -1,4 +1,4 @@
-import type { ComplianceTaskItem, CreateTaskInput, UpdateTaskInput } from "../types/tasks.types";
+import type { ComplianceTaskItem, CreateTaskInput, UpdateTaskInput, TaskSource } from "../types/tasks.types";
 import { triggerTaskCreated, triggerTaskCompleted, triggerTaskOverdue, syncDeadlineNotifications } from "@/features/notifications/api/notification-triggers";
 import { logActivity } from "@/features/activity/api/activity-api";
 import { audit } from "@/features/audit/api/audit-api";
@@ -24,7 +24,7 @@ function saveLocal(tasks: ComplianceTaskItem[], businessId?: string): void {
 /* ----- API helpers ----- */
 async function apiGet<T>(url: string): Promise<T | null> {
   try {
-    const res = await fetch(url);
+    const res = await fetch(url + (url.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store' });
     const json = await res.json();
     return json.success ? json.data : null;
   } catch { return null; }
@@ -69,24 +69,55 @@ function computeInitialStatus(dueDate: string | undefined | null): "pending" | "
 /* ----- Public API ----- */
 
 let syncPromise: Promise<void> | null = null;
+let lastLocalMutation: number = Date.now();
 
 function triggerSync(): void {
   if (syncPromise) return;
   const businessId = getActiveBusinessId();
   if (!businessId) return;
+  const startTime = Date.now();
   syncPromise = (async () => {
     try {
       const server = await apiGet<ComplianceTaskItem[]>(`/api/compliance?businessId=${businessId}`);
-      if (server) saveLocal(server, businessId);
+      if (server) {
+        const local = loadLocal(businessId);
+        if (lastLocalMutation < startTime && server.length >= local.length) {
+          saveLocal(server, businessId);
+        } else if (server.length < local.length) {
+          console.log("[LaunchSafe] triggerSync: server has fewer tasks than local, skipping overwrite", { serverCount: server.length, localCount: local.length });
+        }
+      }
     } catch {} finally {
       syncPromise = null;
     }
   })();
 }
 
+const OLD_TASKS_KEY = "launchsafe-tasks";
+
 export function loadTasks(): ComplianceTaskItem[] {
   triggerSync();
-  return loadLocal();
+
+  const businessId = getActiveBusinessId();
+  const tasks = loadLocal(businessId || undefined);
+
+  if (tasks.length === 0 && businessId) {
+    try {
+      const oldRaw = localStorage.getItem(OLD_TASKS_KEY);
+      if (oldRaw) {
+        const oldTasks: ComplianceTaskItem[] = JSON.parse(oldRaw);
+        if (oldTasks.length > 0) {
+          const migrated = oldTasks.map((t) => ({ ...t, businessId }));
+          saveLocal(migrated, businessId || undefined);
+          try { localStorage.removeItem(OLD_TASKS_KEY); } catch {}
+          return migrated;
+        }
+      }
+    } catch {}
+  }
+
+  console.log("[LaunchSafe] loadTasks returning", { count: tasks.length, businessId });
+  return tasks;
 }
 
 export async function ensureTasksSynced(): Promise<ComplianceTaskItem[]> {
@@ -106,7 +137,7 @@ export function saveTasks(tasks: ComplianceTaskItem[], businessId?: string): voi
   saveLocal(tasks, businessId);
 }
 
-export async function createTask(input: CreateTaskInput, businessId?: string): Promise<ComplianceTaskItem> {
+export async function createTask(input: CreateTaskInput & { source?: TaskSource; suggestionReason?: string | null }, businessId?: string): Promise<ComplianceTaskItem> {
   const bid = businessId || getActiveBusinessId() || "";
   const now = new Date().toISOString();
   const taskId = genId();
@@ -118,8 +149,8 @@ export async function createTask(input: CreateTaskInput, businessId?: string): P
     dueDate: input.dueDate || null,
     priority: input.priority,
     status: computeInitialStatus(input.dueDate),
-    source: "manual",
-    suggestionReason: null,
+    source: input.source || "manual",
+    suggestionReason: input.suggestionReason ?? null,
     reminderDate: null,
     reminderEnabled: false,
     createdBy: "user",
@@ -127,16 +158,20 @@ export async function createTask(input: CreateTaskInput, businessId?: string): P
     updatedAt: now,
   };
 
-  const server = await apiPost<ComplianceTaskItem>("/api/compliance", { ...input, businessId: bid, id: taskId });
+  const server = await apiPost<ComplianceTaskItem>("/api/compliance", { ...input, businessId: bid, id: taskId, source: input.source || "manual", suggestionReason: input.suggestionReason ?? null });
   if (server) {
+    lastLocalMutation = Date.now();
     const tasks = loadLocal();
     tasks.push(server);
     saveLocal(tasks);
+    console.log("[LaunchSafe] createTask: server success", { taskTitle: server.title, totalTasks: tasks.length, bid });
     triggerTaskCreated(server);
     logActivity("task_created", "New Task Created", server.title);
     return server;
   }
 
+  console.log("[LaunchSafe] createTask: POST failed, saving locally", { taskTitle: localTask.title, bid });
+  lastLocalMutation = Date.now();
   const tasks = loadLocal();
   tasks.push(localTask);
   saveLocal(tasks);
@@ -150,6 +185,7 @@ export async function updateTask(id: string, input: UpdateTaskInput): Promise<Co
   const businessId = getActiveBusinessId();
   const server = await apiPatch<ComplianceTaskItem>("/api/compliance", { id, ...input, businessId });
   if (server) {
+    lastLocalMutation = Date.now();
     const tasks = loadLocal();
     const idx = tasks.findIndex((t) => t.id === id);
     if (idx >= 0) tasks[idx] = server;
@@ -158,6 +194,7 @@ export async function updateTask(id: string, input: UpdateTaskInput): Promise<Co
     return server;
   }
 
+  lastLocalMutation = Date.now();
   const tasks = loadLocal();
   const idx = tasks.findIndex((t) => t.id === id);
   if (idx === -1) return null;
@@ -171,6 +208,7 @@ export async function deleteTask(id: string): Promise<void> {
   const deletedTask = loadLocal().find((t) => t.id === id);
   const businessId = getActiveBusinessId();
   await apiDelete("/api/compliance", { id, businessId });
+  lastLocalMutation = Date.now();
   const tasks = loadLocal().filter((t) => t.id !== id);
   saveLocal(tasks);
   if (deletedTask) audit.taskDeleted(id, deletedTask.title);
@@ -188,7 +226,7 @@ export async function completeTask(id: string): Promise<ComplianceTaskItem | nul
 
 export async function addSuggestedTask(suggested: { title: string; description: string; priority: string; explanation?: string }, businessId?: string): Promise<ComplianceTaskItem> {
   return createTask(
-    { title: suggested.title, description: suggested.description, priority: suggested.priority as any },
+    { title: suggested.title, description: suggested.description, priority: suggested.priority as any, source: "suggested", suggestionReason: suggested.explanation || null },
     businessId
   );
 }
@@ -210,6 +248,9 @@ export async function reconcileTaskStatuses(): Promise<void> {
       }
     }
   }
-  if (changed) saveLocal(tasks);
+  if (changed) {
+    lastLocalMutation = Date.now();
+    saveLocal(tasks);
+  }
   syncDeadlineNotifications().catch(() => {});
 }

@@ -12,10 +12,18 @@ export interface AccessInfo {
   status: string | null;
 }
 
-const DB_TO_PLAN: Record<string, string> = {
+export const DB_TO_PLAN: Record<string, string> = {
   free: "starter",
-  pro: "starter",
-  business: "starter",
+  starter: "starter",
+  growth: "growth",
+  pro: "growth", // Legacy mapping if any
+  business: "growth", // Legacy mapping if any
+  enterprise: "enterprise",
+};
+
+export const PLAN_TO_DB: Record<string, string> = {
+  starter: "free",
+  growth: "pro",
   enterprise: "enterprise",
 };
 
@@ -26,9 +34,9 @@ const PLAN_FEATURES: Record<string, FeatureFlag[]> = {
 };
 
 const PLAN_LIMITS: Record<string, Record<string, number>> = {
-  starter: { businesses: 1 },
-  growth: { businesses: 5 },
-  enterprise: { businesses: 20 },
+  starter: { businesses: 1, documents: 2 },
+  growth: { businesses: 5, documents: 15 },
+  enterprise: { businesses: 20, documents: 100 },
 };
 
 export function resolveAccess(planSlug: string | null, planStatus: string | null): AccessInfo {

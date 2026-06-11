@@ -218,3 +218,15 @@ export function trackEvent(event: string, data?: Record<string, unknown>): void 
   } catch {
   }
 }
+
+export async function deleteAssessment(assessmentId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`/api/assessments/${assessmentId}`, {
+      method: "DELETE",
+    });
+    const json: ApiResponse<null> = await res.json();
+    return json.success;
+  } catch {
+    return false;
+  }
+}

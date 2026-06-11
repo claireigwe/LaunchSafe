@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
 import { createAdminClient } from "@/lib/supabase/server";
+import { resolveAccess } from "@/lib/billing/features";
 import type { ApiResponse } from "@/types/api.types";
 
 export async function GET() {
@@ -28,9 +29,12 @@ export async function GET() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
+    const rawPlanSlug = subs?.subscription_plans?.slug || "starter";
+    const resolved = resolveAccess(rawPlanSlug, subs?.status || "trial");
+
     const subscription = subs ? {
-      planId: subs.subscription_plans?.slug || "starter",
-      planName: subs.subscription_plans?.name || "Starter",
+      planId: resolved.planId,
+      planName: resolved.planName,
       billingCycle: "monthly",
       status: subs.status,
       startDate: subs.current_period_start,
