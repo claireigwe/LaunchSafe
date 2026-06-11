@@ -50,7 +50,7 @@ export function ReportModal({ reportId, isOpen, onClose }: { reportId: string | 
       const element = reportRef.current;
       if (!element) return;
 
-      const opt = {
+      const opt: any = {
         margin:       [10, 10, 10, 10],
         filename:     "LaunchSafe-Compliance-Report.pdf",
         image:        { type: "jpeg", quality: 0.98 },
