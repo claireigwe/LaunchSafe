@@ -1,4 +1,4 @@
-import { CheckCircle2 } from "lucide-react";
+import Image from "next/image";
 import styles from "./how-it-works.module.css";
 
 export function HowItWorksSection() {
@@ -40,35 +40,14 @@ export function HowItWorksSection() {
         </div>
 
         <div className={styles.visual}>
-          <div className={styles.visualCard}>
-            <div className={styles.visualHeader}>
-              <div className={styles.visualDot} />
-              <div className={styles.visualDot} />
-              <div className={styles.visualDot} />
-            </div>
-            <div className={styles.visualBody}>
-              <div className={styles.mockItem}>
-                <CheckCircle2 className={styles.mockIcon} size={24} />
-                <div className={styles.mockLines}>
-                  <div className={styles.mockLine} style={{ width: '80%' }} />
-                  <div className={styles.mockLine} style={{ width: '60%' }} />
-                </div>
-              </div>
-              <div className={styles.mockItem}>
-                <CheckCircle2 className={styles.mockIcon} size={24} />
-                <div className={styles.mockLines}>
-                  <div className={styles.mockLine} style={{ width: '90%' }} />
-                  <div className={styles.mockLine} style={{ width: '40%' }} />
-                </div>
-              </div>
-              <div className={styles.mockItem}>
-                <CheckCircle2 className={styles.mockIcon} size={24} />
-                <div className={styles.mockLines}>
-                  <div className={styles.mockLine} style={{ width: '70%' }} />
-                  <div className={styles.mockLine} style={{ width: '50%' }} />
-                </div>
-              </div>
-            </div>
+          <div className={styles.imageContainer}>
+            <Image
+              src="/images/landing/how-it-works-report.png"
+              alt="LaunchSafe Assessment Dashboard"
+              width={600}
+              height={400}
+              className={styles.dashboardImage}
+            />
           </div>
         </div>
       </div>

@@ -220,8 +220,8 @@
 }
 
 .channelCard {
-  background-color: var(--color-role-light-tertiaryContainer);
-  color: var(--color-role-light-onTertiaryContainer);
+  background-color: var(--color-palette-tertiary-95);
+  color: var(--color-palette-tertiary-20);
   border-radius: 16px;
   padding: 24px;
   display: flex;
@@ -356,8 +356,8 @@
 .reminder {
   margin-top: 24px;
   padding: 16px;
-  background-color: var(--color-role-light-errorContainer);
-  color: var(--color-role-light-onErrorContainer);
+  background-color: var(--color-palette-error-95);
+  color: var(--color-palette-error-20);
   border-radius: 12px;
   font-family: var(--font-body-body-small-fontFamily);
   font-size: 14px;

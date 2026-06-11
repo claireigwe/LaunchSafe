@@ -71,7 +71,7 @@
 .title {
   font-family: var(--font-display-display-medium-fontFamily);
   font-weight: 700;
-  font-size: clamp(40px, 8vw, 72px);
+  font-size: clamp(32px, 8vw, 72px);
   line-height: 1.1;
   letter-spacing: -2px;
   color: var(--color-role-light-onSurface);
@@ -103,7 +103,7 @@
 
 .button {
   width: 100%;
-  border-radius: 32px;
+  border-radius: 12px;
 }
 
 @media (min-width: 640px) {

@@ -39,6 +39,7 @@ const NAV_ITEMS = [
 export function AppSidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [setupMode, setSetupMode] = useState(false);
   const [activeBizName, setActiveBizName] = useState("");
@@ -58,9 +59,6 @@ export function AppSidebar() {
   }
 
   useEffect(() => {
-    if (window.innerWidth <= 768) {
-      setCollapsed(true);
-    }
     setSetupMode(isInSetupMode());
     setMounted(true);
 
@@ -78,22 +76,20 @@ export function AppSidebar() {
   }, [storeBizId]);
 
   const handleLinkClick = () => {
-    if (window.innerWidth <= 768) {
-      setCollapsed(true);
-    }
+    setMobileOpen(false);
   };
 
   return (
     <>
       <button
         className={styles.mobileToggle}
-        onClick={() => setCollapsed((p) => !p)}
-        aria-label={collapsed ? "Open navigation" : "Close navigation"}
+        onClick={() => setMobileOpen((p) => !p)}
+        aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
       >
         <Menu size={20} />
       </button>
 
-      <aside className={cn(styles.sidebar, collapsed && styles.collapsed)}>
+      <aside className={cn(styles.sidebar, collapsed && styles.collapsed, mobileOpen && styles.mobileOpen)}>
         <div className={styles.logo}>
           <span className={styles.logoIcon}>⬡</span>
           {!collapsed && <span className={styles.logoText}>LaunchSafe</span>}
@@ -104,7 +100,7 @@ export function AppSidebar() {
             <Link
               href="/onboarding"
               className={cn(styles.link, styles.setupLink, pathname === "/onboarding" && styles.active)}
-              tabIndex={collapsed ? -1 : 0}
+              tabIndex={collapsed && !mobileOpen ? -1 : 0}
               onClick={handleLinkClick}
             >
               <Compass size={18} className={styles.icon} />
@@ -124,7 +120,7 @@ export function AppSidebar() {
                 key={href}
                 href={href}
                 className={cn(styles.link, isActive && styles.active)}
-                tabIndex={collapsed ? -1 : 0}
+                tabIndex={collapsed && !mobileOpen ? -1 : 0}
                 onClick={handleLinkClick}
               >
                 <Icon size={18} className={styles.icon} />
@@ -153,7 +149,7 @@ export function AppSidebar() {
         </button>
       </aside>
 
-      {!collapsed && <div className={styles.overlay} onClick={() => setCollapsed(true)} />}
+      {mobileOpen && <div className={styles.overlay} onClick={() => setMobileOpen(false)} />}
     </>
   );
 }

@@ -26,7 +26,7 @@
 .title {
   font-family: var(--font-headline-headline-large-fontFamily);
   font-weight: 600;
-  font-size: clamp(32px, 5vw, 48px);
+  font-size: clamp(28px, 6vw, 48px);
   color: var(--color-role-light-onSurface);
   margin-bottom: 16px;
 }
@@ -94,71 +94,19 @@
   justify-content: center;
 }
 
-.visualCard {
+.imageContainer {
   width: 100%;
-  max-width: 500px;
-  background-color: var(--color-role-light-surface);
+  max-width: 600px;
   border-radius: 24px;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.08);
   border: 1px solid var(--color-role-light-outlineVariant);
   overflow: hidden;
+  background-color: var(--color-role-light-surface);
+  line-height: 0;
 }
 
-.visualHeader {
-  display: flex;
-  gap: 8px;
-  padding: 16px 24px;
-  background-color: var(--color-role-light-surfaceContainerLowest);
-  border-bottom: 1px solid var(--color-role-light-outlineVariant);
-}
-
-.visualDot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: var(--color-role-light-outlineVariant);
-}
-
-.visualDot:nth-child(1) { background-color: var(--color-role-light-error); }
-.visualDot:nth-child(2) { background-color: var(--color-role-light-warning); }
-.visualDot:nth-child(3) { background-color: var(--color-role-light-success); }
-
-.visualBody {
-  padding: 32px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.mockItem {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  background-color: var(--color-role-light-surfaceContainerLowest);
-  border-radius: 12px;
-  border: 1px solid var(--color-role-light-outlineVariant);
-}
-
-.mockIcon {
-  color: var(--color-role-light-primary);
-  opacity: 0.8;
-}
-
-.mockLines {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.mockLine {
-  height: 8px;
-  background-color: var(--color-role-light-surfaceContainerHigh);
-  border-radius: 4px;
-}
-
-.mockLine:first-child {
-  background-color: var(--color-role-light-surfaceVariant);
-  height: 12px;
+.dashboardImage {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
 }
