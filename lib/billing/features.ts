@@ -6,7 +6,7 @@ export type FeatureFlag =
   | "ai_compliance";
 
 export interface AccessInfo {
-  planId: string;
+  planId: string | null;
   planName: string;
   features: FeatureFlag[];
   limits: Record<string, number>;
@@ -14,17 +14,14 @@ export interface AccessInfo {
 }
 
 export const DB_TO_PLAN: Record<string, string> = {
-  free: "starter",
   starter: "starter",
   growth: "growth",
-  pro: "growth", // Legacy mapping if any
-  business: "growth", // Legacy mapping if any
   enterprise: "enterprise",
 };
 
 export const PLAN_TO_DB: Record<string, string> = {
-  starter: "free",
-  growth: "pro",
+  starter: "starter",
+  growth: "growth",
   enterprise: "enterprise",
 };
 
@@ -41,12 +38,26 @@ const PLAN_LIMITS: Record<string, Record<string, number>> = {
 };
 
 export function resolveAccess(planSlug: string | null, planStatus: string | null): AccessInfo {
-  const planId = (planSlug && DB_TO_PLAN[planSlug]) || "starter";
+  if (!planSlug || !DB_TO_PLAN[planSlug]) {
+    return {
+      planId: null,
+      planName: "No Plan",
+      features: [],
+      limits: { businesses: 0, documents: 0 },
+      status: null,
+    };
+  }
+  const planId = DB_TO_PLAN[planSlug];
+  const planName: Record<string, string> = {
+    starter: "Starter",
+    growth: "Growth",
+    enterprise: "Enterprise",
+  };
   return {
     planId,
-    planName: planId === "starter" ? "Starter" : planId === "growth" ? "Growth" : "Enterprise",
+    planName: planName[planId] || "Starter",
     features: PLAN_FEATURES[planId] || [],
-    limits: PLAN_LIMITS[planId] || { businesses: 1 },
+    limits: PLAN_LIMITS[planId] || { businesses: 0 },
     status: planStatus,
   };
 }

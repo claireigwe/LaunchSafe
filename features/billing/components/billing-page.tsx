@@ -7,7 +7,6 @@ import { CreditCard, Check, ChevronRight, ExternalLink, AlertCircle, Clock } fro
 import { Button } from "@/components/ui/button";
 import {
   getSubscription,
-  saveSubscription,
   getPayments,
   getAssessmentPurchases,
   cancelSubscription,
@@ -57,16 +56,14 @@ export function BillingPage() {
 
   useEffect(() => {
     async function load() {
-      const res = await fetch("/api/billing/data");
-      const json = await res.json();
-      if (json.success && json.data) {
-        if (json.data.subscription) {
-          saveSubscription(json.data.subscription);
-          setSub(json.data.subscription);
-        }
-        if (json.data.payments) setPayments(json.data.payments);
-        if (json.data.purchases) setPurchases(json.data.purchases);
-      }
+      const [s, p, pp] = await Promise.all([
+        getSubscription(),
+        getPayments(),
+        getAssessmentPurchases(),
+      ]);
+      setSub(s);
+      setPayments(p);
+      setPurchases(pp);
     }
     load().catch(() => {});
     trackEvent("Billing Page Viewed");
@@ -75,9 +72,9 @@ export function BillingPage() {
   const statusInfo = sub ? STATUS_LABELS[sub.status] || STATUS_LABELS.active : null;
   const isActive = sub?.status === "active";
 
-  function handleCancel() {
-    cancelSubscription();
-    setSub(getSubscription());
+  async function handleCancel() {
+    await cancelSubscription();
+    setSub(await getSubscription());
     setShowCancel(false);
     trackEvent("Subscription Cancelled");
   }
@@ -136,7 +133,7 @@ export function BillingPage() {
                   <span className={styles.pendingTitle}>Plan change scheduled</span>
                   <span className={styles.pendingText}>Switching to <strong>{sub.pendingPlanName}</strong> at next renewal ({formatDate(sub.nextRenewal)}).</span>
                 </div>
-                <button type="button" className={styles.pendingCancel} onClick={() => { clearPendingChange(); setSub(getSubscription()); }}>Cancel</button>
+                <button type="button" className={styles.pendingCancel} onClick={async () => { await clearPendingChange(); setSub(await getSubscription()); }}>Cancel</button>
               </div>
             )}
           </>
@@ -241,7 +238,7 @@ export function BillingPage() {
           <CreditCard size={16} className={styles.sectionIcon} />
           <h2 className={styles.sectionTitle}>Billing History</h2>
         </div>
-        {payments.length > 0 ? (
+        {payments.filter((p) => p.paymentType === "subscription").length > 0 ? (
           <div className={styles.table}>
             <div className={styles.tableHeader}>
               <span className={styles.th}>Date</span>
@@ -250,7 +247,7 @@ export function BillingPage() {
               <span className={styles.th}>Status</span>
               <span className={styles.th}>Reference</span>
             </div>
-            {payments.map((p) => (
+            {payments.filter((p) => p.paymentType === "subscription").map((p) => (
               <div key={p.id} className={styles.tableRow}>
                 <span className={styles.td}>{formatDate(p.createdAt)}</span>
                 <span className={styles.td}>{p.description}</span>

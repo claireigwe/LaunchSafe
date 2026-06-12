@@ -5,12 +5,14 @@ import Link from "next/link";
 import { Bell, ExternalLink, AlertTriangle } from "lucide-react";
 import { getRegulatoryUpdates } from "../api/regulatory-updates-api";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
+import type { RegulatoryUpdate } from "@/types/domain/regulatory";
 import styles from "./regulatory-updates-page.module.css";
 
 export function RegulatoryUpdatesPage() {
-  const [updates, setUpdates] = useState(getRegulatoryUpdates());
+  const [updates, setUpdates] = useState<RegulatoryUpdate[]>([]);
 
   useEffect(() => {
+    getRegulatoryUpdates().then(setUpdates);
     trackEvent("Regulatory Updates Viewed");
   }, []);
 
@@ -36,7 +38,7 @@ export function RegulatoryUpdatesPage() {
               <div className={styles.cardMeta}>
                 <span className={styles.source}>Source: {u.source}</span>
                 <span className={styles.date}>
-                  {new Date(u.publishedAt || u.createdAt).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" })}
+                  Effective {new Date(u.effectiveDate).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" })}
                 </span>
               </div>
               {u.sourceUrl && (

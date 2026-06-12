@@ -29,7 +29,7 @@ export async function GET() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    let rawPlanSlug = "starter";
+    let rawPlanSlug: string | null = null;
     if (subs?.plan_id) {
       const { data: plan } = await supabase
         .from("subscription_plans")
@@ -53,21 +53,22 @@ export async function GET() {
       }
     }
 
-    const resolved = resolveAccess(rawPlanSlug, subs?.status || "trial");
-
-    const subscription = subs ? {
-      planId: resolved.planId,
-      planName: resolved.planName,
-      billingCycle: "monthly",
-      status: subs.status,
-      startDate: subs.current_period_start,
-      nextRenewal: subs.current_period_end,
-      cancelledAt: subs.cancelled_at,
-      paystackSubscriptionCode: subs.paystack_subscription_code,
-      pendingPlanId: pendingSlug,
-      pendingPlanName: pendingName,
-      pendingBillingCycle: null,
-    } : null;
+    const subscription = subs ? (() => {
+      const resolved = resolveAccess(rawPlanSlug, subs.status);
+      return {
+        planId: resolved.planId,
+        planName: resolved.planName,
+        billingCycle: "monthly",
+        status: subs.status,
+        startDate: subs.current_period_start,
+        nextRenewal: subs.current_period_end,
+        cancelledAt: subs.cancelled_at,
+        paystackSubscriptionCode: subs.paystack_subscription_code,
+        pendingPlanId: pendingSlug,
+        pendingPlanName: pendingName,
+        pendingBillingCycle: null,
+      };
+    })() : null;
 
     const paymentList = (payments || []).map((p: any) => ({
       id: p.id,
@@ -92,10 +93,11 @@ export async function GET() {
       success: true,
       data: { subscription, payments: paymentList, purchases: purchaseList },
     });
-  } catch {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "An unexpected error occurred";
     return NextResponse.json<ApiResponse>(
-      { success: false, error: { message: "Unauthorized" } },
-      { status: 401 }
+      { success: false, error: { message } },
+      { status: 500 }
     );
   }
 }

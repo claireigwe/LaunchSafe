@@ -43,9 +43,11 @@ export function BusinessOnboardingWizard() {
       }
       if (isAddBusiness) {
         const count = await getBusinessCount();
-        const limit = getPlanLimit("businesses");
-        if (count >= limit) {
-          router.push("/business?limit_reached=true");
+        if (count > 0) {
+          const limit = getPlanLimit("businesses");
+          if (count >= limit) {
+            router.push("/business?limit_reached=true");
+          }
         }
       }
     });
@@ -96,15 +98,10 @@ export function BusinessOnboardingWizard() {
             router.push("/dashboard");
           } catch (err: any) {
             if (err.code === "payment_required") {
+              // Save business data — will be created after subscription payment
               localStorage.setItem("launchsafe-pending-business", JSON.stringify(data));
               clearUserIntent();
-              try {
-                const { authorizationUrl } = await initiateSubscriptionPayment("enterprise", "monthly");
-                window.location.href = authorizationUrl;
-              } catch {
-                alert("Failed to initiate payment. Please visit the Billing page.");
-                router.push("/settings/billing");
-              }
+              goNext();
             } else {
               const bizCount = await getBusinessCount();
               if (isAddBusiness && bizCount > 0) {

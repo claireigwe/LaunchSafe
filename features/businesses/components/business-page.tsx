@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button";
 import { getBusinessData, getBusinessDataById, fetchAllBusinesses, loadCachedBusinesses, saveBusinessData, saveBusinessDataForBusiness, removeBusiness, type StoredBusiness } from "@/features/businesses/api/onboarding-api";
 import { useAppStore } from "@/lib/stores/app-store";
 import { audit } from "@/features/audit/api/audit-api";
-import { getSubscription } from "@/features/billing/api/billing-api";
-import { canAccess, getPlanLimit, getCurrentPlanName } from "@/features/billing/api/feature-access";
+import { canAccess, getPlanLimit, getCurrentPlanName, getCurrentPlanId } from "@/features/billing/api/feature-access";
 import { getIndustriesSync } from "@/features/assessments/api/industries-api";
 import { EditBusinessModal } from "./edit-business-modal";
 import styles from "./business-page.module.css";
@@ -115,7 +114,6 @@ export function BusinessPage() {
   const info = saved?.info || null;
   const status = saved?.status || null;
   const operations = saved?.operations || null;
-  const sub = getSubscription();
   const planName = getCurrentPlanName();
   const planLimit = getPlanLimit("businesses");
   const searchParams = useSearchParams();

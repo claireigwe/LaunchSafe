@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS public.subscription_plans (
   id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name             TEXT NOT NULL,
   slug             TEXT NOT NULL UNIQUE
-                     CHECK (slug IN ('free', 'pro', 'business', 'enterprise')),
+                     CHECK (slug IN ('starter', 'growth', 'enterprise')),
   price_monthly    BIGINT NOT NULL DEFAULT 0,   -- in kobo
   price_yearly     BIGINT NOT NULL DEFAULT 0,
   currency         TEXT NOT NULL DEFAULT 'NGN',

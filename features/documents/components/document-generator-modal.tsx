@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { generateDocument, DOC_TYPE_LABELS_GEN, DOC_TYPE_DESCRIPTIONS } from "../api/document-generation";
+import { DOC_TYPE_TO_TEMPLATE } from "../data/document-templates";
 import { getBusinessData, getBusinessDataById } from "@/features/businesses/api/onboarding-api";
 import { getActiveBusinessId } from "@/lib/stores/app-store";
 import { generatePdfFromText } from "@/lib/pdf/generator";
@@ -36,7 +37,8 @@ export function DocumentGeneratorModal({ onClose, onComplete }: Props) {
     setError("");
     trackEvent("Document Generated", { docType });
     try {
-      const doc = await generateDocument(docType, context, activeBusinessId || undefined);
+      const templateSlug = DOC_TYPE_TO_TEMPLATE[docType] || undefined;
+      const doc = await generateDocument(docType, context, activeBusinessId || undefined, templateSlug);
       setResult({ title: doc.title, content: doc.content || "" });
       onComplete();
     } catch (err: any) {

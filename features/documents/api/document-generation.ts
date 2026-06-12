@@ -6,12 +6,13 @@ import { getActiveBusinessId } from "@/lib/stores/app-store";
 export async function generateDocument(
   docType: DocumentType,
   context: string,
-  businessId?: string
+  businessId?: string,
+  templateSlug?: string
 ): Promise<ComplianceDocument> {
   const res = await fetch("/api/documents/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ docType, context, businessId }),
+    body: JSON.stringify({ docType, context, businessId, templateSlug }),
   });
   
   const json = await res.json();

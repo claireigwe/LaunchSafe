@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BarChart, ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getSubscription } from "@/features/billing/api/billing-api";
 import { generateReportData, canAccessReporting, canExport } from "../api/reporting-engine";
+import { getCurrentPlanId } from "@/features/billing/api/feature-access";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import { useHasBusiness } from "@/features/businesses/hooks/use-has-business";
 import { BusinessRequiredOverlay } from "@/features/businesses/components/business-required-overlay";
@@ -20,8 +20,7 @@ import styles from "./reporting-page.module.css";
 
 export function ReportingPage() {
   const router = useRouter();
-  const sub = getSubscription();
-  const planId = sub?.planId || "starter";
+  const planId = getCurrentPlanId() || "";
   const hasAccess = canAccessReporting(planId);
   const canExportReport = canExport(planId);
   const hasBusiness = useHasBusiness();

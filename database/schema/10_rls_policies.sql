@@ -226,4 +226,11 @@ CREATE POLICY "Authenticated users can read knowledge embeddings"
   ON public.knowledge_embeddings FOR SELECT
   USING (auth.role() = 'authenticated');
 
+-- Document templates (platform-owned, read-only for authenticated users)
+ALTER TABLE public.document_templates ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Authenticated users can read active document templates"
+  ON public.document_templates FOR SELECT
+  USING (auth.role() = 'authenticated' AND is_active = TRUE);
+
 -- Service role bypasses RLS for admin operations (webhooks, cron, migrations).

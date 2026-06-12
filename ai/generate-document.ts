@@ -5,7 +5,8 @@ import type { DocumentType } from "@/types/domain/document";
 export async function generateDocumentWithAI(
   docType: DocumentType,
   contextText: string,
-  businessId: string
+  businessId: string,
+  templateSlug?: string
 ) {
   const supabase = createAdminClient() as any;
 
@@ -45,12 +46,10 @@ export async function generateDocumentWithAI(
       .eq("status", "active")
       .in("confidence_level", ["verified", "estimated"]);
 
-    // Filter by country if available
     if (business.country_id) {
       query = query.eq("country_id", business.country_id);
     }
 
-    // Filter by state if available — also include federal (null state) requirements
     if (business.state_id) {
       query = query.or(`state_id.eq.${business.state_id},state_id.is.null`);
     }
@@ -61,30 +60,21 @@ export async function generateDocumentWithAI(
       throw new Error(`Failed to fetch requirements: ${reqError.message}`);
     }
     if (reqs && reqs.length > 0) {
-      // Fetch costs for these requirements
-      const reqIds = reqs.map((r: any) => r.agency_id ? r : r).map((_: any, __: number, arr: any[]) => arr).length > 0
-        ? reqs.map((r: any) => r.name)
-        : [];
-      
-      // Fetch all requirement costs in a single query
-      const reqUuids = reqs.map((r: any) => r.id).filter(Boolean);
-      let costsMap: Record<string, any[]> = {};
-      
-      // Re-fetch with IDs to get costs
-      const { data: reqsWithIds } = await supabase
+      const reqsWithIds = await supabase
         .from("requirements")
         .select("id, name")
         .eq("industry_id", targetIndustryId)
         .eq("status", "active")
         .in("confidence_level", ["verified", "estimated"]);
 
-      if (reqsWithIds && reqsWithIds.length > 0) {
-        const ids = reqsWithIds.map((r: any) => r.id);
+      if (reqsWithIds.data && reqsWithIds.data.length > 0) {
+        const ids = reqsWithIds.data.map((r: any) => r.id);
         const { data: costs } = await supabase
           .from("requirement_costs")
           .select("requirement_id, cost_type, amount, currency, notes")
           .in("requirement_id", ids);
 
+        const costsMap: Record<string, any[]> = {};
         if (costs) {
           for (const cost of costs) {
             if (!costsMap[cost.requirement_id]) costsMap[cost.requirement_id] = [];
@@ -92,9 +82,8 @@ export async function generateDocumentWithAI(
           }
         }
 
-        // Merge cost info into requirements
         const nameToId: Record<string, string> = {};
-        for (const r of reqsWithIds) nameToId[r.name] = r.id;
+        for (const r of reqsWithIds.data) nameToId[r.name] = r.id;
 
         requirements = reqs.map((r: any) => {
           const rid = nameToId[r.name];
@@ -106,18 +95,16 @@ export async function generateDocumentWithAI(
     }
   }
 
-  // 4. Build rich regulatory context — with fallback from description JSON
+  // 4. Build rich regulatory context
   let industryName = business.industries?.name || null;
   let stateName = business.states?.name || null;
   let countryName = business.countries?.name || null;
   const countryCode = business.countries?.code || "";
 
-  // Fallback: parse description JSON for names when FKs are missing
   if ((!industryName || !stateName) && business.description) {
     try {
       const descData = JSON.parse(business.description);
       if (!industryName && descData.industry) {
-        // Try to get a human-readable name from the slug
         const { data: ind } = await supabase.from("industries").select("name").eq("slug", descData.industry).maybeSingle();
         industryName = ind?.name || descData.industry.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
       }
@@ -125,7 +112,6 @@ export async function generateDocumentWithAI(
         const { data: st } = await supabase.from("states").select("name").ilike("name", descData.state).maybeSingle();
         stateName = st?.name || descData.state.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
       }
-      // Assume Nigeria if no country is set (Phase 1 market)
       if (!countryName) {
         countryName = "Nigeria";
       }
@@ -134,7 +120,6 @@ export async function generateDocumentWithAI(
     }
   }
 
-  // Final defaults
   industryName = industryName || "General Business";
   stateName = stateName || "Nigeria";
   countryName = countryName || "Nigeria";
@@ -161,10 +146,23 @@ export async function generateDocumentWithAI(
       }).join("\n\n")
     : null;
 
-  // 5. Construct System Prompt
+  // 5. Fetch document template prompt if templateSlug provided
+  let templatePrompt: string | null = null;
+  if (templateSlug) {
+    const { data: tmpl } = await supabase
+      .from("document_templates")
+      .select("prompt_template")
+      .eq("slug", templateSlug)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (tmpl) templatePrompt = tmpl.prompt_template;
+  }
+
+  // 6. Construct System Prompt
   const noData = requirements.length === 0;
+  const docLabel = docType.replace(/_/g, " ");
   const systemPrompt = `You are the LaunchSafe Compliance AI, a document generation assistant for businesses in ${countryName}.
-You must generate a ${docType.replace(/_/g, " ")} for a ${industryName} business operating in ${stateName}, ${countryName}.
+You must generate a ${docLabel} for a ${industryName} business operating in ${stateName}, ${countryName}.
 
 ### STRICT RULES:
 1. NEVER invent regulatory requirements, fees, timelines, or penalties.
@@ -176,6 +174,7 @@ You must generate a ${docType.replace(/_/g, " ")} for a ${industryName} business
 4. Write in a formal, professional tone suitable for submission to government or regulatory bodies.
 5. FORMATTING: Output clean plain text. DO NOT use markdown bolding (**), italics, or hash (#) headers. Use standard plain text spacing, numbering, and UPPERCASE for section titles.
 6. ${noData ? "End the document with: 'Note: This document is a template. Compliance requirements vary by industry and location. Please consult the relevant government agencies for your specific obligations.'" : "CRITICAL: ABSOLUTELY NO DISCLAIMERS, NOTES, OR WARNINGS at the end of the document. The document MUST end immediately after the final content item."}
+${templatePrompt ? `\n### DOCUMENT STRUCTURE GUIDELINES:\n${templatePrompt}` : ""}
 
 ### BUSINESS CONTEXT:
 Business Name: ${business.name}
@@ -188,19 +187,19 @@ Description: ${business.description || "N/A"}
 ### REGULATORY REQUIREMENTS FROM LAUNCHSAFE DATABASE:
 ${reqContext || "No regulatory requirements are available in the LaunchSafe database for this industry and location."}`;
 
-  // 6. Construct User Prompt
+  // 7. Construct User Prompt
   const userPrompt = `${noData
-    ? `Generate a general ${docType.replace(/_/g, " ")} template for a ${industryName} business in ${stateName}, ${countryName}. Include common compliance categories and blank sections where the user can fill in specific regulatory details.`
-    : `Generate a ${docType.replace(/_/g, " ")} for this ${industryName} business in ${stateName}, ${countryName}.
+    ? `Generate a general ${docLabel} template for a ${industryName} business in ${stateName}, ${countryName}. Include common compliance categories and blank sections where the user can fill in specific regulatory details.`
+    : `Generate a ${docLabel} for this ${industryName} business in ${stateName}, ${countryName}.
 ${contextText ? `Additional user context:\n${contextText}` : ""}
 The document must be specific to ${countryName} regulations and ${stateName} state requirements. Reference actual agencies and laws by name.`
   }`;
 
-  // 7. Call DeepSeek
+  // 8. Call DeepSeek
   const content = await callDeepSeek(systemPrompt, userPrompt);
 
   return {
-    title: `${business.name} - ${docType.replace(/_/g, " ").toUpperCase()}`,
+    title: `${business.name} - ${docLabel.toUpperCase()}`,
     content,
   };
 }

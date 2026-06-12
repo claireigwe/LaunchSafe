@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { initiateSubscriptionPayment, saveBusinessData, addBusiness } from "../../api/onboarding-api";
-import { saveSubscription } from "@/features/billing/api/billing-api";
+import { initiateSubscriptionPayment, saveBusinessData } from "../../api/onboarding-api";
 import { logActivity } from "@/features/activity/api/activity-api";
 import { audit } from "@/features/audit/api/audit-api";
 import styles from "./payment-processing.module.css";
@@ -36,23 +35,7 @@ export function PaymentProcessing({ planId, isAnnual, onboardingData, isChangePl
     try {
       if (!isChangePlan) {
         saveBusinessData({ ...onboardingData, _savedAt: new Date().toISOString() });
-        await addBusiness({ ...onboardingData, _savedAt: new Date().toISOString() });
       }
-      const now = new Date();
-      const renewal = new Date(now);
-      renewal.setMonth(renewal.getMonth() + (isAnnual ? 12 : 1));
-      saveSubscription({
-        planId,
-        planName: plan?.name || planId,
-        billingCycle,
-        status: "active",
-        startDate: now.toISOString(),
-        nextRenewal: renewal.toISOString(),
-        cancelledAt: null,
-        pendingPlanId: null,
-        pendingPlanName: null,
-        pendingBillingCycle: null,
-      });
       logActivity("subscription_activated", "Subscription Activated", `${plan!.name} Plan - ${billingCycle === "annual" ? "Annual" : "Monthly"}`);
       audit.subscriptionActivated(`${plan!.name} (${billingCycle})`);
       const { authorizationUrl } = await initiateSubscriptionPayment(planId, billingCycle);

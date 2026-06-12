@@ -20,8 +20,9 @@ import { loadTasks, reconcileTaskStatuses, createTask } from "../../api/tasks-ap
 import { getActiveBusinessId } from "@/lib/stores/app-store";
 import { formatFileSize, type UploadDocumentInput } from "@/features/documents/api/documents-api";
 import { DOC_TYPE_LABELS } from "@/features/documents/types/documents.types";
-import { getSubscription, formatCurrency } from "@/features/billing/api/billing-api";
-import { canAccess } from "@/features/billing/api/feature-access";
+import { formatCurrency, getSubscription } from "@/features/billing/api/billing-api";
+import type { SavedSubscription } from "@/features/billing/api/billing-api";
+import { canAccess, getCurrentPlanId } from "@/features/billing/api/feature-access";
 import { SetupOverlay } from "@/features/billing/components/setup-overlay";
 import { isInSetupMode } from "@/features/billing/api/setup-check";
 import { getRegulatoryUpdates } from "@/features/regulatory-updates/api/regulatory-updates-api";
@@ -30,6 +31,7 @@ import { trackEvent } from "@/features/assessments/api/assessment-api";
 import { addBusiness } from "@/features/businesses/api/onboarding-api";
 import type { ComplianceTaskItem, CreateTaskInput } from "../../types/tasks.types";
 import type { AppDocument } from "@/features/documents/types/documents.types";
+import type { RegulatoryUpdate } from "@/types/domain/regulatory";
 import { useDocuments, useUploadDocument } from "@/features/documents/hooks/use-documents-query";
 import styles from "./dashboard-page.module.css";
 
@@ -39,9 +41,9 @@ export function DashboardPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [showUploadDoc, setShowUploadDoc] = useState(false);
   const hasBusiness = useHasBusiness();
-  const [regUpdates, setRegUpdates] = useState(getRegulatoryUpdates().slice(0, 3));
+  const [regUpdates, setRegUpdates] = useState<RegulatoryUpdate[]>([]);
   const [recentActivity, setRecentActivity] = useState<ActivityEntry[]>([]);
-  const subscription = getSubscription();
+  const [subscription, setSubscription] = useState<SavedSubscription | null>(null);
   const { data: uploadedDocs = [] } = useDocuments();
   const uploadMutation = useUploadDocument();
   const recentDocs = uploadedDocs.slice(0, 4);
@@ -124,13 +126,15 @@ export function DashboardPage() {
   async function refreshDashboard() {
     await reconcileTaskStatuses();
     setSavedTasks(loadTasks());
-    setRegUpdates(getRegulatoryUpdates().slice(0, 3));
+    const updates = await getRegulatoryUpdates();
+    setRegUpdates(updates.slice(0, 3));
     const acts = await getRecentActivity(5);
     setRecentActivity(acts);
   }
 
   useEffect(() => {
     refreshDashboard();
+    getSubscription().then(setSubscription).catch(() => {});
     const onFocus = () => refreshDashboard();
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
@@ -351,9 +355,8 @@ function DocumentsSection({ docs }: { docs: AppDocument[] }) {
 }
 
 function ReportsPreview() {
-  const sub = getSubscription();
-  const planId = sub?.planId || "starter";
-  if (planId === "starter") return null;
+  const planId = getCurrentPlanId();
+  if (!planId) return null;
   const tasks = loadTasks();
   const completed = tasks.filter((t) => t.status === "completed").length;
   const overdue = tasks.filter((t) => t.status === "overdue").length;

@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils/cn";
 import { fetchProfileAndPrefs, updateProfile, updateNotificationPrefs } from "../api/settings-api";
 import { canManageTeam } from "../api/permissions";
 import { canAccess, getCurrentPlanName } from "@/features/billing/api/feature-access";
-import { getSubscription } from "@/features/billing/api/billing-api";
 import { getBusinessData, fetchAllBusinesses } from "@/features/businesses/api/onboarding-api";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import { EmptyBusinessState } from "@/features/businesses/components/empty-business-state";
@@ -452,10 +451,16 @@ function TeamSection() {
 }
 
 function AccountSection({ router, supabase }: { router: any; supabase: any }) {
-  const sub = getSubscription();
   const [error, setError] = useState("");
   const [showDelete, setShowDelete] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [sub, setSub] = useState<{ planName: string; status: string } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/billing/data").then(r => r.json()).then(d => {
+      if (d.success && d.data?.subscription) setSub(d.data.subscription);
+    }).catch(() => {});
+  }, []);
 
   async function handleSignOut() {
     await supabase.auth.signOut();

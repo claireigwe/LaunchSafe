@@ -9,10 +9,11 @@ export async function POST(request: Request) {
   try {
     const user = await getRequiredUser();
     const body = await request.json();
-    const { docType, context, businessId } = body as {
+    const { docType, context, businessId, templateSlug } = body as {
       docType: DocumentType;
       context: string;
       businessId?: string;
+      templateSlug?: string;
     };
 
     if (!docType) {
@@ -93,7 +94,7 @@ export async function POST(request: Request) {
     }
 
     // Generate the document via AI
-    const result = await generateDocumentWithAI(docType, context || "", activeBusinessId);
+    const result = await generateDocumentWithAI(docType, context || "", activeBusinessId, templateSlug);
 
     // Persist to database
     const { data: newDoc, error: insertError } = await supabase

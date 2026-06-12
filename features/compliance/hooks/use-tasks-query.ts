@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { loadTasks, createTask, updateTask, deleteTask, completeTask } from "../api/tasks-api";
+import { refreshTasks, createTask, updateTask, deleteTask, completeTask } from "../api/tasks-api";
 import { useAppStore } from "@/lib/stores/app-store";
 import type { CreateTaskInput, UpdateTaskInput, ComplianceTaskItem } from "../types/tasks.types";
 
@@ -9,10 +9,7 @@ export function useTasks() {
   const activeBusinessId = useAppStore((s) => s.activeBusinessId);
   return useQuery({
     queryKey: ["tasks", activeBusinessId],
-    queryFn: async () => {
-      const tasks = await loadTasks();
-      return tasks;
-    },
+    queryFn: () => refreshTasks(activeBusinessId || undefined),
     staleTime: 30_000,
   });
 }

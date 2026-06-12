@@ -62,28 +62,22 @@ export async function POST(request: Request) {
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.id);
 
-    const { data: suspendedSub } = await adminSupabase
-      .from("subscriptions")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("status", "suspended")
-      .maybeSingle();
-
-    if (suspendedSub) {
-      return NextResponse.json<ApiResponse>(
-        { success: false, error: { message: "Payment required. Please set up payment for your Enterprise plan before adding a business.", code: "payment_required" } },
-        { status: 402 }
-      );
-    }
-
+    // Require an active subscription before any business can be created
     const { data: sub } = await adminSupabase
       .from("subscriptions")
-      .select("plan_id")
+      .select("plan_id, status")
       .eq("user_id", user.id)
       .in("status", ["active", "trial"])
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+
+    if (!sub) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: "A subscription is required to create a business. Please subscribe to a plan first.", code: "payment_required" } },
+        { status: 402 }
+      );
+    }
 
     let planSlug: string | null = null;
     if (sub?.plan_id) {
@@ -94,8 +88,7 @@ export async function POST(request: Request) {
         .maybeSingle();
       if (plan) planSlug = plan.slug;
     }
-    const { limits } = require("@/lib/billing/features").resolveAccess(planSlug, "active");
-    const limit = limits.businesses || 1;
+    const limit = require("@/lib/billing/features").resolveAccess(planSlug, "active").limits.businesses || 1;
 
     if (bizCount !== null && bizCount !== undefined && bizCount >= limit) {
       return NextResponse.json<ApiResponse>(
@@ -177,10 +170,11 @@ export async function POST(request: Request) {
       { success: true, data: { id: data.id, name: data.name } },
       { status: 201 }
     );
-  } catch {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "An unexpected error occurred";
     return NextResponse.json<ApiResponse>(
-      { success: false, error: { message: "Unauthorized" } },
-      { status: 401 }
+      { success: false, error: { message } },
+      { status: 500 }
     );
   }
 }

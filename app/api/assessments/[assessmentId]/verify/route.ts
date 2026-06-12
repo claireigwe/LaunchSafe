@@ -16,7 +16,7 @@ export async function POST(
     const user = await getRequiredUser();
     const { assessmentId } = await params;
     const body = await request.json();
-    const { trxref, assessmentData } = body;
+    const { trxref } = body;
 
     if (!trxref) {
       return NextResponse.json<ApiResponse>(
@@ -32,6 +32,7 @@ export async function POST(
       );
     }
 
+    // Verify payment with Paystack server-side
     const verifyRes = await fetch(`${PAYSTACK_VERIFY_API}/${encodeURIComponent(trxref)}`, {
       headers: {
         Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
@@ -47,21 +48,34 @@ export async function POST(
       );
     }
 
-    // Save to database
     const supabase = createAdminClient() as any;
 
+    // Build report from server-stored data, never from client
+    let report: AssessmentFullReport | null = null;
+
     if (assessmentId !== "pending") {
-      // Check if assessment already exists
-      const { data: existingAssessment } = await supabase
+      const { data: existing } = await supabase
         .from("assessments")
-        .select("results_json, status")
+        .select("wizard_data, results_json, status")
         .eq("id", assessmentId)
+        .eq("user_id", user.id)
         .maybeSingle();
+
+      if (existing?.wizard_data) {
+        // Preferred: regenerate report from stored wizard data
+        report = generateFullReport(existing.wizard_data);
+      } else if (existing?.results_json) {
+        // Fallback: use already-generated report
+        report = existing.results_json as AssessmentFullReport;
+      }
     }
 
-    const report = generateFullReport(assessmentData || {});
+    // Last resort: generate from client data (only for brand-new "pending" assessments)
+    if (!report) {
+      report = generateFullReport(body.assessmentData || {});
+    }
 
-    // 1. Create or get payment record
+    // Create or get payment record
     let paymentId;
     const { data: existingPayment } = await supabase
       .from("payments")
@@ -86,7 +100,7 @@ export async function POST(
         })
         .select()
         .single();
-        
+
       if (paymentError) throw new Error(`Failed to create payment record: ${paymentError.message}`);
       paymentId = newPayment.id;
     }
@@ -114,7 +128,7 @@ export async function POST(
         })
         .select()
         .single();
-      
+
       if (insertError) throw new Error(`Failed to insert assessment: ${insertError.message}`);
       finalAssessmentId = newAss.id;
     } else {
@@ -129,7 +143,7 @@ export async function POST(
       if (updateError) throw new Error(`Failed to update assessment: ${updateError.message}`);
     }
 
-    // 3. Upsert assessment purchase record (handles race condition with webhook)
+    // Upsert assessment purchase record (handles race condition with webhook)
     const { error: purchaseError } = await supabase
       .from("assessment_purchases")
       .upsert({
@@ -154,4 +168,3 @@ export async function POST(
     );
   }
 }
-

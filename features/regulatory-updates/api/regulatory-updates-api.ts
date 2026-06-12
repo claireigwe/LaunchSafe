@@ -1,15 +1,26 @@
-import { REGULATORY_UPDATES } from "../data/regulatory-updates-data";
 import { getBusinessData } from "@/features/businesses/api/onboarding-api";
 import type { RegulatoryUpdate } from "@/types/domain/regulatory";
 
-export function getRegulatoryUpdates(): RegulatoryUpdate[] {
+async function fetchUpdates(): Promise<RegulatoryUpdate[]> {
+  try {
+    const res = await fetch("/api/regulatory/updates");
+    const json = await res.json();
+    return json.success ? (json.data || []) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getRegulatoryUpdates(): Promise<RegulatoryUpdate[]> {
   const saved = getBusinessData() as any;
   const industry = saved?.info?.industry || "";
 
-  return REGULATORY_UPDATES
+  const all = await fetchUpdates();
+
+  return all
     .filter((u) => u.isPublished)
     .filter((u) => {
-      if (u.affectedIndustries.length === 0) return true;
+      if (!u.affectedIndustries || u.affectedIndustries.length === 0) return true;
       if (!industry) return true;
       return u.affectedIndustries.includes(industry);
     })
@@ -17,5 +28,5 @@ export function getRegulatoryUpdates(): RegulatoryUpdate[] {
 }
 
 export function getRegulatoryUpdate(id: string): RegulatoryUpdate | undefined {
-  return REGULATORY_UPDATES.find((u) => u.id === id);
+  return undefined;
 }

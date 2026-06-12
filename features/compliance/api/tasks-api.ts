@@ -4,23 +4,6 @@ import { logActivity } from "@/features/activity/api/activity-api";
 import { audit } from "@/features/audit/api/audit-api";
 import { getActiveBusinessId } from "@/lib/stores/app-store";
 
-function tasksKey(businessId?: string): string {
-  const bid = businessId || getActiveBusinessId() || "default";
-  return `launchsafe-tasks-${bid}`;
-}
-
-/* ----- localStorage fallback ----- */
-function loadLocal(businessId?: string): ComplianceTaskItem[] {
-  try {
-    const raw = localStorage.getItem(tasksKey(businessId));
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
-
-function saveLocal(tasks: ComplianceTaskItem[], businessId?: string): void {
-  try { localStorage.setItem(tasksKey(businessId), JSON.stringify(tasks)); } catch {}
-}
-
 /* ----- API helpers ----- */
 async function apiGet<T>(url: string): Promise<T | null> {
   try {
@@ -54,164 +37,146 @@ async function apiDelete(url: string, body: any): Promise<boolean> {
   } catch { return false; }
 }
 
-function genId(): string {
-  try { return crypto.randomUUID(); } catch { return `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
+/* ----- In-memory cache (source of truth for the session) ----- */
+let tasksCache: ComplianceTaskItem[] | null = null;
+let cacheBusinessId: string | null = null;
+
+function cacheKey(businessId?: string): string {
+  return `launchsafe-tasks-${businessId || getActiveBusinessId() || "default"}`;
 }
 
-function computeInitialStatus(dueDate: string | undefined | null): "pending" | "overdue" {
-  if (!dueDate) return "pending";
-  const due = new Date(dueDate);
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  return due < now ? "overdue" : "pending";
-}
-
-/* ----- Public API ----- */
-
-let syncPromise: Promise<void> | null = null;
-let lastLocalMutation: number = Date.now();
-
-function triggerSync(): void {
-  if (syncPromise) return;
-  const businessId = getActiveBusinessId();
-  if (!businessId) return;
-  const startTime = Date.now();
-  syncPromise = (async () => {
-    try {
-      const server = await apiGet<ComplianceTaskItem[]>(`/api/compliance?businessId=${businessId}`);
-      if (server) {
-        const local = loadLocal(businessId);
-        if (lastLocalMutation < startTime && server.length >= local.length) {
-          saveLocal(server, businessId);
-        } else if (server.length < local.length) {
-          console.log("[LaunchSafe] triggerSync: server has fewer tasks than local, skipping overwrite", { serverCount: server.length, localCount: local.length });
-        }
-      }
-    } catch {} finally {
-      syncPromise = null;
-    }
-  })();
-}
-
-const OLD_TASKS_KEY = "launchsafe-tasks";
-
-export function loadTasks(): ComplianceTaskItem[] {
-  triggerSync();
-
-  const businessId = getActiveBusinessId();
-  const tasks = loadLocal(businessId || undefined);
-
-  if (tasks.length === 0 && businessId) {
-    try {
-      const oldRaw = localStorage.getItem(OLD_TASKS_KEY);
-      if (oldRaw) {
-        const oldTasks: ComplianceTaskItem[] = JSON.parse(oldRaw);
-        if (oldTasks.length > 0) {
-          const migrated = oldTasks.map((t) => ({ ...t, businessId }));
-          saveLocal(migrated, businessId || undefined);
-          try { localStorage.removeItem(OLD_TASKS_KEY); } catch {}
-          return migrated;
-        }
-      }
-    } catch {}
-  }
-
-  console.log("[LaunchSafe] loadTasks returning", { count: tasks.length, businessId });
-  return tasks;
-}
-
-export async function ensureTasksSynced(): Promise<ComplianceTaskItem[]> {
-  const businessId = getActiveBusinessId();
-  if (!businessId) return loadLocal();
+function hydrateFromLocal(businessId?: string): ComplianceTaskItem[] {
   try {
-    const server = await apiGet<ComplianceTaskItem[]>(`/api/compliance?businessId=${businessId}`);
-    if (server) {
-      saveLocal(server, businessId);
-      return server;
-    }
-  } catch {}
-  return loadLocal(businessId);
+    const raw = localStorage.getItem(cacheKey(businessId));
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
 }
 
-export function saveTasks(tasks: ComplianceTaskItem[], businessId?: string): void {
-  saveLocal(tasks, businessId);
+function persistToLocal(tasks: ComplianceTaskItem[], businessId?: string): void {
+  try { localStorage.setItem(cacheKey(businessId), JSON.stringify(tasks)); } catch {}
 }
 
-export async function createTask(input: CreateTaskInput & { source?: TaskSource; suggestionReason?: string | null }, businessId?: string): Promise<ComplianceTaskItem> {
-  const bid = businessId || getActiveBusinessId() || "";
-  const now = new Date().toISOString();
-  const taskId = genId();
-  const localTask: ComplianceTaskItem = {
-    id: taskId,
-    businessId: bid,
-    title: input.title,
-    description: input.description || "",
-    dueDate: input.dueDate || null,
-    priority: input.priority,
-    status: computeInitialStatus(input.dueDate),
-    source: input.source || "manual",
-    suggestionReason: input.suggestionReason ?? null,
-    reminderDate: null,
-    reminderEnabled: false,
-    createdBy: "user",
-    createdAt: now,
-    updatedAt: now,
-  };
+/* ----- Server fetch ----- */
 
-  const server = await apiPost<ComplianceTaskItem>("/api/compliance", { ...input, businessId: bid, id: taskId, source: input.source || "manual", suggestionReason: input.suggestionReason ?? null });
+export async function refreshTasks(businessId?: string): Promise<ComplianceTaskItem[]> {
+  const bid = businessId || getActiveBusinessId();
+  if (!bid) return [];
+
+  const server = await apiGet<ComplianceTaskItem[]>(`/api/compliance?businessId=${bid}`);
   if (server) {
-    lastLocalMutation = Date.now();
-    const tasks = loadLocal();
-    tasks.push(server);
-    saveLocal(tasks);
-    console.log("[LaunchSafe] createTask: server success", { taskTitle: server.title, totalTasks: tasks.length, bid });
-    triggerTaskCreated(server);
-    logActivity("task_created", "New Task Created", server.title);
+    tasksCache = server;
+    cacheBusinessId = bid;
+    persistToLocal(server, bid);
     return server;
   }
 
-  console.log("[LaunchSafe] createTask: POST failed, saving locally", { taskTitle: localTask.title, bid });
-  lastLocalMutation = Date.now();
-  const tasks = loadLocal();
-  tasks.push(localTask);
-  saveLocal(tasks);
-  triggerTaskCreated(localTask);
-  logActivity("task_created", "New Task Created", localTask.title);
-  audit.taskCreated(localTask.id, localTask.title);
-  return localTask;
+  // Server down — fall back to cache or localStorage
+  if (tasksCache && cacheBusinessId === bid) return tasksCache;
+  const local = hydrateFromLocal(bid);
+  tasksCache = local;
+  cacheBusinessId = bid;
+  return local;
+}
+
+/* ----- Synchronous read (returns cached data, triggers background refresh) ----- */
+
+export function loadTasks(): ComplianceTaskItem[] {
+  const bid = getActiveBusinessId();
+
+  // Return cache if it matches the current business
+  if (tasksCache && cacheBusinessId === bid) {
+    return tasksCache;
+  }
+
+  // Hydrate cache from localStorage
+  const local = hydrateFromLocal(bid || undefined);
+  tasksCache = local;
+  cacheBusinessId = bid || null;
+
+  // Trigger background server refresh
+  if (bid) {
+    refreshTasks(bid).then((server) => {
+      tasksCache = server;
+      cacheBusinessId = bid;
+    }).catch(() => {});
+  }
+
+  return tasksCache;
+}
+
+export async function ensureTasksSynced(): Promise<ComplianceTaskItem[]> {
+  return refreshTasks();
+}
+
+export function saveTasks(tasks: ComplianceTaskItem[], businessId?: string): void {
+  tasksCache = tasks;
+  cacheBusinessId = businessId || getActiveBusinessId() || null;
+  persistToLocal(tasks, businessId);
+}
+
+/* ----- Mutations (server-first) ----- */
+
+export async function createTask(input: CreateTaskInput & { source?: TaskSource; suggestionReason?: string | null }, businessId?: string): Promise<ComplianceTaskItem> {
+  const bid = businessId || getActiveBusinessId() || "";
+
+  const server = await apiPost<ComplianceTaskItem>("/api/compliance", {
+    ...input,
+    businessId: bid,
+    source: input.source || "manual",
+    suggestionReason: input.suggestionReason ?? null,
+  });
+
+  if (!server) {
+    throw new Error("Failed to create task on server. Please try again.");
+  }
+
+  // Update cache
+  const tasks = tasksCache && cacheBusinessId === bid ? [...tasksCache] : [];
+  tasks.push(server);
+  tasksCache = tasks;
+  cacheBusinessId = bid;
+  persistToLocal(tasks, bid);
+
+  triggerTaskCreated(server);
+  logActivity("task_created", "New Task Created", server.title);
+  return server;
 }
 
 export async function updateTask(id: string, input: UpdateTaskInput): Promise<ComplianceTaskItem | null> {
   const businessId = getActiveBusinessId();
+
   const server = await apiPatch<ComplianceTaskItem>("/api/compliance", { id, ...input, businessId });
-  if (server) {
-    lastLocalMutation = Date.now();
-    const tasks = loadLocal();
-    const idx = tasks.findIndex((t) => t.id === id);
-    if (idx >= 0) tasks[idx] = server;
-    else tasks.push(server);
-    saveLocal(tasks);
-    return server;
+  if (!server) {
+    throw new Error("Failed to update task on server. Please try again.");
   }
 
-  lastLocalMutation = Date.now();
-  const tasks = loadLocal();
-  const idx = tasks.findIndex((t) => t.id === id);
-  if (idx === -1) return null;
-  tasks[idx] = { ...tasks[idx], ...input, updatedAt: new Date().toISOString() };
-  if (input.dueDate) tasks[idx].status = computeInitialStatus(input.dueDate);
-  saveLocal(tasks);
-  return tasks[idx];
+  // Update cache
+  if (tasksCache) {
+    const idx = tasksCache.findIndex((t) => t.id === id);
+    if (idx >= 0) {
+      tasksCache = [...tasksCache];
+      tasksCache[idx] = server;
+    } else {
+      tasksCache = [...tasksCache, server];
+    }
+    persistToLocal(tasksCache, businessId || undefined);
+  }
+
+  return server;
 }
 
 export async function deleteTask(id: string): Promise<void> {
-  const deletedTask = loadLocal().find((t) => t.id === id);
   const businessId = getActiveBusinessId();
-  await apiDelete("/api/compliance", { id, businessId });
-  lastLocalMutation = Date.now();
-  const tasks = loadLocal().filter((t) => t.id !== id);
-  saveLocal(tasks);
-  if (deletedTask) audit.taskDeleted(id, deletedTask.title);
+  const ok = await apiDelete("/api/compliance", { id, businessId });
+  if (!ok) {
+    throw new Error("Failed to delete task on server. Please try again.");
+  }
+
+  // Update cache
+  if (tasksCache) {
+    tasksCache = tasksCache.filter((t) => t.id !== id);
+    persistToLocal(tasksCache, businessId || undefined);
+  }
 }
 
 export async function completeTask(id: string): Promise<ComplianceTaskItem | null> {
@@ -232,25 +197,40 @@ export async function addSuggestedTask(suggested: { title: string; description: 
 }
 
 export async function reconcileTaskStatuses(): Promise<void> {
-  const tasks = loadLocal();
+  const bid = getActiveBusinessId();
+  if (!bid) return;
+
+  // Fetch fresh data from server
+  const server = await apiGet<ComplianceTaskItem[]>(`/api/compliance?businessId=${bid}`);
+  if (!server) return;
+
   const now = new Date();
   now.setHours(0, 0, 0, 0);
   let changed = false;
-  for (const t of tasks) {
-    if (t.status === "completed") continue;
+  const updated = server.map((t) => {
+    if (t.status === "completed") return t;
     if (t.dueDate) {
       const due = new Date(t.dueDate);
       if (due < now && t.status !== "overdue") {
-        t.status = "overdue";
-        t.updatedAt = new Date().toISOString();
         changed = true;
+        return { ...t, status: "overdue" as const, updatedAt: new Date().toISOString() };
+      }
+    }
+    return t;
+  });
+
+  if (changed) {
+    // Update each overdue task on the server
+    for (const t of updated) {
+      if (t.status === "overdue") {
+        await apiPatch("/api/compliance", { id: t.id, status: "overdue", businessId: bid });
         triggerTaskOverdue(t.title);
       }
     }
   }
-  if (changed) {
-    lastLocalMutation = Date.now();
-    saveLocal(tasks);
-  }
+
+  tasksCache = updated;
+  cacheBusinessId = bid;
+  persistToLocal(updated, bid);
   syncDeadlineNotifications().catch(() => {});
 }

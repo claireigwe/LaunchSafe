@@ -57,6 +57,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // Verify the user owns this business
+    const { data: business } = await supabase
+      .from("businesses")
+      .select("id")
+      .eq("id", businessId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!business) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: "Business not found or access denied" } },
+        { status: 403 }
+      );
+    }
+
     let score: number;
     let breakdown: any;
 
