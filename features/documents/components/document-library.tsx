@@ -10,7 +10,7 @@ import { DocumentDetailModal } from "./document-detail-modal";
 import { DocumentGeneratorModal } from "./document-generator-modal";
 import { SuggestedDocumentsWidget } from "./suggested-documents-widget";
 import { useDocuments, useGeneratedDocuments, useUploadDocument, useDeleteDocument } from "../hooks/use-documents-query";
-import type { UploadDocumentInput } from "../api/documents-api";
+import { downloadDocument, type UploadDocumentInput } from "../api/documents-api";
 import { DOC_TYPE_LABELS_GEN } from "../api/document-generation";
 import type { DocType, AppDocument } from "../types/documents.types";
 import { SetupOverlay } from "@/features/billing/components/setup-overlay";
@@ -157,17 +157,7 @@ export function DocumentLibrary() {
   async function handleDownload(doc: AppDocument) {
     if (doc.fileUrl) {
       try {
-        const res = await fetch(doc.fileUrl);
-        const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.style.display = "none";
-        a.href = url;
-        a.download = doc.fileName || "document";
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        await downloadDocument(doc);
         trackEvent("Document Downloaded", { id: doc.id });
       } catch (err) {
         // Fallback if CORS prevents blob fetch

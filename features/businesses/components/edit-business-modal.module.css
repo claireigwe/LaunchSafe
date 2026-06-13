@@ -3,7 +3,8 @@
 .header { display: flex; align-items: center; justify-content: space-between; padding: 24px 24px 0; flex-shrink: 0; }
 .title { font-family: var(--font-headline-headline-small-fontFamily); font-size: 20px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0; }
 .close { background: none; border: none; font-size: 28px; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; padding: 0 4px; line-height: 1; }
-.form { padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; flex: 1; }
+.form { padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; flex: 1; scrollbar-width: none; -ms-overflow-style: none; }
+.form::-webkit-scrollbar { display: none; }
 .form::-webkit-scrollbar { width: 4px; }
 .form::-webkit-scrollbar-track { background: transparent; }
 .form::-webkit-scrollbar-thumb { background: var(--color-role-light-outlineVariant); border-radius: 4px; }

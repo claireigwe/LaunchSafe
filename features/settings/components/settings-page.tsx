@@ -393,7 +393,7 @@ function TeamSection() {
       <Section title="Team" subtitle="Manage who has access to your business.">
         <div className={styles.emptyCard}>
           <p className={styles.emptyText}>
-            Team collaboration is available on the <strong>Enterprise</strong> plan. You are currently on the <strong>{currentPlan}</strong> plan.
+            Team collaboration is available on the <strong>Enterprise</strong> plan.{currentPlan ? <> You are currently on the <strong>{currentPlan}</strong> plan.</> : ''}
           </p>
           <Button variant="primary" size="md" onClick={() => window.location.href = "/settings/billing"}>
             Upgrade to Enterprise

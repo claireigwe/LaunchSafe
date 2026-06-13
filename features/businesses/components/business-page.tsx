@@ -212,8 +212,8 @@ export function BusinessPage() {
         <h1 className={styles.title}>Business{count > 1 ? ` (${count})` : ""}</h1>
         <p className={styles.subtitle}>
           {canAddBiz
-            ? `${count} of ${planLimit} businesses on your ${planName} plan.`
-            : `${count} business on your ${planName} plan. Upgrade to add more.`}
+            ? `${count} of ${planLimit} businesses on your ${planName || "current"} plan.`
+            : `${count} business on your ${planName || "current"} plan. Upgrade to add more.`}
         </p>
         <div className={styles.headerActions}>
           {canAddBiz && !atLimit && (
@@ -231,7 +231,7 @@ export function BusinessPage() {
 
       {showLimitBanner && (
         <div className={styles.limitBanner}>
-          <span>Your {getCurrentPlanName()} plan allows up to {getPlanLimit("businesses")} businesses. Please upgrade to add more.</span>
+          <span>Your plan allows up to {getPlanLimit("businesses")} businesses. Please upgrade to add more.</span>
           <button type="button" className={styles.limitBannerClose} onClick={() => setShowLimitBanner(false)}>×</button>
         </div>
       )}
@@ -272,7 +272,7 @@ export function BusinessPage() {
           </div>
 
           <div className={styles.planSummary}>
-            <span className={styles.planLabel}>{planName} Plan</span>
+            <span className={styles.planLabel}>{planName || "Current"} Plan</span>
             <span className={styles.planCount}>{count} of {planLimit} used</span>
             <Button variant="ghost" size="sm" fullWidth onClick={() => router.push("/settings/billing")}>Manage Billing</Button>
           </div>

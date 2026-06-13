@@ -65,9 +65,9 @@ export async function uploadDocument(input: UploadDocumentInput): Promise<AppDoc
   return doc;
 }
 
-export async function getDocuments(): Promise<AppDocument[]> {
-  const businessId = getActiveBusinessId();
-  const data = await apiGet<AppDocument[]>(`/api/documents${businessId ? `?businessId=${businessId}` : ""}`);
+export async function getDocuments(businessId?: string): Promise<AppDocument[]> {
+  const bid = businessId || getActiveBusinessId();
+  const data = await apiGet<AppDocument[]>(`/api/documents${bid ? `?businessId=${bid}` : ""}`);
   return data || [];
 }
 
@@ -101,6 +101,23 @@ export function formatFileSize(bytes: number): string {
 export async function getDocumentsByType(type: DocType): Promise<AppDocument[]> {
   const allDocs = await getDocuments();
   return allDocs.filter((d) => d.docType === type);
+}
+
+export async function downloadDocument(doc: AppDocument): Promise<void> {
+  if (!doc.fileUrl) return;
+  try {
+    const res = await fetch(doc.fileUrl);
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.style.display = "none";
+    a.href = url;
+    a.download = doc.fileName || "document";
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch {}
 }
 
 export async function searchDocuments(query: string, typeFilter?: string): Promise<AppDocument[]> {

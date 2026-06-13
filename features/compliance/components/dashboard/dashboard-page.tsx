@@ -28,7 +28,7 @@ import { isInSetupMode } from "@/features/billing/api/setup-check";
 import { getRegulatoryUpdates } from "@/features/regulatory-updates/api/regulatory-updates-api";
 import { getRecentActivity, type ActivityEntry } from "@/features/activity/api/activity-api";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
-import { addBusiness } from "@/features/businesses/api/onboarding-api";
+import { addBusiness, fetchAllBusinesses } from "@/features/businesses/api/onboarding-api";
 import type { ComplianceTaskItem, CreateTaskInput } from "../../types/tasks.types";
 import type { AppDocument } from "@/features/documents/types/documents.types";
 import type { RegulatoryUpdate } from "@/types/domain/regulatory";
@@ -44,12 +44,14 @@ export function DashboardPage() {
   const [regUpdates, setRegUpdates] = useState<RegulatoryUpdate[]>([]);
   const [recentActivity, setRecentActivity] = useState<ActivityEntry[]>([]);
   const [subscription, setSubscription] = useState<SavedSubscription | null>(null);
+  const [businessCount, setBusinessCount] = useState(0);
   const { data: uploadedDocs = [] } = useDocuments();
   const uploadMutation = useUploadDocument();
   const recentDocs = uploadedDocs.slice(0, 4);
   const [setupMsg, setSetupMsg] = useState<string | null>(null);
   const [aiInsight, setAiInsight] = useState<string | null>(null);
   const [aiInsightLoading, setAiInsightLoading] = useState(false);
+  const [aiInsightError, setAiInsightError] = useState<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -89,8 +91,9 @@ export function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (!canAccess("ai_compliance")) return;
+    if (savedTasks.length === 0) return;
     setAiInsightLoading(true);
+    setAiInsightError(null);
 
     const completedCount = savedTasks.filter(t => t.status === "completed").length;
     const overdueTasks = savedTasks.filter(t => t.status === "overdue");
@@ -117,9 +120,11 @@ export function DashboardPage() {
       if (json.success && json.data?.content) {
         const cleaned = json.data.content.replace(/\*\*/g, "").replace(/\*/g, "");
         setAiInsight(cleaned);
+      } else {
+        setAiInsightError(json.error?.message || "AI insight unavailable");
       }
     })
-    .catch(() => {})
+    .catch(() => setAiInsightError("Failed to get AI insight"))
     .finally(() => setAiInsightLoading(false));
   }, [savedTasks]);
 
@@ -135,6 +140,7 @@ export function DashboardPage() {
   useEffect(() => {
     refreshDashboard();
     getSubscription().then(setSubscription).catch(() => {});
+    fetchAllBusinesses().then((biz) => setBusinessCount(biz.length)).catch(() => {});
     const onFocus = () => refreshDashboard();
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
@@ -450,9 +456,14 @@ function EmptyTasks({ onAddTask }: { onAddTask: () => void }) {
               <p className={styles.aiInsightText} style={{ opacity: 0.5 }}>Loading insight...</p>
             </div>
           )}
+          {aiInsightError && !aiInsightLoading && (
+            <div className={styles.aiInsightCard}>
+              <p className={styles.aiInsightText} style={{ color: "var(--color-role-light-onSurfaceVariant)", fontSize: 12 }}>{aiInsightError}</p>
+            </div>
+          )}
           <PastReportsWidget />
           {subscription && <SubscriptionStatus sub={subscription} />}
-          <BusinessOverview business={data.business} />
+          <BusinessOverview business={data.business} businessCount={businessCount} />
           <RecentActivity activities={recentActivity} />
         </aside>
       </div>

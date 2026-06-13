@@ -4,14 +4,16 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils/cn";
-import { AlertTriangle, Loader2, Upload, Sparkles } from "lucide-react";
-import { fetchEvidence, linkDocumentAsEvidenceAPI } from "@/features/compliance/api/evidence-api";
-import { getDocuments, uploadDocument } from "@/features/documents/api/documents-api";
+import { AlertTriangle, Loader2, Upload, Sparkles, X } from "lucide-react";
+import { fetchEvidence, linkDocumentAsEvidenceAPI, removeEvidence } from "@/features/compliance/api/evidence-api";
+import { getDocuments, uploadDocument, downloadDocument } from "@/features/documents/api/documents-api";
 import { DocumentUploadModal } from "@/features/documents/components/document-upload-modal";
+import { DocumentDetailModal } from "@/features/documents/components/document-detail-modal";
 import { canAccess } from "@/features/billing/api/feature-access";
 import type { ComplianceTaskItem, UpdateTaskInput, TaskPriority, TaskStatus } from "../../types/tasks.types";
 import type { EvidenceRecord } from "@/features/compliance/api/evidence-api";
 import type { UploadDocumentInput } from "@/features/documents/api/documents-api";
+import type { AppDocument } from "@/features/documents/types/documents.types";
 import styles from "./task-detail-modal.module.css";
 
 interface Props {
@@ -35,6 +37,8 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [evidenceDoc, setEvidenceDoc] = useState<AppDocument | null>(null);
+  const [removingEvidenceId, setRemovingEvidenceId] = useState<string | null>(null);
   const [aiExplanation, setAiExplanation] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -64,11 +68,23 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
     }
   }
 
+  async function handleRemoveEvidence(evidenceId: string) {
+    setRemovingEvidenceId(evidenceId);
+    try {
+      await removeEvidence(evidenceId);
+      setEvidence((prev) => prev.filter((e) => e.id !== evidenceId));
+    } catch {
+      alert("Failed to remove evidence");
+    } finally {
+      setRemovingEvidenceId(null);
+    }
+  }
+
   useEffect(() => {
     async function loadData() {
       const allEvidence = await fetchEvidence();
       setEvidence(allEvidence.filter(e => e.complianceTaskId === task.id));
-      const docs = await getDocuments();
+      const docs = await getDocuments(task.businessId);
       setAvailableDocs(docs);
     }
     loadData();
@@ -215,33 +231,80 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
               )}
 
               {evidence.length > 0 && (
-                <div className={styles.section}>
-                  <h4 className={styles.sectionTitle}>Evidence ({evidence.length})</h4>
-                  {evidence.map((e) => (
-                    <div key={e.id} className={styles.evidenceItem}>
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7L5.5 9.5L11 4" stroke="var(--color-key-success)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                      <span className={styles.evidenceTitle}>{e.documentTitle}</span>
-                    </div>
-                  ))}
+                <div className={styles.evidenceSection}>
+                  <h4 className={styles.evidenceSectionTitle}>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.2" fill="none" /><path d="M5 5H11M5 8H11M5 11H8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /></svg>
+                    Linked Documents ({evidence.length})
+                  </h4>
+                  <div className={styles.evidenceList}>
+                    {evidence.map((e) => (
+                      <button
+                        key={e.id}
+                        type="button"
+                        className={styles.evidenceCard}
+                        onClick={() => {
+                          const doc = availableDocs.find((d) => d.id === e.documentId);
+                          if (doc) setEvidenceDoc(doc);
+                        }}
+                      >
+                        <div className={styles.evidenceCardIcon}>
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 2H13C13.6 2 14 2.4 14 3V13C14 13.6 13.6 14 13 14H3C2.4 14 2 13.6 2 13V3C2 2.4 2.4 2 3 2Z" stroke="var(--color-role-light-primary)" strokeWidth="1.2" fill="none" /><path d="M3 7H13M3 10H13" stroke="var(--color-role-light-primary)" strokeWidth="1.2" /></svg>
+                        </div>
+                        <div className={styles.evidenceCardBody}>
+                          <span className={styles.evidenceCardTitle}>{e.documentTitle}</span>
+                          <span className={styles.evidenceCardDate}>{new Date(e.uploadedAt).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}</span>
+                        </div>
+                        {task.status !== "completed" && (
+                          <button
+                            type="button"
+                            className={styles.evidenceRemoveBtn}
+                            onClick={(ev) => { ev.stopPropagation(); handleRemoveEvidence(e.id); }}
+                            disabled={removingEvidenceId === e.id}
+                            title="Remove evidence"
+                          >
+                            {removingEvidenceId === e.id ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />}
+                          </button>
+                        )}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+              )}
+
+              {evidenceDoc && (
+                <DocumentDetailModal
+                  doc={evidenceDoc}
+                  onUpdate={() => {}}
+                  onDelete={() => setEvidenceDoc(null)}
+                  onDownload={(d) => { downloadDocument(d); }}
+                  onClose={() => setEvidenceDoc(null)}
+                />
               )}
 
               <div className={styles.linkDocRow}>
                 {showLinkDoc ? (
                   <div className={styles.linkDocDropdown}>
                     <p className={styles.linkDocLabel}>Select a document to link as evidence:</p>
-                    {availableDocs.length === 0 ? (
-                      <button type="button" className={styles.uploadFromLinkBtn} onClick={() => setShowUploadModal(true)}>
-                        <Upload size={14} />
-                        Upload a Document
-                      </button>
-                    ) : (
-                      availableDocs.map((d) => (
-                        <button key={d.id} type="button" className={styles.linkDocItem} onClick={() => handleLinkDoc(d.id, d.title)}>
-                          {d.title}
-                        </button>
-                      ))
-                    )}
+                    <div className={styles.linkDocList}>
+                      {(() => {
+                        const linkedIds = new Set(evidence.map((e) => e.documentId).filter(Boolean));
+                        const unlinked = availableDocs.filter((d) => !linkedIds.has(d.id));
+                        return unlinked.length > 0 ? (
+                          unlinked.map((d) => (
+                            <button key={d.id} type="button" className={styles.linkDocItem} onClick={() => handleLinkDoc(d.id, d.title)}>
+                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 2H11C11.6 2 12 2.4 12 3V11C12 11.6 11.6 12 11 12H3C2.4 12 2 11.6 2 11V3C2 2.4 2.4 2 3 2Z" stroke="currentColor" strokeWidth="1.2" fill="none" /><path d="M3 5H11M3 8H11" stroke="currentColor" strokeWidth="1.2" /></svg>
+                              {d.title}
+                            </button>
+                          ))
+                        ) : (
+                          <p className={styles.linkDocEmpty}>All documents are already linked.</p>
+                        );
+                      })()}
+                    </div>
+                    <button type="button" className={styles.uploadFromLinkBtn} onClick={() => setShowUploadModal(true)}>
+                      <Upload size={14} />
+                      Upload a New Document
+                    </button>
                     <button type="button" className={styles.linkDocCancel} onClick={() => setShowLinkDoc(false)}>Cancel</button>
                   </div>
                 ) : (

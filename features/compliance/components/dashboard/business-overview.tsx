@@ -2,17 +2,23 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Building2, Settings, ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { canAccess, getCurrentPlanName } from "@/features/billing/api/feature-access";
+import { canAccess, getCurrentPlanName, getCurrentPlanId, getPlanLimit } from "@/features/billing/api/feature-access";
 import type { Business } from "@/types/domain/business";
 import styles from "./business-overview.module.css";
 
 interface Props {
   business: Business | null;
+  businessCount?: number;
 }
 
-export function BusinessOverview({ business }: Props) {
+export function BusinessOverview({ business, businessCount = 1 }: Props) {
   const router = useRouter();
+  const planId = getCurrentPlanId();
+  const planName = getCurrentPlanName();
   const canAdd = canAccess("multi_business");
+  const planLoaded = planId !== null;
+  const limit = getPlanLimit("businesses");
+  const atLimit = planLoaded && limit > 0 && businessCount >= limit;
 
   if (!business) {
     return (
@@ -43,9 +49,17 @@ export function BusinessOverview({ business }: Props) {
       <div className={styles.body}>
         <h3 className={styles.businessName}>{business.name}</h3>
         <p className={styles.businessMeta}>{business.description || "No description"}</p>
-        {!canAdd && (
+        {planLoaded && !canAdd && (
           <div className={styles.limitNotice}>
-            <span>1 business on your {getCurrentPlanName()} plan.</span>
+            <span>{businessCount} business{businessCount > 1 ? "es" : ""} on your {planName || "current"} plan.</span>
+            <button type="button" className={styles.upgradeLink} onClick={() => router.push("/business-onboarding?mode=change-plan")}>
+              <ArrowUp size={12} /> Upgrade
+            </button>
+          </div>
+        )}
+        {planLoaded && atLimit && (
+          <div className={styles.limitNotice}>
+            <span>You have reached the limit of {limit} business{limit > 1 ? "es" : ""} on your {planName} plan.</span>
             <button type="button" className={styles.upgradeLink} onClick={() => router.push("/business-onboarding?mode=change-plan")}>
               <ArrowUp size={12} /> Upgrade
             </button>

@@ -34,6 +34,19 @@ export async function getFileUrl(storagePath: string): Promise<string | null> {
     const supabase = createAdminClient();
     const { data } = await supabase.storage
       .from(BUCKET)
+      .createSignedUrl(storagePath, 86400);
+
+    return data?.signedUrl || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getDownloadUrl(storagePath: string): Promise<string | null> {
+  try {
+    const supabase = createAdminClient();
+    const { data } = await supabase.storage
+      .from(BUCKET)
       .createSignedUrl(storagePath, 86400, { download: true });
 
     return data?.signedUrl || null;

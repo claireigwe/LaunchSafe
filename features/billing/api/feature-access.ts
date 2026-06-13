@@ -20,6 +20,8 @@ export async function refreshAccess(): Promise<AccessInfo | null> {
     const server = await fetchAccess();
     if (server) {
       cachedAccess = server;
+    } else if (!cachedAccess) {
+      cachedAccess = { planId: null, planName: "", features: [], limits: { businesses: 0, documents: 0 }, status: null };
     }
     refreshPromise = null;
     return cachedAccess;
@@ -44,5 +46,5 @@ export function getCurrentPlanId(): string | null {
 }
 
 export function getCurrentPlanName(): string {
-  return cachedAccess?.planName ?? "No Plan";
+  return cachedAccess?.planName ?? "";
 }

@@ -75,6 +75,7 @@ export async function POST(request: Request) {
         business_id: resolvedBusinessId,
         compliance_task_id: complianceTaskId,
         requirement_id: doc.requirement_id,
+        document_id: documentId,
         title: doc.title,
         description: doc.content || "Linked from generated document",
         file_url: fileUrlToSave,
@@ -101,6 +102,7 @@ export async function POST(request: Request) {
         success: true,
         data: {
           id: ev.id,
+          documentId: ev.document_id,
           businessId: ev.business_id,
           complianceTaskId: ev.compliance_task_id,
           requirementId: ev.requirement_id,

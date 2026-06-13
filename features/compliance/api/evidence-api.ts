@@ -67,3 +67,15 @@ export async function linkDocumentAsEvidenceAPI(
 
   return json.data as EvidenceRecord;
 }
+
+export async function removeEvidence(evidenceId: string): Promise<void> {
+  const res = await fetch("/api/evidence", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: evidenceId }),
+  });
+  const json = await res.json();
+  if (!json.success) {
+    throw new Error(json.error?.message || "Failed to remove evidence");
+  }
+}

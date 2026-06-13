@@ -1,5 +1,6 @@
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
-.modal { background: var(--color-role-light-surfaceBright); border-radius: 20px; width: 100%; max-width: 560px; box-shadow: 0 20px 60px rgba(0,0,0,.12); max-height: 90vh; overflow-y: auto; }
+.modal { background: var(--color-role-light-surfaceBright); border-radius: 20px; width: 100%; max-width: 560px; box-shadow: 0 20px 60px rgba(0,0,0,.12); max-height: 90vh; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+.modal::-webkit-scrollbar { display: none; }
 .header { display: flex; align-items: center; justify-content: space-between; padding: 24px 24px 0; }
 .title { font-family: var(--font-headline-headline-small-fontFamily); font-size: 20px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0; }
 .close { background: none; border: none; font-size: 28px; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; padding: 0 4px; line-height: 1; }

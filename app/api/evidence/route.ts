@@ -26,6 +26,7 @@ export async function GET(request: Request) {
         
         return {
           id: row.id,
+          documentId: row.document_id,
           businessId: row.business_id,
           complianceTaskId: row.compliance_task_id,
           requirementId: row.requirement_id,
@@ -41,6 +42,37 @@ export async function GET(request: Request) {
     );
 
     return NextResponse.json<ApiResponse>({ success: true, data: evidenceRecords });
+  } catch {
+    return NextResponse.json<ApiResponse>(
+      { success: false, error: { message: "Unauthorized" } },
+      { status: 401 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const user = await getRequiredUser();
+    const supabase = createAdminClient() as any;
+    const body = await request.json();
+    const { id } = body;
+
+    if (!id) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: "Evidence ID is required" } },
+        { status: 400 }
+      );
+    }
+
+    const { error } = await supabase
+      .from("evidence")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", user.id);
+
+    if (error) throw error;
+
+    return NextResponse.json<ApiResponse>({ success: true, data: { deleted: true } });
   } catch {
     return NextResponse.json<ApiResponse>(
       { success: false, error: { message: "Unauthorized" } },

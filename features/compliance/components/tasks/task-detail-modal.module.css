@@ -1,5 +1,6 @@
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
-.modal { background: var(--color-role-light-surfaceBright); border-radius: 20px; width: 100%; max-width: 520px; box-shadow: 0 20px 60px rgba(0,0,0,0.12); max-height: 90vh; overflow-y: auto; }
+.modal { background: var(--color-role-light-surfaceBright); border-radius: 20px; width: 100%; max-width: 520px; box-shadow: 0 20px 60px rgba(0,0,0,0.12); max-height: 90vh; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+.modal::-webkit-scrollbar { display: none; }
 .header { display: flex; align-items: center; justify-content: space-between; padding: 24px 24px 0; }
 .title { font-family: var(--font-headline-headline-small-fontFamily); font-size: 20px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0; flex: 1; }
 .close { background: none; border: none; font-size: 28px; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; padding: 0 4px; line-height: 1; }
@@ -35,8 +36,19 @@
 .overdueText { color: var(--color-role-light-error); font-weight: 600; }
 .section { margin-bottom: 16px; }
 .sectionTitle { font-family: var(--font-label-label-large-fontFamily); font-size: 14px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0 0 8px; }
-.evidenceItem { display: flex; align-items: center; gap: 8px; padding: 8px 0; font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onSurface); }
-.evidenceTitle { flex: 1; }
+.evidenceSection { margin-bottom: 16px; }
+.evidenceSectionTitle { display: flex; align-items: center; gap: 6px; font-family: var(--font-label-label-large-fontFamily); font-size: 14px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0 0 10px; }
+.evidenceList { display: flex; flex-direction: column; gap: 6px; }
+.evidenceCard { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border: 1px solid var(--color-role-light-outlineVariant); border-radius: 10px; background: var(--color-role-light-surfaceContainerLow); cursor: pointer; transition: all .15s; text-align: left; }
+.evidenceCard:hover { border-color: var(--color-role-light-primary); background: var(--color-role-light-primaryContainer); }
+.evidenceCardIcon { width: 32px; height: 32px; border-radius: 8px; background: var(--color-role-light-primaryContainer); display: flex; align-items: center; justify-content: center; color: var(--color-role-light-primary); flex-shrink: 0; }
+.evidenceCardBody { flex: 1; min-width: 0; }
+.evidenceCardTitle { display: block; font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 500; color: var(--color-role-light-onSurface); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.evidenceCardDate { display: block; font-family: var(--font-label-label-small-fontFamily); font-size: 11px; color: var(--color-role-light-onSurfaceVariant); margin-top: 1px; }
+.evidenceCardArrow { color: var(--color-role-light-onSurfaceVariant); flex-shrink: 0; }
+.evidenceRemoveBtn { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: none; background: var(--color-role-light-surfaceContainer); border-radius: 6px; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; flex-shrink: 0; transition: all .15s; }
+.evidenceRemoveBtn:hover { background: var(--color-role-light-errorContainer); color: var(--color-role-light-onErrorContainer); }
+.evidenceRemoveBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 .linkDocRow { margin-bottom: 16px; }
 .linkDocBtn { display: inline-flex; align-items: center; gap: 6px; background: none; border: 1px dashed var(--color-role-light-outlineVariant); border-radius: 8px; padding: 8px 12px; font-family: var(--font-label-label-medium-fontFamily); font-size: 12px; color: var(--color-role-light-primary); cursor: pointer; transition: all .15s; }
 .linkDocBtn:hover { border-color: var(--color-role-light-primary); background: var(--color-role-light-primaryContainer); }
@@ -44,9 +56,12 @@
 .linkDocLabel { font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); margin: 0 0 4px; }
 .uploadFromLinkBtn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px dashed var(--color-role-light-primary); border-radius: 8px; background: var(--color-role-light-primaryContainer); font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 500; color: var(--color-role-light-primary); cursor: pointer; transition: all .15s; }
 .uploadFromLinkBtn:hover { background: var(--color-role-light-primary); color: var(--color-role-light-onPrimary); }
-.linkDocItem { display: block; width: 100%; padding: 8px 10px; border: none; background: none; border-radius: 6px; cursor: pointer; text-align: left; font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onSurface); transition: background .1s; }
+.linkDocItem { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border: none; background: none; border-radius: 6px; cursor: pointer; text-align: left; font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onSurface); transition: background .1s; }
+.linkDocItem svg { flex-shrink: 0; }
 .linkDocItem:hover { background: var(--color-role-light-surfaceContainer); }
 .linkDocCancel { align-self: flex-start; background: none; border: none; font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); cursor: pointer; padding: 4px 0; margin-top: 4px; }
+.linkDocList { margin-bottom: 8px; border: 1px solid var(--color-role-light-outlineVariant); border-radius: 8px; padding: 4px; }
+.linkDocEmpty { font-family: var(--font-label-label-small-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); text-align: center; padding: 12px; margin: 0; }
 .evidenceWarning { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 10px; background: var(--color-role-light-warningContainer); border: 1px solid var(--color-key-warning); }
 .warnIcon { color: var(--color-key-warning); flex-shrink: 0; margin-top: 2px; }
 .warnBody { flex: 1; }

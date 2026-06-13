@@ -28,7 +28,8 @@ export function DocumentDetailModal({ doc, onUpdate, onDelete, onDownload, onClo
   const [docType, setDocType] = useState(doc.docType);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const isPreviewable = doc.fileType === "application/pdf" || doc.fileType?.startsWith("image/");
+  const isPreviewable = !!doc.fileUrl && (doc.fileType === "application/pdf" || doc.fileType?.startsWith("image/"));
+  const hasContent = !!doc.content;
 
   function handleSaveEdit() {
     updateDocument(doc.id, {
@@ -49,7 +50,12 @@ export function DocumentDetailModal({ doc, onUpdate, onDelete, onDownload, onClo
         </div>
 
         <div className={styles.body}>
-          {previewUrl ? (
+          {previewUrl === "content" ? (
+            <div className={styles.preview}>
+              <pre className={styles.contentPreview}>{doc.content}</pre>
+              <button type="button" className={styles.closePreview} onClick={() => setPreviewUrl(null)}>Close Preview</button>
+            </div>
+          ) : previewUrl ? (
             <div className={styles.preview}>
               <iframe src={previewUrl} className={styles.iframe} title={doc.title} />
               <button type="button" className={styles.closePreview} onClick={() => setPreviewUrl(null)}>Close Preview</button>
@@ -114,7 +120,8 @@ export function DocumentDetailModal({ doc, onUpdate, onDelete, onDownload, onClo
                 )}
                 <div className={styles.rightActions}>
                   {isPreviewable && <Button type="button" variant="outline" size="sm" onClick={() => setPreviewUrl(doc.fileUrl)}><FileText size={14} /> Preview</Button>}
-                  <Button type="button" variant="outline" size="sm" onClick={() => onDownload(doc)}><Download size={14} /> Download</Button>
+                  {hasContent && <Button type="button" variant="outline" size="sm" onClick={() => setPreviewUrl("content")}><FileText size={14} /> View Content</Button>}
+                  {doc.fileUrl && <Button type="button" variant="outline" size="sm" onClick={() => onDownload(doc)}><Download size={14} /> Download</Button>}
                   <Button type="button" variant="primary" size="sm" onClick={() => setEditing(true)}><Edit3 size={14} /> Edit</Button>
                 </div>
               </div>
