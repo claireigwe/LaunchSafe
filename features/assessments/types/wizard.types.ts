@@ -4,6 +4,7 @@ export interface BusinessBasicsData {
   businessName: string;
   businessType: string;
   industry: string;
+  subIndustry: string;
   businessStage: BusinessStage | "";
 }
 
@@ -19,6 +20,7 @@ export interface BusinessActivitiesData {
 export interface LocationOperationsData {
   country: string;
   state: string;
+  lga: string;
   city: string;
   customersVisitLocation: boolean | null;
   requiresInspections: boolean | null;
@@ -43,14 +45,15 @@ export interface WizardData {
   industryQuestions: IndustryQuestionsData;
 }
 
-export type WizardStep = 1 | 2 | 3 | 4 | 5 | "processing" | "summary";
+export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6 | "processing" | "summary";
 
 export const WIZARD_STEPS: { key: WizardStep; label: string }[] = [
   { key: 1, label: "Business Basics" },
-  { key: 2, label: "Business Activities" },
-  { key: 3, label: "Location & Operations" },
-  { key: 4, label: "Team & Staffing" },
-  { key: 5, label: "Industry Details" },
+  { key: 2, label: "Industry & Sub-Industry" },
+  { key: 3, label: "Business Activities" },
+  { key: 4, label: "Location & Operations" },
+  { key: 5, label: "Team & Staffing" },
+  { key: 6, label: "Industry Details" },
 ];
 
 export function createEmptyWizardData(): WizardData {
@@ -59,6 +62,7 @@ export function createEmptyWizardData(): WizardData {
       businessName: "",
       businessType: "",
       industry: "",
+      subIndustry: "",
       businessStage: "",
     },
     activities: {
@@ -72,6 +76,7 @@ export function createEmptyWizardData(): WizardData {
     location: {
       country: "",
       state: "",
+      lga: "",
       city: "",
       customersVisitLocation: null,
       requiresInspections: null,

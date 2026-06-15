@@ -64,6 +64,8 @@ export function SuggestedTasksWidget({ onTaskAdded }: SuggestedTasksWidgetProps)
 
       const profile = saved ? {
         industry: saved.info?.industry || "",
+        subIndustry: saved.info?.subIndustry || "",
+        state: saved.info?.state || "",
         isRegistered: saved.status?.isRegistered ?? null,
         hasCAC: saved.status?.hasCAC ?? null,
         employeeCount: saved.operations?.employeeCount || "",

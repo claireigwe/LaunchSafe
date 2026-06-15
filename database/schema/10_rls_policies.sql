@@ -67,6 +67,10 @@ CREATE POLICY "Users can create assessments"
   ON public.assessments FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+CREATE POLICY "Anonymous users can create assessments"
+  ON public.assessments FOR INSERT
+  WITH CHECK (user_id IS NULL);
+
 -- =============================================
 -- Compliance Tasks
 -- =============================================

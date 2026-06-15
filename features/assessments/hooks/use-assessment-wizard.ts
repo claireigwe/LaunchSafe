@@ -82,7 +82,7 @@ export function useAssessmentWizard(): UseAssessmentWizardReturn {
   );
 
   const goNext = useCallback(() => {
-    if (typeof currentStep === "number" && currentStep < 5) {
+    if (typeof currentStep === "number" && currentStep < 6) {
       setCurrentStep((currentStep + 1) as WizardStep);
     }
   }, [currentStep]);

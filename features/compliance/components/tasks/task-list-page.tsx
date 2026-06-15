@@ -89,10 +89,15 @@ export function TaskListPage() {
           <h1 className={styles.title}>Compliance Tasks</h1>
           <p className={styles.subtitle}>Track and manage your compliance obligations.</p>
         </div>
-        <Button variant="primary" size="md" onClick={() => setShowCreate(true)}>
-          <Plus size={16} />
-          New Task
-        </Button>
+        {hasBusiness === true && (
+          <Button variant="primary" size="md" onClick={() => setShowCreate(true)}>
+            <Plus size={16} />
+            New Task
+          </Button>
+        )}
+        {hasBusiness === null && (
+          <div style={{ width: 120, height: 40, borderRadius: 10, background: "var(--color-role-light-surfaceContainer)", animation: "pulse 1.5s infinite" }} />
+        )}
       </div>
 
       <div className={styles.toolbar}>
@@ -119,7 +124,8 @@ export function TaskListPage() {
           <p className={styles.emptyText}>
             {tasks.length === 0 ? "You do not have any compliance tasks yet." : "No tasks match the selected filters."}
           </p>
-          {tasks.length === 0 && <Button variant="primary" size="md" onClick={() => setShowCreate(true)}>Create Your First Task</Button>}
+          {tasks.length === 0 && hasBusiness === true && <Button variant="primary" size="md" onClick={() => setShowCreate(true)}>Create Your First Task</Button>}
+          {tasks.length === 0 && hasBusiness === null && <p className={styles.emptyText}>Checking your account...</p>}
         </div>
       )}
 

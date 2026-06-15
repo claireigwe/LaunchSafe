@@ -10,7 +10,8 @@ export function useTasks() {
   return useQuery({
     queryKey: ["tasks", activeBusinessId],
     queryFn: () => refreshTasks(activeBusinessId || undefined),
-    staleTime: 30_000,
+    staleTime: 120_000,
+    gcTime: 300_000,
   });
 }
 

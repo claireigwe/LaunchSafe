@@ -37,7 +37,7 @@ export async function PATCH(request: Request) {
         .maybeSingle();
 
       if (sub && planId) {
-        const dbSlug = require("@/lib/billing/features").PLAN_TO_DB[planId] || planId;
+        const dbSlug = planId;
         const { data: plan } = await supabase
           .from("subscription_plans")
           .select("id")

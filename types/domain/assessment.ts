@@ -30,14 +30,47 @@ export interface AssessmentSummary {
   categories: string[];
 }
 
+/** A cost range with a label and optional note. */
+export interface CostRange {
+  label: string;
+  min: number;
+  max: number;
+  note?: string;
+}
+
+/** An item in the Common Setup Costs section. */
+export interface CommonCostItem {
+  label: string;
+  range: string;
+  reason: string;
+}
+
+/** An item in the Local Costs & Levies section. */
+export interface LocalCostItem {
+  label: string;
+  note: string;
+}
+
 /** Available only after verified payment. */
 export interface AssessmentFullReport {
+  /** Category 1: Verified regulatory requirements with costs */
   requirements: AssessmentRequirement[];
+  /** Agencies involved in the requirements */
   agencies: AssessmentAgency[];
-  totalOfficialCost: number;
-  totalEstimatedCost: number;
+  /** Category 1 summary range */
+  officialCosts: CostRange;
+  /** Category 2: Common business setup costs */
+  commonSetupCosts: CommonCostItem[];
+  commonSetupCostRange: CostRange;
+  /** Category 3: Potential local costs & levies */
+  localCosts: LocalCostItem[];
+  localCostNote: string;
+  /** Overall estimated launch budget range */
+  estimatedBudget: CostRange;
+  /** Complexity assessment */
   riskLevel: "low" | "medium" | "high";
   riskFactors: string[];
+  /** Compliance roadmap */
   roadmap: RoadmapItem[];
   generatedAt: string;
 }

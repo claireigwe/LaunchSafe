@@ -1,54 +1,31 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { BusinessInfo } from "./steps/business-info";
 import { BusinessStatus } from "./steps/business-status";
 import { BusinessOperations } from "./steps/business-operations";
-import { ProcessingProfile } from "./steps/processing-profile";
 import { SubscriptionSelect } from "./steps/subscription-select";
 import { PaymentProcessing } from "./steps/payment-processing";
-import { DashboardRedirect } from "./steps/dashboard-redirect";
-import { clearUserIntent, saveUserIntent, addBusiness, getBusinessCount, initiateSubscriptionPayment } from "../api/onboarding-api";
-import { getSubscription } from "@/features/billing/api/billing-api";
-import { schedulePlanChange } from "@/features/billing/api/billing-api";
-import { getPlanLimit } from "@/features/billing/api/feature-access";
+import { clearUserIntent, saveUserIntent } from "../api/onboarding-api";
 import type { OnboardingStep, OnboardingData } from "../types/onboarding.types";
 import { createEmptyOnboardingData, ONBOARDING_STEPS } from "../types/onboarding.types";
 import styles from "./business-onboarding-wizard.module.css";
 
 export function BusinessOnboardingWizard() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const supabase = createClient();
-  const [step, setStep] = useState<OnboardingStep>(() => {
-    return searchParams.get("mode") === "change-plan" ? 5 : 1;
-  });
+  const [step, setStep] = useState<OnboardingStep>(1);
   const [data, setData] = useState<OnboardingData>(createEmptyOnboardingData());
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isAnnual, setIsAnnual] = useState(true);
-  const [session, setSession] = useState<any>(null);
-  const mode = searchParams.get("mode");
-  const isChangePlan = mode === "change-plan";
-  const isAddBusiness = mode === "add-business";
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         saveUserIntent("existing_business");
         router.push("/signup?redirect=/business-onboarding");
-        return;
-      }
-      if (isAddBusiness) {
-        const count = await getBusinessCount();
-        if (count > 0) {
-          const limit = getPlanLimit("businesses");
-          if (count >= limit) {
-            router.push("/business?limit_reached=true");
-          }
-        }
       }
     });
   }, []);
@@ -62,25 +39,16 @@ export function BusinessOnboardingWizard() {
   }
 
   function goNext() {
-    if (step < 7) setStep((step + 1) as OnboardingStep);
+    if (step < 6) setStep((step + 1) as OnboardingStep);
   }
 
   function goBack() {
     if (step > 1) setStep((step - 1) as OnboardingStep);
   }
 
-  const handlePlanChange = useCallback(async () => {
-    if (selectedPlan) {
-      const plans: Record<string, string> = { starter: "Starter", growth: "Growth", enterprise: "Enterprise" };
-      await schedulePlanChange(selectedPlan, plans[selectedPlan] || selectedPlan, isAnnual ? "annual" : "monthly");
-      clearUserIntent();
-      router.push("/settings/billing");
-    }
-  }, [selectedPlan, isAnnual, router]);
-
-  const handleComplete = useCallback(() => {
+  function handleComplete() {
     clearUserIntent();
-  }, []);
+  }
 
   function renderStep() {
     switch (step) {
@@ -91,47 +59,49 @@ export function BusinessOnboardingWizard() {
       case 3:
         return <BusinessOperations data={data.operations} onUpdate={(v) => updateStepData("operations", v)} onNext={goNext} onBack={goBack} />;
       case 4:
-        return <ProcessingProfile onComplete={async () => {
-          try {
-            await addBusiness(data as any);
-            clearUserIntent();
-            router.push("/dashboard");
-          } catch (err: any) {
-            if (err.code === "payment_required") {
-              // Save business data — will be created after subscription payment
-              localStorage.setItem("launchsafe-pending-business", JSON.stringify(data));
-              clearUserIntent();
-              goNext();
-            } else {
-              const bizCount = await getBusinessCount();
-              if (isAddBusiness && bizCount > 0) {
-                alert(err.message || "Failed to create business.");
-                router.push("/dashboard");
-              } else {
-                goNext();
-              }
-            }
-          }
-        }} />;
-      case 5:
         return (
           <SubscriptionSelect
             selected={selectedPlan}
             onSelect={setSelectedPlan}
             isAnnual={isAnnual}
             onToggleBilling={() => setIsAnnual((p) => !p)}
-            onNext={isChangePlan ? handlePlanChange : goNext}
-            onBack={isChangePlan ? () => router.push("/settings/billing") : goBack}
+            onNext={goNext}
+            onBack={goBack}
+          />
+        );
+      case 5:
+        return (
+          <PaymentProcessing
+            planId={selectedPlan}
+            isAnnual={isAnnual}
+            onboardingData={data}
+            onComplete={goNext}
+            onBack={goBack}
           />
         );
       case 6:
-        return <PaymentProcessing planId={selectedPlan} isAnnual={isAnnual} onboardingData={data} isChangePlan={isChangePlan} onComplete={goNext} onBack={goBack} />;
-      case 7:
-        return <DashboardRedirect onComplete={handleComplete} />;
+        return (
+          <div style={{ textAlign: "center", padding: "60px 24px" }}>
+            <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--color-role-light-successContainer)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M6 14L11 19L22 8" stroke="var(--color-role-light-onSuccessContainer)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </div>
+            <h2 style={{ fontFamily: "var(--font-headline-headline-small-fontFamily)", fontSize: 22, fontWeight: 600, color: "var(--color-role-light-onSurface)", margin: "0 0 8px" }}>Payment Initiated</h2>
+            <p style={{ fontFamily: "var(--font-body-body-large-fontFamily)", fontSize: 15, color: "var(--color-role-light-onSurfaceVariant)", margin: "0 0 24px", lineHeight: 1.5 }}>
+              You'll be redirected to Paystack to complete your payment. After payment, your business will be created and you'll be taken to your dashboard.
+            </p>
+            <button
+              type="button"
+              onClick={handleComplete}
+              style={{ background: "var(--color-role-light-primary)", color: "#fff", border: "none", borderRadius: 10, padding: "14px 32px", fontFamily: "var(--font-label-label-large-fontFamily)", fontSize: 15, fontWeight: 600, cursor: "pointer" }}
+            >
+              Go to Dashboard
+            </button>
+          </div>
+        );
     }
   }
 
-  const showProgress = step >= 1 && step <= 3;
+  const showProgress = step >= 1 && step <= 4;
   const stepIndex = showProgress ? step - 1 : -1;
 
   return (

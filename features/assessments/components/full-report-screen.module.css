@@ -188,6 +188,15 @@
   margin-bottom: 8px;
 }
 
+.costNote { display: block; font-family: var(--font-label-label-small-fontFamily); font-size: 11px; color: var(--color-role-light-onSurfaceVariant); margin-top: 4px; }
+.sectionSubtitle { font-family: var(--font-body-body-medium-fontFamily); font-size: 13px; color: var(--color-role-light-onSurfaceVariant); margin: -8px 0 16px; line-height: 1.5; }
+.commonList { display: flex; flex-direction: column; gap: 8px; }
+.commonItem { background: rgba(255,255,255,0.75); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 8px 32px rgba(0,0,0,0.04); border-radius: 16px; padding: 14px 16px; }
+.commonItemHead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.commonItemLabel { font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 600; color: var(--color-role-light-onSurface); }
+.commonItemRange { font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 500; color: var(--color-role-light-primary); }
+.commonItemReason { font-family: var(--font-body-body-medium-fontFamily); font-size: 12px; color: var(--color-role-light-onSurfaceVariant); margin: 0; line-height: 1.4; }
+.localList { display: flex; flex-direction: column; gap: 8px; }
 .costValue {
   font-family: var(--font-headline-headline-small-fontFamily);
   font-size: 24px;

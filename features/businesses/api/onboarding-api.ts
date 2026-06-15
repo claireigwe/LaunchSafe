@@ -135,9 +135,11 @@ export async function addBusiness(data: Record<string, unknown>): Promise<Stored
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       name,
-      description: JSON.stringify({ industry: info.industry || "", type: info.businessType || "", state: info.state || "", fullData: data }),
+      description: JSON.stringify({ industry: info.industry || "", subIndustry: info.subIndustry || "", type: info.businessType || "", state: info.state || "", lga: info.lga || "", fullData: data }),
       industrySlug: info.industry || "",
+      subIndustrySlug: info.subIndustry || "",
       stateSlug: info.state || "",
+      lgaId: (data as any).info?.lga || (data as any).location?.lga || null,
       website: info.website || null,
       employeeCount: ops.employeeCount || null,
       details: {

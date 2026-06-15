@@ -34,6 +34,8 @@ export function PaymentProcessing({ planId, isAnnual, onboardingData, isChangePl
     setError("");
     try {
       if (!isChangePlan) {
+        // Save business data — will be created after subscription payment
+        localStorage.setItem("launchsafe-pending-business", JSON.stringify(onboardingData));
         saveBusinessData({ ...onboardingData, _savedAt: new Date().toISOString() });
       }
       logActivity("subscription_activated", "Subscription Activated", `${plan!.name} Plan - ${billingCycle === "annual" ? "Annual" : "Monthly"}`);

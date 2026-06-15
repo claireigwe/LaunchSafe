@@ -1,31 +1,17 @@
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
-import { createAdminClient } from "@/lib/supabase/server";
-import { resolveAccess } from "@/lib/billing/features";
+import { PlanService } from "@/lib/billing/plan-service";
 import type { ApiResponse } from "@/types/api.types";
 
 export async function GET() {
   try {
     const user = await getRequiredUser();
-    const supabase = createAdminClient() as any;
-
-    const { data: sub } = await supabase
-      .from("subscriptions")
-      .select("status, subscription_plans!inner(slug)")
-      .eq("user_id", user.id)
-      .in("status", ["active", "trial"])
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const planSlug = sub?.subscription_plans?.slug || null;
-    const planStatus = sub?.status || null;
-    const access = resolveAccess(planSlug, planStatus);
-
+    const access = await PlanService.getUserPlanAccess(user.id);
     return NextResponse.json<ApiResponse>({ success: true, data: access });
-  } catch {
+  } catch (error) {
+    console.error("[Billing Access] Error:", error);
     return NextResponse.json<ApiResponse>(
-      { success: true, data: resolveAccess(null, null) },
+      { success: true, data: { planId: null, planName: "", features: [], limits: { businesses: 0, documents: 0 }, status: null } },
     );
   }
 }

@@ -31,9 +31,10 @@ export async function GET(
       );
     }
     
+    const msg = error instanceof Error ? error.message : "An error occurred";
     return NextResponse.json<ApiResponse>(
-      { success: false, error: { message: "Unauthorized or Assessment not found" } },
-      { status: 401 }
+      { success: false, error: { message: msg } },
+      { status: msg === "PaymentRequired" ? 402 : 401 }
     );
   }
 }

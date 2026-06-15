@@ -15,7 +15,6 @@ export async function GET(request: Request) {
     const { data: all } = await supabase
       .from("compliance_scores")
       .select("*")
-      .eq("user_id", user.id)
       .eq("business_id", businessId)
       .order("calculated_at", { ascending: false })
       .limit(2);
@@ -79,7 +78,7 @@ export async function POST(request: Request) {
       score = clientScore;
       breakdown = clientBreakdown;
     } else {
-      const result = await calculateComplianceScore(user.id, businessId);
+      const result = await calculateComplianceScore(businessId);
       score = result.score;
       breakdown = result.breakdown;
     }
@@ -87,7 +86,6 @@ export async function POST(request: Request) {
     const { data: previousScores } = await supabase
       .from("compliance_scores")
       .select("score")
-      .eq("user_id", user.id)
       .eq("business_id", businessId)
       .order("calculated_at", { ascending: false })
       .limit(1);
@@ -95,7 +93,6 @@ export async function POST(request: Request) {
     const previousScore = previousScores?.[0]?.score ?? null;
 
     const { data, error } = await supabase.from("compliance_scores").insert({
-      user_id: user.id,
       business_id: businessId,
       score,
       breakdown,

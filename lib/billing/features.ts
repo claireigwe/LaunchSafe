@@ -1,3 +1,5 @@
+import { createAdminClient } from "@/lib/supabase/server";
+
 export type FeatureFlag =
   | "multi_business"
   | "advanced_reporting"
@@ -13,18 +15,6 @@ export interface AccessInfo {
   status: string | null;
 }
 
-export const DB_TO_PLAN: Record<string, string> = {
-  starter: "starter",
-  growth: "growth",
-  enterprise: "enterprise",
-};
-
-export const PLAN_TO_DB: Record<string, string> = {
-  starter: "starter",
-  growth: "growth",
-  enterprise: "enterprise",
-};
-
 const PLAN_FEATURES: Record<string, FeatureFlag[]> = {
   starter: [],
   growth: ["multi_business", "advanced_reporting"],
@@ -37,27 +27,42 @@ const PLAN_LIMITS: Record<string, Record<string, number>> = {
   enterprise: { businesses: 20, documents: 100 },
 };
 
-export function resolveAccess(planSlug: string | null, planStatus: string | null): AccessInfo {
-  if (!planSlug || !DB_TO_PLAN[planSlug]) {
+const PLAN_NAMES: Record<string, string> = {
+  starter: "Starter",
+  growth: "Growth",
+  enterprise: "Enterprise",
+};
+
+const FEATURE_FLAG_MAP: Record<string, FeatureFlag> = {
+  multi_business: "multi_business",
+  advanced_reporting: "advanced_reporting",
+  team_collaboration: "team_collaboration",
+  priority_support: "priority_support",
+  ai_compliance: "ai_compliance",
+};
+
+export async function resolveAccess(planSlug: string | null, planStatus: string | null): Promise<AccessInfo> {
+  if (!planSlug) {
     return {
       planId: null,
-      planName: "No Plan",
+      planName: "",
       features: [],
       limits: { businesses: 0, documents: 0 },
       status: null,
     };
   }
-  const planId = DB_TO_PLAN[planSlug];
-  const planName: Record<string, string> = {
-    starter: "Starter",
-    growth: "Growth",
-    enterprise: "Enterprise",
-  };
+
+  // Use hardcoded plan configs as the primary source of truth
+  const planId = planSlug;
+  const features = PLAN_FEATURES[planId] || [];
+  const limits = PLAN_LIMITS[planId] || { businesses: 0, documents: 0 };
+  const planName = PLAN_NAMES[planId] || planId;
+
   return {
     planId,
-    planName: planName[planId] || "Starter",
-    features: PLAN_FEATURES[planId] || [],
-    limits: PLAN_LIMITS[planId] || { businesses: 0 },
+    planName,
+    features,
+    limits,
     status: planStatus,
   };
 }

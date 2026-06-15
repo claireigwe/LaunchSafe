@@ -1,8 +1,8 @@
-import { generateFullReport } from '@/features/assessments/services/report-generator';
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
 import type { ApiResponse } from "@/types/api.types";
 import { createAdminClient } from "@/lib/supabase/server";
+import { AssessmentEngine } from "@/features/assessments/services/assessment-engine";
 import type { AssessmentFullReport } from "@/types/domain/assessment";
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
@@ -63,7 +63,7 @@ export async function POST(
 
       if (existing?.wizard_data) {
         // Preferred: regenerate report from stored wizard data
-        report = generateFullReport(existing.wizard_data);
+        report = (await AssessmentEngine.generateAssessment(existing.wizard_data)).report;
       } else if (existing?.results_json) {
         // Fallback: use already-generated report
         report = existing.results_json as AssessmentFullReport;
@@ -72,7 +72,7 @@ export async function POST(
 
     // Last resort: generate from client data (only for brand-new "pending" assessments)
     if (!report) {
-      report = generateFullReport(body.assessmentData || {});
+      report = (await AssessmentEngine.generateAssessment(body.assessmentData || {})).report;
     }
 
     // Create or get payment record

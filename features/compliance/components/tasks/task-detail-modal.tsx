@@ -82,9 +82,11 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
 
   useEffect(() => {
     async function loadData() {
-      const allEvidence = await fetchEvidence();
+      const [allEvidence, docs] = await Promise.all([
+        fetchEvidence(),
+        getDocuments(task.businessId),
+      ]);
       setEvidence(allEvidence.filter(e => e.complianceTaskId === task.id));
-      const docs = await getDocuments(task.businessId);
       setAvailableDocs(docs);
     }
     loadData();
@@ -102,9 +104,9 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
   async function handleLinkDoc(docId: string, docTitle: string) {
     try {
       setIsLinking(true);
-      await linkDocumentAsEvidenceAPI(docId, docTitle, task.id, task.businessId);
-      const allEvidence = await fetchEvidence();
-      setEvidence(allEvidence.filter(e => e.complianceTaskId === task.id));
+      const newEvidence = await linkDocumentAsEvidenceAPI(docId, docTitle, task.id, task.businessId);
+      setEvidence((prev) => [...prev, newEvidence]);
+      setAvailableDocs((prev) => prev.filter((d) => d.id !== docId));
       setShowLinkDoc(false);
     } catch (err: any) {
       console.error("Failed to link document", err);
@@ -238,14 +240,16 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
                   </h4>
                   <div className={styles.evidenceList}>
                     {evidence.map((e) => (
-                      <button
+                      <div
                         key={e.id}
-                        type="button"
+                        role="button"
+                        tabIndex={0}
                         className={styles.evidenceCard}
                         onClick={() => {
                           const doc = availableDocs.find((d) => d.id === e.documentId);
                           if (doc) setEvidenceDoc(doc);
                         }}
+                        onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); const doc = availableDocs.find((d) => d.id === e.documentId); if (doc) setEvidenceDoc(doc); } }}
                       >
                         <div className={styles.evidenceCardIcon}>
                           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 2H13C13.6 2 14 2.4 14 3V13C14 13.6 13.6 14 13 14H3C2.4 14 2 13.6 2 13V3C2 2.4 2.4 2 3 2Z" stroke="var(--color-role-light-primary)" strokeWidth="1.2" fill="none" /><path d="M3 7H13M3 10H13" stroke="var(--color-role-light-primary)" strokeWidth="1.2" /></svg>
@@ -265,7 +269,7 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
                             {removingEvidenceId === e.id ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />}
                           </button>
                         )}
-                      </button>
+                      </div>
                     ))}
                   </div>
                 </div>

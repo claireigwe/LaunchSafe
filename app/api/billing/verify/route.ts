@@ -25,6 +25,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // Verify payment with Paystack
     const verifyRes = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
       headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` },
     });
@@ -37,30 +38,37 @@ export async function POST(request: Request) {
       );
     }
 
+    // Read planId from Paystack transaction metadata
+    const metadata = verifyData.data.metadata || {};
+    const planId = metadata.planId || "enterprise";
+    const billingCycle = metadata.billingCycle || "monthly";
+
     const supabase = createAdminClient() as any;
 
-    const { data: entPlan } = await supabase
+    // Look up the plan by slug
+    const { data: plan } = await supabase
       .from("subscription_plans")
       .select("id")
-      .eq("slug", "enterprise")
+      .eq("slug", planId)
+      .eq("is_active", true)
       .maybeSingle();
 
-    if (entPlan) {
+    if (plan) {
+      const now = new Date();
+      const end = new Date(now);
+      end.setMonth(end.getMonth() + (billingCycle === "annual" ? 12 : 1));
+
       const { data: existingSub } = await supabase
         .from("subscriptions")
         .select("id")
         .eq("user_id", user.id)
-        .eq("plan_id", entPlan.id)
         .maybeSingle();
-
-      const now = new Date();
-      const end = new Date(now);
-      end.setMonth(end.getMonth() + 1);
 
       if (existingSub) {
         await supabase
           .from("subscriptions")
           .update({
+            plan_id: plan.id,
             status: "active",
             paystack_subscription_code: reference,
             current_period_start: now.toISOString(),
@@ -73,7 +81,7 @@ export async function POST(request: Request) {
           .from("subscriptions")
           .insert({
             user_id: user.id,
-            plan_id: entPlan.id,
+            plan_id: plan.id,
             status: "active",
             paystack_subscription_code: reference,
             current_period_start: now.toISOString(),
@@ -82,6 +90,7 @@ export async function POST(request: Request) {
       }
     }
 
+    // Create payment record if it doesn't exist
     const { data: existingPay } = await supabase
       .from("payments")
       .select("id")
@@ -89,17 +98,16 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (!existingPay) {
-      const amount = verifyData.data.amount || 3500000;
       await supabase.from("payments").insert({
         user_id: user.id,
-        amount,
-        currency: "NGN",
+        amount: verifyData.data.amount || 0,
+        currency: verifyData.data.currency || "NGN",
         provider: "paystack",
         payment_type: "subscription",
         reference,
         provider_reference: reference,
         status: "paid",
-        metadata: { planId: "enterprise", source: "verify" },
+        metadata: { planId, source: "verify" },
       });
     }
 

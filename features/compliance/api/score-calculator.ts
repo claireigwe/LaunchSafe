@@ -15,7 +15,7 @@ export interface ScoreCalculationResult {
   previousScore: number | null;
 }
 
-export async function calculateComplianceScore(userId: string, businessId: string): Promise<ScoreCalculationResult> {
+export async function calculateComplianceScore(businessId: string): Promise<ScoreCalculationResult> {
   const supabase = createAdminClient() as any;
 
   const { data: tasks, error: tasksError, count: tasksCount } = await supabase
@@ -43,10 +43,9 @@ export async function calculateComplianceScore(userId: string, businessId: strin
   }
 
   const { data: documents, error: docsError } = await supabase
-    .from("documents")
-    .select("expiry_date")
-    .eq("business_id", businessId)
-    .not("expiry_date", "is", null);
+    .from("compliance_documents")
+    .select("id")
+    .eq("business_id", businessId);
 
   if (docsError) {
     throw new Error("Failed to fetch documents for score calculation");
@@ -55,7 +54,6 @@ export async function calculateComplianceScore(userId: string, businessId: strin
   const { data: previousScores } = await supabase
     .from("compliance_scores")
     .select("score")
-    .eq("user_id", userId)
     .eq("business_id", businessId)
     .order("calculated_at", { ascending: false })
     .limit(1);
@@ -110,10 +108,7 @@ export async function calculateComplianceScore(userId: string, businessId: strin
     }
   }
 
-  const expiredDocuments = allDocuments.filter((d: any) => {
-    const expiry = new Date(d.expiry_date).getTime();
-    return expiry < now;
-  }).length;
+  const expiredDocuments = 0;
 
   const completionRatio = completedTasks / allTasks.length;
   let score = Math.round(completionRatio * 70);

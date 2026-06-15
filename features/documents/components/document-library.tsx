@@ -184,8 +184,12 @@ export function DocumentLibrary() {
           <p className={styles.subtitle}>Manage your compliance documents and records.</p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <Button variant="outline" size="md" onClick={() => setShowGenerate(true)}><FilePlus size={16} /> Generate</Button>
-          <Button variant="primary" size="md" onClick={() => setShowUpload(true)}><Upload size={16} /> Upload</Button>
+          {hasBusiness === true && (
+            <>
+              <Button variant="outline" size="md" onClick={() => setShowGenerate(true)}><FilePlus size={16} /> Generate</Button>
+              <Button variant="primary" size="md" onClick={() => setShowUpload(true)}><Upload size={16} /> Upload</Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -236,8 +240,12 @@ export function DocumentLibrary() {
           </p>
           {allItems.length === 0 && (
             <div style={{ display: "flex", gap: 8 }}>
-              <Button variant="primary" size="md" onClick={() => setShowUpload(true)}>Upload Document</Button>
-              <Button variant="outline" size="md" onClick={() => setShowGenerate(true)}>Generate Document</Button>
+              {hasBusiness === true && (
+                <>
+                  <Button variant="primary" size="md" onClick={() => setShowUpload(true)}>Upload Document</Button>
+                  <Button variant="outline" size="md" onClick={() => setShowGenerate(true)}>Generate Document</Button>
+                </>
+              )}
             </div>
           )}
           {allItems.length > 0 && <Button variant="ghost" size="sm" onClick={() => { setFilter("all"); setSearch(""); }}>Clear Filters</Button>}

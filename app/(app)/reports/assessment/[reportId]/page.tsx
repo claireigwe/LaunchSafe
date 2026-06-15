@@ -24,11 +24,18 @@ export default function AssessmentReportPage() {
 
   useEffect(() => {
     if (!reportId) return;
+
+    // Load the report
     fetch(`/api/assessments/${reportId}/report`)
       .then((r) => r.json())
       .then((json) => {
-        if (json.success && json.data) setReport(json.data);
-        else setError(json.error?.message || "Report not found");
+        if (json.success && json.data) {
+          setReport(json.data);
+          // Claim this assessment if it was anonymous — link it to the logged-in user
+          fetch(`/api/assessments/${reportId}/claim`, { method: "POST" }).catch(() => {});
+        } else {
+          setError(json.error?.message || "Report not found");
+        }
       })
       .catch(() => setError("Failed to load report"))
       .finally(() => setLoading(false));
@@ -45,7 +52,6 @@ export default function AssessmentReportPage() {
 
   if (!report) return null;
 
-  const totalCost = (report.totalOfficialCost || 0) + (report.totalEstimatedCost || 0);
   const complexity = report.requirements && report.requirements.length > 8 ? "high" : report.requirements && report.requirements.length > 4 ? "medium" : "low";
   const complexityColor = complexity === "high" ? "var(--color-role-light-error)" : complexity === "medium" ? "#d97706" : "var(--color-role-light-success)";
 
@@ -67,8 +73,8 @@ export default function AssessmentReportPage() {
         <div style={{ padding: "20px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
           <DetailRow label="Total Requirements" value={String(report.requirements?.length || 0)} />
           <DetailRow label="Risk Level" value={report.riskLevel} />
-          <DetailRow label="Official Fees" value={`₦${(report.totalOfficialCost || 0).toLocaleString("en-US")}`} />
-          <DetailRow label="Estimated Total" value={`₦${totalCost.toLocaleString("en-US")}`} />
+          <DetailRow label="Official Costs" value={`₦${Math.round((report.officialCosts?.min || 0) / 100).toLocaleString("en-US")} – ₦${Math.round((report.officialCosts?.max || 0) / 100).toLocaleString("en-US")}`} />
+          <DetailRow label="Budget Total" value={`₦${Math.round((report.estimatedBudget?.min || 0) / 100).toLocaleString("en-US")} – ₦${Math.round((report.estimatedBudget?.max || 0) / 100).toLocaleString("en-US")}+`} />
         </div>
       </div>
 

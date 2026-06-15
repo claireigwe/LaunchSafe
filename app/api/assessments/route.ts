@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { AssessmentEngine } from "@/features/assessments/services/assessment-engine";
 import type { ApiResponse } from "@/types/api.types";
-import type { Assessment } from "@/types/domain/assessment";
 
 export const dynamic = "force-dynamic";
 
@@ -42,16 +41,27 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
+    // Use admin client to bypass RLS — no session required for anonymous assessments
+    const supabase = createAdminClient() as any;
     let userId: string | null = null;
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      userId = user.id;
-    }
+    try {
+      const { cookies } = await import("next/headers");
+      const { createServerClient } = await import("@supabase/ssr");
+      const cookieStore = await cookies();
+      const authClient = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            getAll: () => cookieStore.getAll(),
+            setAll: () => {},
+          },
+        }
+      );
+      const { data: { user } } = await authClient.auth.getUser();
+      if (user) userId = user.id;
+    } catch {} // Anonymous user — userId stays null
 
     const body = await request.json();
     const { data: formData } = body;
@@ -65,73 +75,76 @@ export async function POST(request: Request) {
 
     const { summary: summaryJson, report: resultsJson } = await AssessmentEngine.generateAssessment(formData);
 
-    if (userId) {
-      const { data: assessment, error } = await supabase
-        .from("assessments")
-        .insert({
-          user_id: userId,
-          status: "completed",
-          summary_json: summaryJson,
-          results_json: resultsJson,
-        } as any)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      if (!assessment) {
-        throw new Error("Failed to create assessment");
+    // Resolve sub_industry_id from form data
+    let subIndustryId = null;
+    const industrySlug = formData?.basics?.industry;
+    const subIndustrySlug = formData?.basics?.subIndustry;
+    if (industrySlug && subIndustrySlug) {
+      const { data: ind } = await (supabase as any)
+        .from("industries")
+        .select("id")
+        .eq("slug", industrySlug)
+        .maybeSingle();
+      if (ind) {
+        const { data: subInd } = await (supabase as any)
+          .from("sub_industries")
+          .select("id")
+          .eq("slug", subIndustrySlug)
+          .eq("industry_id", (ind as any).id)
+          .maybeSingle();
+        if (subInd) subIndustryId = subInd.id;
       }
-
-      const a = assessment as any;
-
-      return NextResponse.json<ApiResponse>(
-        {
-          success: true,
-          data: {
-            id: a.id,
-            userId: a.user_id,
-            businessId: null,
-            industryId: null,
-            countryId: null,
-            stateId: null,
-            status: a.status,
-            summaryJson: a.summary_json,
-            resultsJson: null, // Intentionally null, locked until payment
-            createdAt: a.created_at,
-            updatedAt: a.updated_at,
-          },
-        },
-        { status: 201 }
-      );
     }
+
+    // LGA is already a UUID from the wizard selection
+    const lgaId = formData?.location?.lga || null;
+
+    // Store assessment for both authenticated and anonymous users
+    const { data: assessment, error } = await supabase
+      .from("assessments")
+      .insert({
+        user_id: userId || null,
+        status: "completed",
+        wizard_data: formData,
+        sub_industry_id: subIndustryId,
+        lga_id: lgaId,
+        summary_json: summaryJson,
+        results_json: resultsJson,
+      } as any)
+      .select()
+      .single();
+
+    if (error) throw error;
+    if (!assessment) throw new Error("Failed to create assessment");
+
+    const a = assessment as any;
 
     return NextResponse.json<ApiResponse>(
       {
         success: true,
         data: {
-          id: "pending",
-          userId: "",
+          id: a.id,
+          userId: a.user_id,
           businessId: null,
           industryId: null,
           countryId: null,
           stateId: null,
-          status: "completed",
-          summaryJson,
+          status: a.status,
+          summaryJson: a.summary_json,
           resultsJson: null,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          createdAt: a.created_at,
+          updatedAt: a.updated_at,
         },
       },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
+    console.error("[Assessment Create] Error:", error);
+    const message = error?.message || (typeof error === 'string' ? error : "Internal server error");
     return NextResponse.json<ApiResponse>(
       {
         success: false,
-        error: {
-          message: error instanceof Error ? error.message : "Internal server error",
-        },
+        error: { message },
       },
       { status: 500 }
     );

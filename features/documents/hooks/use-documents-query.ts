@@ -11,10 +11,9 @@ export function useDocuments() {
   const activeBusinessId = useAppStore((s) => s.activeBusinessId);
   return useQuery({
     queryKey: ["documents", activeBusinessId],
-    queryFn: async () => {
-      return getDocuments();
-    },
-    staleTime: 30_000,
+    queryFn: () => getDocuments(),
+    staleTime: 60_000,
+    gcTime: 120_000,
   });
 }
 
@@ -22,10 +21,9 @@ export function useGeneratedDocuments() {
   const activeBusinessId = useAppStore((s) => s.activeBusinessId);
   return useQuery({
     queryKey: ["documents", "generated", activeBusinessId],
-    queryFn: async () => {
-      return getGeneratedDocuments();
-    },
-    staleTime: 30_000,
+    queryFn: () => getGeneratedDocuments(),
+    staleTime: 60_000,
+    gcTime: 120_000,
   });
 }
 

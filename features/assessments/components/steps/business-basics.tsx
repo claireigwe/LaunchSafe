@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
 import { InfoTooltip } from "../tooltip";
 import type { BusinessBasicsData } from "../../types/wizard.types";
-import { getIndustries, getIndustriesSync, type IndustryOption } from "@/features/assessments/api/industries-api";
 import styles from "./business-basics.module.css";
 
 interface BusinessBasicsProps {
@@ -22,20 +20,12 @@ const BUSINESS_STAGES = [
 ];
 
 export function BusinessBasics({ data, onUpdate, onNext }: BusinessBasicsProps) {
-  const [industries, setIndustries] = useState<IndustryOption[]>(() => getIndustriesSync());
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    getIndustries().then(setIndustries).catch(() => {});
-  }, []);
 
   function validate(): boolean {
     const newErrors: Record<string, string> = {};
     if (!data.businessType.trim()) {
       newErrors.businessType = "Tell us about your business idea";
-    }
-    if (!data.industry) {
-      newErrors.industry = "Select an industry";
     }
     if (!data.businessStage) {
       newErrors.businessStage = "Select your business stage";
@@ -89,23 +79,6 @@ export function BusinessBasics({ data, onUpdate, onNext }: BusinessBasicsProps) 
           value={data.businessType}
           onChange={(e) => onUpdate({ businessType: e.target.value })}
           autoComplete="off"
-        />
-      </div>
-
-      <div className={styles.field}>
-        <div className={styles.labelRow}>
-          <label htmlFor="industry" className={styles.label}>
-            Industry
-          </label>
-          <InfoTooltip text="Select the industry that best matches your primary business activity. This helps us identify the right regulatory requirements for your business." />
-        </div>
-        {errors.industry && <p className={styles.errorText} role="alert">{errors.industry}</p>}
-        <Select
-          id="industry"
-          placeholder="Select your industry"
-          value={data.industry}
-          onChange={(e) => onUpdate({ industry: e.target.value })}
-          options={industries.map((ind) => ({ value: ind.slug, label: ind.name }))}
         />
       </div>
 

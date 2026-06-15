@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { generatePdfFromHtml } from "@/lib/pdf/generator";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
@@ -57,6 +58,10 @@ export function FullReportScreen() {
         trackEvent("Payment Completed", { assessmentId });
         localStorage.removeItem("launchsafe-pending-unlock");
 
+        // Preload PDF library in background for instant download
+        // @ts-expect-error - html2pdf.js has no types
+        import("html2pdf.js/dist/html2pdf.bundle.js").catch(() => {});
+
       } catch {
         setError("An error occurred during verification");
       } finally {
@@ -102,29 +107,18 @@ export function FullReportScreen() {
   if (!report) return null;
 
   const formatCurrency = (amount: number) =>
-    `₦${amount.toLocaleString("en-US")}`;
+    `₦${Math.round(amount / 100).toLocaleString("en-US")}`;
 
   async function downloadPdf() {
     setDownloading(true);
     try {
-      const html2pdfModule = await import("html2pdf.js");
-      const html2pdf = html2pdfModule.default || html2pdfModule;
-
       const element = reportRef.current;
       if (!element) return;
 
-      const opt: any = {
-        margin:       [10, 10, 10, 10],
-        filename:     "LaunchSafe-Compliance-Report.pdf",
-        image:        { type: "jpeg", quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false },
-        jsPDF:        { unit: "mm", format: "a4", orientation: "portrait" },
-        pagebreak:    { mode: ["css", "legacy"] }
-      };
-
-      await html2pdf().set(opt).from(element).save();
+      await generatePdfFromHtml(element, "LaunchSafe-Compliance-Report.pdf");
       trackEvent("Report Downloaded");
-    } catch {
+    } catch (err) {
+      console.error("[Report] PDF download failed:", err);
     } finally {
       setDownloading(false);
     }
@@ -183,20 +177,6 @@ export function FullReportScreen() {
         </section>
 
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Cost Summary</h2>
-          <div className={styles.costGrid}>
-            <div className={styles.costCard}>
-              <span className={styles.costLabel}>Official Fees</span>
-              <span className={styles.costValue}>{formatCurrency(report.totalOfficialCost)}</span>
-            </div>
-            <div className={styles.costCard}>
-              <span className={styles.costLabel}>Estimated Total</span>
-              <span className={styles.costValue}>{formatCurrency(report.totalEstimatedCost)}</span>
-            </div>
-          </div>
-        </section>
-
-        <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Agencies Involved</h2>
           <div className={styles.agenciesList}>
             {report.agencies.map((agency) => (
@@ -221,6 +201,88 @@ export function FullReportScreen() {
               <li key={i} className={styles.riskFactor}>{factor}</li>
             ))}
           </ul>
+        </section>
+
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Cost Summary</h2>
+          <div className={styles.costGrid}>
+            <div className={styles.costCard}>
+              <span className={styles.costLabel}>Official Compliance Costs</span>
+              <span className={styles.costValue}>{formatCurrency(report.officialCosts.min)} – {formatCurrency(report.officialCosts.max)}</span>
+              <span className={styles.costNote}>Verified regulatory fees</span>
+            </div>
+            <div className={styles.costCard}>
+              <span className={styles.costLabel}>Common Setup Costs</span>
+              <span className={styles.costValue}>{formatCurrency(report.commonSetupCostRange.min)} – {formatCurrency(report.commonSetupCostRange.max)}</span>
+              <span className={styles.costNote}>Legal, documentation, processing</span>
+            </div>
+            <div className={styles.costCard}>
+              <span className={styles.costLabel}>Potential Local Costs</span>
+              <span className={styles.costValue}>Varies by location</span>
+              <span className={styles.costNote}>Levies, association fees, local charges</span>
+            </div>
+            <div className={styles.costCard} style={{ borderColor: "var(--color-role-light-primary)", background: "var(--color-role-light-surfaceBright)" }}>
+              <span className={styles.costLabel} style={{ fontWeight: 600, color: "var(--color-role-light-primary)" }}>Estimated Launch Budget</span>
+              <span className={styles.costValue} style={{ color: "var(--color-role-light-primary)", fontSize: 28 }}>{formatCurrency(report.estimatedBudget.min)} – {formatCurrency(report.estimatedBudget.max)}+</span>
+              <span className={styles.costNote}>Combined estimate across all categories</span>
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Common Setup Costs</h2>
+          <p className={styles.sectionSubtitle}>Typical expenses when launching your business (not regulatory requirements).</p>
+          <div className={styles.commonList}>
+            {report.commonSetupCosts.map((item, i) => (
+              <div key={i} className={styles.commonItem}>
+                <div className={styles.commonItemHead}>
+                  <span className={styles.commonItemLabel}>{item.label}</span>
+                  <span className={styles.commonItemRange}>{item.range}</span>
+                </div>
+                <p className={styles.commonItemReason}>{item.reason}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {report.localCosts.length > 0 && (
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Potential Local Costs & Levies</h2>
+            <p className={styles.sectionSubtitle}>{report.localCostNote}</p>
+            <div className={styles.localList}>
+              {report.localCosts.map((item, i) => (
+                <div key={i} className={styles.commonItem}>
+                  <span className={styles.commonItemLabel}>{item.label}</span>
+                  <p className={styles.commonItemReason}>{item.note}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className={styles.section} style={{ border: "1.5px dashed var(--color-role-light-outlineVariant)", borderRadius: 16, padding: 20, marginBottom: 24, background: "var(--color-role-light-surfaceBright)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="8.5" stroke="var(--color-role-light-primary)" strokeWidth="1.5" fill="none" />
+              <path d="M10 6V10.5M10 14V14.01" stroke="var(--color-role-light-primary)" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <h2 style={{ fontFamily: "var(--font-label-label-large-fontFamily)", fontSize: 16, fontWeight: 600, color: "var(--color-role-light-primary)", margin: 0 }}>How We Calculated This Estimate</h2>
+          </div>
+          <div style={{ fontFamily: "var(--font-body-body-medium-fontFamily)", fontSize: 14, color: "var(--color-role-light-onSurface)", lineHeight: 1.6, display: "flex", flexDirection: "column", gap: 8 }}>
+            <p style={{ margin: 0 }}>
+              <span style={{ fontWeight: 600, color: "var(--color-key-success)" }}>Official Compliance Costs</span>
+              <span style={{ color: "var(--color-role-light-onSurfaceVariant)" }}> — Based on verified government fee schedules from regulatory agencies. These are the minimum fees required.</span>
+            </p>
+            <p style={{ margin: 0 }}>
+              <span style={{ fontWeight: 600, color: "#d97706" }}>Common Setup Costs</span>
+              <span style={{ color: "var(--color-role-light-onSurfaceVariant)" }}> — Based on typical expenses Nigerian businesses incur during registration and launch. Estimates may vary.</span>
+            </p>
+            <p style={{ margin: 0 }}>
+              <span style={{ fontWeight: 600, color: "var(--color-role-light-onSurfaceVariant)" }}>Potential Local Costs</span>
+              <span style={{ color: "var(--color-role-light-onSurfaceVariant)" }}> — Based on common local charges. Not official federal requirements. Vary significantly by location.</span>
+            </p>
+            <p style={{ margin: "4px 0 0", fontStyle: "italic", color: "var(--color-role-light-onSurfaceVariant)" }}>All figures are estimates. Verify actual costs with relevant agencies before budgeting.</p>
+          </div>
         </section>
 
         <section className={styles.section}>

@@ -108,7 +108,7 @@ async function handleChargeSuccess(supabase: any, eventData: any, rawEvent: any)
     const billingCycle = metadata.billingCycle || "monthly";
 
     if (planId) {
-      const dbSlug = require("@/lib/billing/features").PLAN_TO_DB[planId] || planId;
+      const dbSlug = planId;
       const { data: plans } = await supabase
         .from("subscription_plans")
         .select("id")

@@ -28,7 +28,6 @@ import { isInSetupMode } from "@/features/billing/api/setup-check";
 import { getRegulatoryUpdates } from "@/features/regulatory-updates/api/regulatory-updates-api";
 import { getRecentActivity, type ActivityEntry } from "@/features/activity/api/activity-api";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
-import { addBusiness, fetchAllBusinesses } from "@/features/businesses/api/onboarding-api";
 import type { ComplianceTaskItem, CreateTaskInput } from "../../types/tasks.types";
 import type { AppDocument } from "@/features/documents/types/documents.types";
 import type { RegulatoryUpdate } from "@/types/domain/regulatory";
@@ -36,7 +35,7 @@ import { useDocuments, useUploadDocument } from "@/features/documents/hooks/use-
 import styles from "./dashboard-page.module.css";
 
 export function DashboardPage() {
-  const { data, loading } = useDashboard();
+  const { data, loading, businessCount } = useDashboard();
   const [savedTasks, setSavedTasks] = useState<ComplianceTaskItem[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [showUploadDoc, setShowUploadDoc] = useState(false);
@@ -44,7 +43,6 @@ export function DashboardPage() {
   const [regUpdates, setRegUpdates] = useState<RegulatoryUpdate[]>([]);
   const [recentActivity, setRecentActivity] = useState<ActivityEntry[]>([]);
   const [subscription, setSubscription] = useState<SavedSubscription | null>(null);
-  const [businessCount, setBusinessCount] = useState(0);
   const { data: uploadedDocs = [] } = useDocuments();
   const uploadMutation = useUploadDocument();
   const recentDocs = uploadedDocs.slice(0, 4);
@@ -59,6 +57,7 @@ export function DashboardPage() {
     if (params.get("subscription") === "success" && reference) {
       window.history.replaceState({}, "", "/dashboard");
 
+      // Verify payment and create pending business
       const pendingRaw = localStorage.getItem("launchsafe-pending-business");
       if (!pendingRaw) return;
 
@@ -75,18 +74,16 @@ export function DashboardPage() {
         if (json.success) {
           try {
             const pending = JSON.parse(pendingRaw);
+            const { addBusiness } = await import("@/features/businesses/api/onboarding-api");
             const biz = await addBusiness(pending);
             if (biz?.id) {
               localStorage.setItem("launchsafe-active-business", biz.id);
-              localStorage.setItem("launchsafe-business-data", JSON.stringify(pending));
             }
           } catch {}
         }
         window.location.reload();
       })
-      .catch(() => {
-        window.location.reload();
-      });
+      .catch(() => window.location.reload());
     }
   }, []);
 
@@ -140,93 +137,35 @@ export function DashboardPage() {
   useEffect(() => {
     refreshDashboard();
     getSubscription().then(setSubscription).catch(() => {});
-    fetchAllBusinesses().then((biz) => setBusinessCount(biz.length)).catch(() => {});
     const onFocus = () => refreshDashboard();
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, []);
 
-  const [computedScore, setComputedScore] = useState<any>({
-    id: "computed",
-    businessId: getActiveBusinessId() || "",
-    score: 0,
-    breakdown: {
-      completedTasks: 0,
-      totalTasks: 0,
-      overdueCount: 0,
-      missingEvidence: 0,
-      expiredDocuments: 0,
-      upcomingDeadlineCount: 0,
-    },
-    previousScore: null,
-    calculatedAt: new Date().toISOString(),
-  });
+  const [computedScore, setComputedScore] = useState<any>(null);
 
   useEffect(() => {
-    const tasks = savedTasks;
-    if (tasks.length === 0) return;
+    const bid = data.business?.id;
+    if (!bid) return;
 
-    const now = Date.now();
-    const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
-
-    let completedTasks = 0;
-    let overdueCount = 0;
-    let upcomingDeadlineCount = 0;
-
-    for (const t of tasks) {
-      const isCompleted = t.status === "completed";
-      const isOverdue = t.status === "overdue";
-      const dueDate = t.dueDate ? new Date(t.dueDate).getTime() : null;
-
-      if (isCompleted) {
-        completedTasks++;
-      } else if (isOverdue || (dueDate && dueDate < now)) {
-        overdueCount++;
-      } else if (dueDate && dueDate >= now && dueDate - now <= SEVEN_DAYS) {
-        upcomingDeadlineCount++;
+    fetch(`/api/compliance/score?businessId=${bid}`)
+    .then(r => r.json())
+    .then(json => {
+      if (json.success && json.data) {
+        setComputedScore({
+          id: json.data.id,
+          businessId: json.data.businessId,
+          score: json.data.score,
+          breakdown: json.data.breakdown,
+          previousScore: json.data.previousScore,
+          calculatedAt: json.data.calculatedAt,
+        });
+      } else {
+        console.error("[Dashboard] Score API error:", json.error);
       }
-    }
-
-    const completionRatio = tasks.length > 0 ? completedTasks / tasks.length : 0;
-    let score = Math.round(completionRatio * 70);
-    score -= overdueCount * 10;
-    score -= upcomingDeadlineCount * 3;
-    score = Math.max(0, Math.min(100, score));
-
-    const breakdown = {
-      completedTasks,
-      totalTasks: tasks.length,
-      overdueCount,
-      missingEvidence: 0,
-      expiredDocuments: 0,
-      upcomingDeadlineCount,
-    };
-
-    setComputedScore({
-      id: "computed",
-      businessId: getActiveBusinessId() || "",
-      score,
-      breakdown,
-      previousScore: null,
-      calculatedAt: new Date().toISOString(),
-    });
-
-    const businessId = getActiveBusinessId();
-    if (businessId) {
-      fetch("/api/compliance/score", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ businessId, score, breakdown }),
-      })
-      .then(res => res.json())
-      .then(json => {
-        if (json.success && json.data && json.data.previousScore != null) {
-          setComputedScore((prev: any) => ({ ...prev, previousScore: json.data.previousScore }));
-        }
-      })
-      .catch(() => {});
-    }
-  }, [savedTasks]);
+    })
+    .catch((err) => console.error("[Dashboard] Score fetch failed:", err));
+  }, [data.business]);
 
   const upcoming = savedTasks
     .filter((t) => t.status !== "completed" && t.dueDate)
@@ -433,15 +372,15 @@ function EmptyTasks({ onAddTask }: { onAddTask: () => void }) {
           {upcoming.length > 0 && <UpcomingSection items={upcoming} />}
           {recentDocs.length > 0 && <DocumentsSection docs={recentDocs} />}
           {savedTasks.length > 0 ? (
-            <TasksSection tasks={savedTasks} onAddTask={() => setShowCreate(true)} />
+            <TasksSection tasks={savedTasks} onAddTask={() => hasBusiness === true && setShowCreate(true)} />
           ) : (
-            <EmptyTasks onAddTask={() => setShowCreate(true)} />
+            <EmptyTasks onAddTask={() => hasBusiness === true && setShowCreate(true)} />
           )}
           <ReportsPreview />
           <RegulatoryUpdates updates={regUpdates} />
         </section>
         <aside className={styles.secondary}>
-          <QuickActions onAddTask={() => setShowCreate(true)} onUploadDocument={() => setShowUploadDoc(true)} />
+          <QuickActions onAddTask={() => hasBusiness === true && setShowCreate(true)} onUploadDocument={() => hasBusiness === true && setShowUploadDoc(true)} />
           {aiInsight && (
             <div className={styles.aiInsightCard}>
               <div className={styles.aiInsightHeader}>

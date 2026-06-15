@@ -188,14 +188,16 @@ export async function createAssessment(
 }
 
 export async function initiateAssessmentPayment(
-  assessmentId: string
+  assessmentId: string,
+  email?: string | null
 ): Promise<{ authorizationUrl: string }> {
   const res = await fetch("/api/billing/assessments", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       assessmentId,
-      callbackUrl: `${window.location.origin}/assessment?paid=${assessmentId}`,
+      email,
+      callbackUrl: `${window.location.origin}/assessment/success?assessmentId=${assessmentId}`,
     }),
   });
 

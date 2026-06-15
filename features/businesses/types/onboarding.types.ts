@@ -3,8 +3,10 @@ export type OnboardingStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export interface BusinessInfoData {
   businessName: string;
   industry: string;
+  subIndustry: string;
   businessType: string;
   state: string;
+  lga: string;
   website: string;
   description: string;
 }
@@ -36,7 +38,7 @@ export const ONBOARDING_STEPS = [
 
 export function createEmptyOnboardingData(): OnboardingData {
   return {
-    info: { businessName: "", industry: "", businessType: "", state: "", website: "", description: "" },
+    info: { businessName: "", industry: "", subIndustry: "", businessType: "", state: "", lga: "", website: "", description: "" },
     status: { isRegistered: null, hasCAC: null, cacNumber: "" },
     operations: { employeeCount: "", hasPhysicalLocation: null, hasOnlineOperations: null, hasCustomerLocation: null },
   };

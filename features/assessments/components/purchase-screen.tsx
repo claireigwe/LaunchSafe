@@ -17,6 +17,7 @@ export function PurchaseScreen() {
 
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [email, setEmail] = useState("");
 
   useEffect(() => {
     const supabase = createClient();
@@ -41,11 +42,6 @@ export function PurchaseScreen() {
     setError(null);
     setIsProcessing(true);
 
-    if (!session) {
-      router.push("/signup?redirect=/assessment/unlock");
-      return;
-    }
-
     const pending = getPendingUnlockIntent();
     const assessmentId = pending.assessmentId;
 
@@ -55,9 +51,16 @@ export function PurchaseScreen() {
       return;
     }
 
+    const userEmail = session?.user?.email || email.trim();
+    if (!userEmail) {
+      setError("Please enter your email address to proceed with payment.");
+      setIsProcessing(false);
+      return;
+    }
+
     try {
       trackEvent("Assessment Purchase Initiated");
-      const { authorizationUrl } = await initiateAssessmentPayment(assessmentId);
+      const { authorizationUrl } = await initiateAssessmentPayment(assessmentId, userEmail);
       clearPendingUnlockIntent();
       window.location.href = authorizationUrl;
     } catch (err) {
@@ -152,6 +155,21 @@ export function PurchaseScreen() {
               <span className={styles.amountNote}>One-time payment</span>
             </div>
             <p className={styles.noSubscription}>No subscription required</p>
+            {!session && (
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "block", fontFamily: "var(--font-label-label-medium-fontFamily)", fontSize: 13, fontWeight: 500,                   color: "#fff", marginBottom: 6 }}>
+                  Email for receipt
+                </label>
+                <input
+                  type="email"
+                  className={styles.emailInput}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  style={{ width: "100%", padding: "12px 14px", fontFamily: "var(--font-body-body-medium-fontFamily)", fontSize: 14, color: "#fff", background: "rgba(255,255,255,0.1)", border: "1.5px solid rgba(255,255,255,0.2)", borderRadius: 10, outline: "none", boxSizing: "border-box" }}
+                />
+              </div>
+            )}
             {error && (
               <div className={styles.errorAlert} style={{ color: "var(--color-palette-error-40)", backgroundColor: "var(--color-palette-error-95)", padding: "12px", borderRadius: "8px", fontSize: "14px", marginBottom: "16px", textAlign: "center" }}>
                 {error}

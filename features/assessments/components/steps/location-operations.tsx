@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { InfoTooltip } from "../tooltip";
 import type { LocationOperationsData } from "../../types/wizard.types";
-import { ASSESSMENT_COUNTRIES } from "../../data/countries-data";
+import { ASSESSMENT_COUNTRIES, getStateById } from "../../data/countries-data";
 import styles from "./location-operations.module.css";
 
 interface LocationOperationsProps {
@@ -13,6 +13,11 @@ interface LocationOperationsProps {
   onUpdate: (values: Partial<LocationOperationsData>) => void;
   onNext: () => void;
   onBack: () => void;
+}
+
+interface LgaOption {
+  id: string;
+  name: string;
 }
 
 function BooleanInput({
@@ -39,73 +44,79 @@ function BooleanInput({
           onClick={() => onChange(true)}
           role="radio"
           aria-checked={value === true}
-        >
-          Yes
-        </button>
+        >Yes</button>
         <button
           type="button"
           className={`${styles.booleanBtn} ${value === false ? styles.booleanBtnActive : ""}`}
           onClick={() => onChange(false)}
           role="radio"
           aria-checked={value === false}
-        >
-          No
-        </button>
+        >No</button>
       </div>
     </div>
   );
 }
 
-export function LocationOperations({
-  data,
-  onUpdate,
-  onNext,
-  onBack,
-}: LocationOperationsProps) {
+export function LocationOperations({ data, onUpdate, onNext, onBack }: LocationOperationsProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const selectedCountry = ASSESSMENT_COUNTRIES.find((c) => c.id === data.country);
+  const [lgas, setLgas] = useState<LgaOption[]>([]);
 
-  function validate(): boolean {
-    const newErrors: Record<string, string> = {};
-    if (!data.country) newErrors.country = "Select your country";
-    if (!data.state) newErrors.state = "Select your state";
-    if (data.customersVisitLocation === null)
-      newErrors.customersVisitLocation = "Please answer this question";
-    if (data.requiresInspections === null)
-      newErrors.requiresInspections = "Please answer this question";
-    if (data.handlesRegulatedGoods === null)
-      newErrors.handlesRegulatedGoods = "Please answer this question";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const selectedCountry = ASSESSMENT_COUNTRIES.find((c) => c.id === data.country);
+  const stateName = data.state ? getStateById(data.country, data.state) : null;
+
+  // Fetch LGAs when state changes
+  useEffect(() => {
+    if (stateName) {
+      fetch(`/api/lgas?state=${encodeURIComponent(stateName)}`)
+        .then((r) => r.json())
+        .then((json) => {
+          if (json.success) setLgas(json.data || []);
+        })
+        .catch(() => {});
+    } else {
+      setLgas([]);
+    }
+  }, [stateName]);
+
+  function validate() {
+    const errs: Record<string, string> = {};
+    if (!data.country) errs.country = "Please select a country.";
+    if (!data.state) errs.state = "Please select a state.";
+    if (!data.lga) errs.lga = "Please select a Local Government Area.";
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (validate()) {
-      onNext();
-    }
+  function handleNext() {
+    if (validate()) onNext();
   }
 
   return (
-    <form onSubmit={handleSubmit} className={styles.form} noValidate>
-      <div className={styles.header}>
-        <h2 className={styles.title}>Location & Operations</h2>
-        <p className={styles.subtitle}>Where will your business operate? Location determines which regulations apply.</p>
-      </div>
+    <div className={styles.container}>
+      <h2 className={styles.title}>Location & Operations</h2>
+      <p className={styles.subtitle}>Where will your business operate? This helps identify local permits and regulatory requirements.</p>
 
       <div className={styles.row}>
         <div className={styles.field}>
           <label htmlFor="country" className={styles.label}>Country</label>
           {errors.country && <p className={styles.errorText} role="alert">{errors.country}</p>}
-          <Select id="country" placeholder="Select country" value={data.country} onChange={(e) => { onUpdate({ country: e.target.value, state: "" }); }} options={ASSESSMENT_COUNTRIES.map((c) => ({ value: c.id, label: c.name }))} />
+          <Select id="country" placeholder="Select country" value={data.country} onChange={(e) => { onUpdate({ country: e.target.value, state: "", lga: "" }); }} options={ASSESSMENT_COUNTRIES.map((c) => ({ value: c.id, label: c.name }))} />
         </div>
 
         <div className={styles.field}>
           <label htmlFor="state" className={styles.label}>State</label>
           {errors.state && <p className={styles.errorText} role="alert">{errors.state}</p>}
-          <Select id="state" placeholder="Select state" value={data.state} onChange={(e) => onUpdate({ state: e.target.value })} disabled={!data.country} options={selectedCountry?.states.map((s) => ({ value: s.id, label: s.name })) || []} />
+          <Select id="state" placeholder="Select state" value={data.state} onChange={(e) => { onUpdate({ state: e.target.value, lga: "" }); }} disabled={!data.country} options={selectedCountry?.states.map((s) => ({ value: s.id, label: s.name })) || []} />
         </div>
       </div>
+
+      {data.state && (
+        <div className={styles.field}>
+          <label htmlFor="lga" className={styles.label}>Local Government Area (LGA)</label>
+          {errors.lga && <p className={styles.errorText} role="alert">{errors.lga}</p>}
+          <Select id="lga" placeholder="Select LGA..." value={data.lga} onChange={(e) => onUpdate({ lga: e.target.value })} options={lgas.map((l) => ({ value: l.id, label: l.name }))} />
+        </div>
+      )}
 
       <div className={styles.field}>
         <label htmlFor="city" className={styles.label}>
@@ -115,7 +126,7 @@ export function LocationOperations({
           id="city"
           type="text"
           className={styles.input}
-          placeholder="e.g. Ikeja, Accra Central"
+          placeholder="e.g. Ikeja"
           value={data.city}
           onChange={(e) => onUpdate({ city: e.target.value })}
           autoComplete="address-level2"
@@ -155,13 +166,9 @@ export function LocationOperations({
       </div>
 
       <div className={styles.actions}>
-        <Button type="button" variant="ghost" size="md" onClick={onBack}>
-          Back
-        </Button>
-        <Button type="submit" variant="primary" size="lg">
-          Continue
-        </Button>
+        <Button type="button" variant="ghost" size="md" onClick={onBack}>Back</Button>
+        <Button type="button" variant="primary" size="md" onClick={handleNext}>Continue</Button>
       </div>
-    </form>
+    </div>
   );
 }

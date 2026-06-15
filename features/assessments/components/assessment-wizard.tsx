@@ -7,6 +7,7 @@ import { BusinessBasics } from "./steps/business-basics";
 import { BusinessActivities } from "./steps/business-activities";
 import { LocationOperations } from "./steps/location-operations";
 import { TeamStaffing } from "./steps/team-staffing";
+import { IndustrySubIndustry } from "./steps/industry-subindustry";
 import { IndustryQuestions } from "./steps/industry-questions";
 import { ProcessingScreen } from "./steps/processing-screen";
 import { SummaryScreen } from "./steps/summary-screen";
@@ -94,7 +95,8 @@ export function AssessmentWizard() {
       setAssessmentId(assessment.id);
       saveAssessmentIdToLocalStorage(assessment.id);
       trackEvent("Assessment Saved", { assessmentId: assessment.id });
-    } catch {
+    } catch (err) {
+      console.error("[Assessment] Failed to save assessment:", err);
     }
 
     goToStep("processing");
@@ -105,28 +107,13 @@ export function AssessmentWizard() {
 
     const id = assessmentId || loadAssessmentIdFromLocalStorage();
     const savedSummary = summary || await loadSummaryFromLocalStorage();
-    
+
     if (savedSummary) {
       savePendingUnlockIntent({ summary: savedSummary, assessmentId: id });
     }
 
-    if (!session) {
-      router.push("/signup?redirect=/assessment/unlock");
-      return;
-    }
-
-    trackEvent("Payment Initiated");
-
-    if (id) {
-      try {
-        const { authorizationUrl } = await initiateAssessmentPayment(id);
-        window.location.href = authorizationUrl;
-        return;
-      } catch {}
-    }
-
     router.push("/assessment/unlock");
-  }, [session, assessmentId, summary, router]);
+  }, [assessmentId, summary, router]);
 
   const handleSignupComplete = useCallback(() => {
     setShowUnlockPrompt(false);
@@ -157,9 +144,9 @@ export function AssessmentWizard() {
         );
       case 2:
         return (
-          <BusinessActivities
-            data={data.activities}
-            onUpdate={(values) => updateStepData("activities", values)}
+          <IndustrySubIndustry
+            data={data.basics}
+            onUpdate={(values) => updateStepData("basics", values)}
             onNext={() => {
               trackEvent("Assessment Step Completed", { step: 2 });
               goNext();
@@ -169,9 +156,9 @@ export function AssessmentWizard() {
         );
       case 3:
         return (
-          <LocationOperations
-            data={data.location}
-            onUpdate={(values) => updateStepData("location", values)}
+          <BusinessActivities
+            data={data.activities}
+            onUpdate={(values) => updateStepData("activities", values)}
             onNext={() => {
               trackEvent("Assessment Step Completed", { step: 3 });
               goNext();
@@ -181,9 +168,9 @@ export function AssessmentWizard() {
         );
       case 4:
         return (
-          <TeamStaffing
-            data={data.team}
-            onUpdate={(values) => updateStepData("team", values)}
+          <LocationOperations
+            data={data.location}
+            onUpdate={(values) => updateStepData("location", values)}
             onNext={() => {
               trackEvent("Assessment Step Completed", { step: 4 });
               goNext();
@@ -192,6 +179,18 @@ export function AssessmentWizard() {
           />
         );
       case 5:
+        return (
+          <TeamStaffing
+            data={data.team}
+            onUpdate={(values) => updateStepData("team", values)}
+            onNext={() => {
+              trackEvent("Assessment Step Completed", { step: 5 });
+              goNext();
+            }}
+            onBack={goBack}
+          />
+        );
+      case 6:
         return (
           <IndustryQuestions
             industry={data.basics.industry}

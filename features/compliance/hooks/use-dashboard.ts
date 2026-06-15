@@ -15,6 +15,7 @@ export function useDashboard() {
   const [data, setData] = useState<DashboardData>(() => buildDashboardData());
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState<ComplianceTaskItem[]>([]);
+  const [businessCount, setBusinessCount] = useState(0);
 
   useEffect(() => {
     trackEvent("Dashboard Viewed");
@@ -29,6 +30,8 @@ export function useDashboard() {
           fetchAllBusinesses(),
           fetchProfileAndPrefs().catch(() => null),
         ]);
+
+        setBusinessCount(bizList.length);
 
         let target = bizList.find((b) => b.id === activeId);
         if (!target && bizList.length > 0) target = bizList[0];
@@ -74,7 +77,7 @@ export function useDashboard() {
     loadDashBusiness();
   }, []);
 
-  return { data, loading, tasks };
+  return { data, loading, tasks, businessCount };
 }
 
 function buildDashboardData(): DashboardData {

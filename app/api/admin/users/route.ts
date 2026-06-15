@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
-import { DB_TO_PLAN } from "@/lib/billing/features";
 import type { ApiResponse } from "@/types/api.types";
 
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
@@ -57,7 +56,7 @@ export async function POST(request: Request) {
     const planMap: Record<string, string | null> = {};
     (subs || []).forEach((s: any) => {
       const dbSlug = planSlugMap[s.plan_id];
-      planMap[s.user_id] = (dbSlug && DB_TO_PLAN[dbSlug]) || dbSlug || null;
+      planMap[s.user_id] = dbSlug || null;
     });
 
     const { data: profiles } = await supabase

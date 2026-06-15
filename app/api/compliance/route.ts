@@ -16,8 +16,9 @@ export async function GET(request: Request) {
 
     let query = (supabase as any)
       .from("compliance_tasks")
-      .select("*, businesses!inner(user_id)")
-      .eq("businesses.user_id", user.id);
+      .select("*");
+
+    if (businessId) query = query.eq("business_id", businessId);
 
     if (businessId) query = query.eq("business_id", businessId);
 
