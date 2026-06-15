@@ -148,21 +148,31 @@ export function DashboardPage() {
     const bid = data.business?.id;
     if (!bid) return;
 
+    const formatScore = (d: any) => ({
+      id: d.id,
+      businessId: d.businessId,
+      score: d.score,
+      breakdown: d.breakdown,
+      previousScore: d.previousScore,
+      calculatedAt: d.calculatedAt,
+    });
+
+    // Try reading existing score first; if none, calculate one
     fetch(`/api/compliance/score?businessId=${bid}`)
     .then(r => r.json())
     .then(json => {
       if (json.success && json.data) {
-        setComputedScore({
-          id: json.data.id,
-          businessId: json.data.businessId,
-          score: json.data.score,
-          breakdown: json.data.breakdown,
-          previousScore: json.data.previousScore,
-          calculatedAt: json.data.calculatedAt,
-        });
-      } else {
-        console.error("[Dashboard] Score API error:", json.error);
+        setComputedScore(formatScore(json.data));
+        return null;
       }
+      return fetch("/api/compliance/score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ businessId: bid }),
+      }).then(r => r.json());
+    })
+    .then((json: any) => {
+      if (json?.success && json?.data) setComputedScore(formatScore(json.data));
     })
     .catch((err) => console.error("[Dashboard] Score fetch failed:", err));
   }, [data.business]);

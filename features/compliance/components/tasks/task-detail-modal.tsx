@@ -73,6 +73,9 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
     try {
       await removeEvidence(evidenceId);
       setEvidence((prev) => prev.filter((e) => e.id !== evidenceId));
+      // Refetch documents so the unlinked doc reappears in the "available to link" list
+      const docs = await getDocuments(task.businessId);
+      setAvailableDocs(docs);
     } catch {
       alert("Failed to remove evidence");
     } finally {
@@ -106,7 +109,6 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
       setIsLinking(true);
       const newEvidence = await linkDocumentAsEvidenceAPI(docId, docTitle, task.id, task.businessId);
       setEvidence((prev) => [...prev, newEvidence]);
-      setAvailableDocs((prev) => prev.filter((d) => d.id !== docId));
       setShowLinkDoc(false);
     } catch (err: any) {
       console.error("Failed to link document", err);
