@@ -186,12 +186,6 @@
   border-radius: 16px;
   border: 1px solid var(--color-role-light-outlineVariant);
   background: var(--color-role-light-surfaceContainerLowest, transparent);
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.userProfile:hover {
-  background: var(--color-role-light-surfaceContainer);
 }
 
 .footerCollapsed .userProfile {
