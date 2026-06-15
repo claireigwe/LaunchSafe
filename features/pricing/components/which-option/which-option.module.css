@@ -43,13 +43,17 @@
 }
 
 .card {
-  background-color: #ffffff;
-  border: none;
+  background: var(--color-role-light-surfaceBright, #ffffff);
+  border: 1px solid #ffffff;
   border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  
+  
+  
   padding: 32px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
+  
 }
 
 .cardContent {

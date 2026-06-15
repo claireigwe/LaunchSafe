@@ -5,10 +5,9 @@
 
 .app-content {
   flex: 1;
-  margin-left: 240px;
+  margin-left: 292px;
   padding: 32px;
   min-height: 100vh;
-  background-color: var(--color-role-light-surface);
 }
 
 @media (max-width: 768px) {

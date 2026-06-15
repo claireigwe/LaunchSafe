@@ -1,8 +1,12 @@
 .card {
-  background: var(--color-role-light-surfaceContainerLowest);
-  border: none;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  border-radius: 20px;
+  background: var(--color-role-light-surfaceBright, #ffffff);
+  border: 1px solid #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  
+  
+  
+  
 }
 
 .header {

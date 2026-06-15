@@ -113,7 +113,6 @@ export function AppSidebar() {
         </div>
 
         <nav className={styles.nav} aria-label="Main navigation">
-          {!collapsed && <div className={styles.sectionLabel}>MAIN</div>}
           {mounted && setupMode && (
             <Link
               href="/onboarding"

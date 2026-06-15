@@ -1,5 +1,9 @@
-.card { background: var(--color-role-light-surfaceContainerLowest); border: none;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 20px; margin-top: 28px; }
+.card {
+  background: var(--color-role-light-surfaceBright, #ffffff);
+  border: 1px solid #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);  
+    margin-top: 28px; }
 .header { display: flex; align-items: center; gap: 10px; padding: 20px 24px; border-bottom: 1px solid var(--color-role-light-outlineVariant); }
 .icon { color: var(--color-role-light-primary); }
 .title { font-family: var(--font-title-title-large-fontFamily); font-size: 16px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0; }

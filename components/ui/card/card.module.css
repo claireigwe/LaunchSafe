@@ -1,7 +1,11 @@
 .card {
-  background-color: var(--color-role-light-surface);
-  border-radius: 24px; /* From design-system.md for cards */
-  border: 1px solid var(--color-role-light-outlineVariant);
+  background: var(--color-role-light-surfaceBright, #ffffff);
+  border: 1px solid #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  
+   /* From design-system.md for cards */
+  
   overflow: hidden;
   position: relative;
 }
