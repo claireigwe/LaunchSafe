@@ -19,7 +19,6 @@ import {
   Compass,
 } from "lucide-react";
 import { isInSetupMode } from "@/features/billing/api/setup-check";
-import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { getUnreadCount } from "@/features/notifications/api/notifications-api";
 import { getActiveBusinessId, useAppStore } from "@/lib/stores/app-store";
 import { fetchAllBusinesses } from "@/features/businesses/api/onboarding-api";
@@ -94,7 +93,6 @@ export function AppSidebar() {
         <div className={styles.logo}>
           <span className={styles.logoIcon}>⬡</span>
           {!collapsed && <span className={styles.logoText}>LaunchSafe</span>}
-          <NotificationBell />
         </div>
 
         <nav className={styles.nav} aria-label="Main navigation">
