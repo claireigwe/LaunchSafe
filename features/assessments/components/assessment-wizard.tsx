@@ -86,17 +86,25 @@ export function AssessmentWizard() {
 
   const handleAssessmentComplete = useCallback(async () => {
     trackEvent("Assessment Completed");
-    const generatedSummary = generateAssessmentSummary(data);
-    setSummary(generatedSummary);
-    await saveSummaryToLocalStorage(generatedSummary);
 
     try {
       const assessment = await createAssessment(data);
       setAssessmentId(assessment.id);
       saveAssessmentIdToLocalStorage(assessment.id);
+
+      // Use the server-returned summary (real DB count, matches post-payment)
+      if (assessment.summaryJson) {
+        setSummary(assessment.summaryJson);
+        await saveSummaryToLocalStorage(assessment.summaryJson);
+      }
+
       trackEvent("Assessment Saved", { assessmentId: assessment.id });
     } catch (err) {
       console.error("[Assessment] Failed to save assessment:", err);
+      // Fallback to local estimate if server is unavailable
+      const fallbackSummary = generateAssessmentSummary(data);
+      setSummary(fallbackSummary);
+      await saveSummaryToLocalStorage(fallbackSummary);
     }
 
     goToStep("processing");
