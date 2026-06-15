@@ -140,16 +140,33 @@ export async function PATCH(request: Request) {
     if (title) updates.requirement_name = title;
     if (description !== undefined) updates.agency_name = description;
     if (dueDate !== undefined) updates.due_date = dueDate || null;
-    if (status) updates.status = status;
+    if (status) updates.status = status === "pending" ? "not_started" : status;
 
-    let updateQuery = (supabase as any)
+    if (priority !== undefined || description !== undefined) {
+      try {
+        const { data: existing } = await supabase
+          .from("compliance_tasks")
+          .select("notes")
+          .eq("id", id)
+          .maybeSingle();
+        let notes: any = {};
+        if (existing?.notes) {
+          try { notes = JSON.parse(existing.notes); } catch { notes = {}; }
+        }
+        if (priority !== undefined) notes.priority = priority;
+        if (description !== undefined) notes.description = description;
+        updates.notes = JSON.stringify(notes);
+      } catch {
+        // Notes merge failed — proceed with column updates only
+      }
+    }
+
+    const { data, error } = await (supabase as any)
       .from("compliance_tasks")
       .update(updates)
-      .eq("id", id);
-
-    if (businessId) updateQuery = updateQuery.eq("business_id", businessId);
-
-    const { data, error } = await updateQuery.select().single();
+      .eq("id", id)
+      .select()
+      .single();
 
     if (error) {
       return NextResponse.json<ApiResponse>(
@@ -159,10 +176,12 @@ export async function PATCH(request: Request) {
     }
 
     return NextResponse.json<ApiResponse>({ success: true, data: mapTask(data) });
-  } catch {
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("[LaunchSafe] PATCH error:", err);
     return NextResponse.json<ApiResponse>(
-      { success: false, error: { message: "Unauthorized" } },
-      { status: 401 }
+      { success: false, error: { message } },
+      { status: 500 }
     );
   }
 }
@@ -219,7 +238,7 @@ function mapTask(row: any): any {
     id: row.id,
     businessId: row.business_id || "",
     title: row.requirement_name,
-    description: notesObj.description || row.agency_name || "",
+    description: row.agency_name || notesObj.description || "",
     dueDate: row.due_date || null,
     priority: notesObj.priority || "medium",
     status: row.status === "not_started" ? "pending" : row.status,

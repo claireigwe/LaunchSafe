@@ -26,7 +26,9 @@ async function apiPatch<T>(url: string, body: any): Promise<T | null> {
     const res = await fetch(url, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const json = await res.json();
     return json.success ? json.data : null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 async function apiDelete(url: string, body: any): Promise<boolean> {
@@ -145,10 +147,17 @@ export async function createTask(input: CreateTaskInput & { source?: TaskSource;
 export async function updateTask(id: string, input: UpdateTaskInput): Promise<ComplianceTaskItem | null> {
   const businessId = getActiveBusinessId();
 
-  const server = await apiPatch<ComplianceTaskItem>("/api/compliance", { id, ...input, businessId });
-  if (!server) {
-    throw new Error("Failed to update task on server. Please try again.");
+  const body = { id, ...input, businessId };
+  const res = await fetch("/api/compliance", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const json = await res.json();
+  if (!json.success) {
+    throw new Error(json.error?.message || `Server error (${res.status})`);
   }
+  const server = json.data;
 
   // Update cache
   if (tasksCache) {
