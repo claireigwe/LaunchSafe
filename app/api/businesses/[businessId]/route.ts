@@ -33,7 +33,9 @@ export async function GET(
         name: data.name,
         description: data.description || "",
         industryId: data.industry_id,
+        subIndustryId: data.sub_industry_id,
         stateId: data.state_id,
+        lgaId: data.lga_id,
         status: data.status,
         employeeCount: data.employee_count,
         website: data.website,
@@ -69,10 +71,20 @@ export async function PATCH(
       const { data: ind } = await supabase.from("industries").select("id").eq("slug", body.industrySlug).maybeSingle();
       if (ind) updates.industry_id = ind.id;
     }
+    if (body.subIndustrySlug !== undefined && body.industrySlug) {
+      const { data: ind } = await supabase.from("industries").select("id").eq("slug", body.industrySlug).maybeSingle();
+      if (ind && body.subIndustrySlug) {
+        const { data: sub } = await supabase.from("sub_industries").select("id").eq("slug", body.subIndustrySlug).eq("industry_id", ind.id).maybeSingle();
+        if (sub) updates.sub_industry_id = sub.id;
+      } else if (ind) {
+        updates.sub_industry_id = null;
+      }
+    }
     if (body.stateSlug) {
       const { data: st } = await supabase.from("states").select("id").ilike("name", body.stateSlug).maybeSingle();
       if (st) updates.state_id = st.id;
     }
+    if (body.lgaId !== undefined) updates.lga_id = body.lgaId || null;
 
     const { data, error } = await supabase
       .from("businesses")

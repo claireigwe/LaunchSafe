@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { getIndustries, getIndustriesSync, type IndustryOption } from "@/features/assessments/api/industries-api";
+import { INDUSTRIES_WITH_SUB } from "@/features/assessments/data/sub-industries";
 import { ASSESSMENT_COUNTRIES } from "@/features/assessments/data/countries-data";
 import styles from "./edit-business-modal.module.css";
 
@@ -11,7 +12,9 @@ interface BusinessFormData {
   businessName: string;
   businessType: string;
   industry: string;
+  subIndustry: string;
   state: string;
+  lga: string;
   website: string;
   description: string;
   employeeCount: string;
@@ -51,8 +54,25 @@ function BoolToggle({ label, value, onChange }: { label: string; value: boolean 
 export function EditBusinessModal({ initial, onSave, onClose }: Props) {
   const [industries, setIndustries] = useState<IndustryOption[]>(() => getIndustriesSync());
   const [form, setForm] = useState<BusinessFormData>(initial);
+  const [lgas, setLgas] = useState<{ id: string; name: string }[]>([]);
+  const [lgasLoading, setLgasLoading] = useState(false);
+
+  const currentIndustry = INDUSTRIES_WITH_SUB.find((i) => i.id === form.industry);
+  const subIndustries = currentIndustry?.subIndustries || [];
 
   useEffect(() => { getIndustries().then(setIndustries).catch(() => {}); }, []);
+
+  useEffect(() => {
+    if (!form.state) { setLgas([]); return; }
+    const state = ASSESSMENT_COUNTRIES[0]?.states.find((s) => s.id === form.state);
+    if (!state) return;
+    setLgasLoading(true);
+    fetch(`/api/lgas?state=${encodeURIComponent(state.name)}`)
+      .then((r) => r.json())
+      .then((json) => { if (json.success) setLgas(json.data); })
+      .catch(() => {})
+      .finally(() => setLgasLoading(false));
+  }, [form.state]);
 
   function update(fields: Partial<BusinessFormData>) {
     setForm((prev) => ({ ...prev, ...fields }));
@@ -79,8 +99,15 @@ export function EditBusinessModal({ initial, onSave, onClose }: Props) {
 
           <div className={styles.field}>
             <label className={styles.label}>Industry</label>
-            <Select placeholder="Select industry" value={form.industry} onChange={(e) => update({ industry: e.target.value })} options={industries.map((i) => ({ value: i.slug, label: i.name }))} />
+            <Select placeholder="Select industry" value={form.industry} onChange={(e) => update({ industry: e.target.value, subIndustry: "" })} options={industries.map((i) => ({ value: i.slug, label: i.name }))} />
           </div>
+
+          {form.industry && (
+            <div className={styles.field}>
+              <label className={styles.label}>Sub-Industry</label>
+              <Select placeholder="Select sub-industry" value={form.subIndustry} onChange={(e) => update({ subIndustry: e.target.value })} options={subIndustries.map((s) => ({ value: s.id, label: s.name }))} />
+            </div>
+          )}
 
           <div className={styles.field}>
             <label className={styles.label}>Business Type</label>
@@ -89,8 +116,15 @@ export function EditBusinessModal({ initial, onSave, onClose }: Props) {
 
           <div className={styles.field}>
             <label className={styles.label}>State</label>
-            <Select placeholder="Select state" value={form.state} onChange={(e) => update({ state: e.target.value })} options={ASSESSMENT_COUNTRIES[0]?.states.map((s) => ({ value: s.id, label: s.name })) || []} />
+            <Select placeholder="Select state" value={form.state} onChange={(e) => update({ state: e.target.value, lga: "" })} options={ASSESSMENT_COUNTRIES[0]?.states.map((s) => ({ value: s.id, label: s.name })) || []} />
           </div>
+
+          {form.state && (
+            <div className={styles.field}>
+              <label className={styles.label}>LGA <span className={styles.opt}>(optional)</span></label>
+              <Select placeholder={lgasLoading ? "Loading..." : "Select LGA"} value={form.lga} onChange={(e) => update({ lga: e.target.value })} options={lgas.map((l) => ({ value: l.id, label: l.name }))} />
+            </div>
+          )}
 
           <div className={styles.field}>
             <label className={styles.label}>Website <span className={styles.opt}>(optional)</span></label>

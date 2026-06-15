@@ -33,7 +33,7 @@ export function ReportModal({ reportId, isOpen, onClose }: { reportId: string | 
     fetch(`/api/assessments/${reportId}/report`)
       .then((r) => r.json())
       .then((json) => {
-        if (json.success && json.data) setReport(json.data);
+        if (json.success && json.data) setReport(json.data.report ?? json.data);
         else setError(json.error?.message || "Report not found");
       })
       .catch(() => setError("Failed to load report"))

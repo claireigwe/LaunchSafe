@@ -9,6 +9,8 @@ import { useAppStore } from "@/lib/stores/app-store";
 import { audit } from "@/features/audit/api/audit-api";
 import { canAccess, getPlanLimit, getCurrentPlanName, getCurrentPlanId } from "@/features/billing/api/feature-access";
 import { getIndustriesSync } from "@/features/assessments/api/industries-api";
+import { INDUSTRIES_WITH_SUB } from "@/features/assessments/data/sub-industries";
+import { ASSESSMENT_COUNTRIES } from "@/features/assessments/data/countries-data";
 import { EditBusinessModal } from "./edit-business-modal";
 import styles from "./business-page.module.css";
 
@@ -42,12 +44,17 @@ export function BusinessPage() {
         const d = json.data;
         const det: any = d.details || {};
         
+        let subIndustry = "";
+        let lga = "";
+
         if (d.description) {
           try {
             const parsed = JSON.parse(d.description);
             if (parsed.fullData) {
               return parsed.fullData;
             }
+            subIndustry = parsed.subIndustry || "";
+            lga = parsed.lga || "";
           } catch {}
         }
 
@@ -56,7 +63,9 @@ export function BusinessPage() {
             businessName: d.name || "",
             businessType: det.businessType || "",
             industry: d.industryId || "",
+            subIndustry: subIndustry || "",
             state: d.stateId || "",
+            lga: lga || d.lgaId || "",
             website: d.website || "",
             description: "",
           },
@@ -133,7 +142,9 @@ export function BusinessPage() {
     businessName: info?.businessName || "",
     businessType: info?.businessType || "",
     industry: info?.industry || "",
+    subIndustry: info?.subIndustry || "",
     state: info?.state || "",
+    lga: info?.lga || "",
     website: info?.website || "",
     description: info?.description || "",
     employeeCount: operations?.employeeCount || "",
@@ -147,7 +158,7 @@ export function BusinessPage() {
   function handleEditSave(formData: typeof editInitial) {
     const updated = {
       ...saved,
-      info: { ...(saved?.info || {}), businessName: formData.businessName, businessType: formData.businessType, industry: formData.industry, state: formData.state, website: formData.website, description: formData.description },
+      info: { ...(saved?.info || {}), businessName: formData.businessName, businessType: formData.businessType, industry: formData.industry, subIndustry: formData.subIndustry, state: formData.state, lga: formData.lga, website: formData.website, description: formData.description },
       status: { ...(saved?.status || {}), isRegistered: formData.isRegistered, hasCAC: formData.hasCAC, cacNumber: formData.cacNumber },
       operations: { ...(saved?.operations || {}), employeeCount: formData.employeeCount, hasPhysicalLocation: formData.hasPhysicalLocation, hasOnlineOperations: formData.hasOnlineOperations },
       _updatedAt: new Date().toISOString(),
@@ -168,7 +179,9 @@ export function BusinessPage() {
           employeeCount: formData.employeeCount || null,
           description: formData.description || null,
           industrySlug: formData.industry || null,
+          subIndustrySlug: formData.subIndustry || null,
           stateSlug: formData.state || null,
+          lgaId: formData.lga || null,
           details: {
             businessType: formData.businessType,
             isRegistered: formData.isRegistered,
@@ -186,6 +199,26 @@ export function BusinessPage() {
   }
 
   const stateLabels: Record<string, string> = { lagos: "Lagos", oyo: "Oyo", "abuja-fct": "Abuja (FCT)", rivers: "Rivers", kano: "Kano" };
+
+  const [lgaNames, setLgaNames] = useState<Record<string, string>>({});
+  useEffect(() => {
+    const lgaId = info?.lga;
+    if (!lgaId || lgaNames[lgaId]) return;
+    const stateId = info?.state;
+    if (!stateId) return;
+    const state = ASSESSMENT_COUNTRIES[0]?.states.find((s) => s.id === stateId);
+    if (!state) return;
+    fetch(`/api/lgas?state=${encodeURIComponent(state.name)}`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success) {
+          const map: Record<string, string> = {};
+          json.data.forEach((l: any) => { map[l.id] = l.name; });
+          setLgaNames(map);
+        }
+      })
+      .catch(() => {});
+  }, [info?.lga, info?.state]);
 
   if (businesses.length === 0 && !info?.businessName) {
     return (
@@ -291,8 +324,20 @@ export function BusinessPage() {
               </div>
               <div className={styles.detailBody}>
                 <DetailRow label="Industry" value={getIndustriesSync().find((i) => i.slug === info?.industry)?.name || info?.industry || selected?.industry || "—"} />
+                {(() => {
+                  const indGroup = INDUSTRIES_WITH_SUB.find((i) => i.id === info?.industry);
+                  const sub = indGroup?.subIndustries.find((s) => s.id === info?.subIndustry);
+                  if (!sub) return null;
+                  return <DetailRow label="Sub-Industry" value={sub.name} />;
+                })()}
                 {info?.businessType && <DetailRow label="Type" value={info.businessType} />}
                 <DetailRow label="State" value={stateLabels[info?.state] || info?.state || stateLabels[selected?.state] || selected?.state || "—"} />
+                {(() => {
+                  const lgaVal = info?.lga;
+                  const lgaName = lgaVal ? (lgaNames[lgaVal] || lgaVal) : null;
+                  if (!lgaName) return null;
+                  return <DetailRow label="LGA" value={lgaName} />;
+                })()}
                 {info?.website && <DetailRow label="Website" value={info.website} />}
                 {info?.description && <DetailRow label="Description" value={info.description} />}
                 <DetailRow label="Registered" value={status?.isRegistered ? "Yes" : status?.isRegistered === false ? "No" : "—"} />
