@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ClipboardList, Plus, AlertTriangle, FileText, BarChart, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDashboard } from "../../hooks/use-dashboard";
+import { useDashboardData } from "../../hooks/use-dashboard-data";
 import { useHasBusiness } from "@/features/businesses/hooks/use-has-business";
 import { BusinessRequiredOverlay } from "@/features/businesses/components/business-required-overlay";
 import { PastReportsWidget } from "@/features/assessments/components/past-reports-widget";
@@ -20,13 +21,10 @@ import { loadTasks, reconcileTaskStatuses, createTask } from "../../api/tasks-ap
 import { getActiveBusinessId } from "@/lib/stores/app-store";
 import { formatFileSize, type UploadDocumentInput } from "@/features/documents/api/documents-api";
 import { DOC_TYPE_LABELS } from "@/features/documents/types/documents.types";
-import { formatCurrency, getSubscription } from "@/features/billing/api/billing-api";
-import type { SavedSubscription } from "@/features/billing/api/billing-api";
+import { formatCurrency } from "@/features/billing/api/billing-api";
 import { canAccess, getCurrentPlanId } from "@/features/billing/api/feature-access";
 import { SetupOverlay } from "@/features/billing/components/setup-overlay";
 import { isInSetupMode } from "@/features/billing/api/setup-check";
-import { getRegulatoryUpdates } from "@/features/regulatory-updates/api/regulatory-updates-api";
-import { getRecentActivity, type ActivityEntry } from "@/features/activity/api/activity-api";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import type { ComplianceTaskItem, CreateTaskInput } from "../../types/tasks.types";
 import type { AppDocument } from "@/features/documents/types/documents.types";
@@ -36,13 +34,11 @@ import styles from "./dashboard-page.module.css";
 
 export function DashboardPage() {
   const { data, loading, businessCount } = useDashboard();
+  const { data: dashData } = useDashboardData();
   const [savedTasks, setSavedTasks] = useState<ComplianceTaskItem[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [showUploadDoc, setShowUploadDoc] = useState(false);
   const hasBusiness = useHasBusiness();
-  const [regUpdates, setRegUpdates] = useState<RegulatoryUpdate[]>([]);
-  const [recentActivity, setRecentActivity] = useState<ActivityEntry[]>([]);
-  const [subscription, setSubscription] = useState<SavedSubscription | null>(null);
   const { data: uploadedDocs = [] } = useDocuments();
   const uploadMutation = useUploadDocument();
   const recentDocs = uploadedDocs.slice(0, 4);
@@ -128,24 +124,16 @@ export function DashboardPage() {
   async function refreshDashboard() {
     await reconcileTaskStatuses();
     setSavedTasks(loadTasks());
-    const updates = await getRegulatoryUpdates();
-    setRegUpdates(updates.slice(0, 3));
-    const acts = await getRecentActivity(5);
-    setRecentActivity(acts);
   }
 
   useEffect(() => {
     refreshDashboard();
-    getSubscription().then(setSubscription).catch(() => {});
-    const onFocus = () => refreshDashboard();
-    window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
   }, []);
 
   const [computedScore, setComputedScore] = useState<any>(null);
 
   useEffect(() => {
-    const bid = data.business?.id;
+    const bid = getActiveBusinessId() || data.business?.id;
     if (!bid) return;
 
     const formatScore = (d: any) => ({
@@ -157,22 +145,15 @@ export function DashboardPage() {
       calculatedAt: d.calculatedAt,
     });
 
-    // Try reading existing score first; if none, calculate one
-    fetch(`/api/compliance/score?businessId=${bid}`)
+    // Always recalculate score to reflect current task state
+    fetch("/api/compliance/score", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ businessId: bid }),
+    })
     .then(r => r.json())
     .then(json => {
-      if (json.success && json.data) {
-        setComputedScore(formatScore(json.data));
-        return null;
-      }
-      return fetch("/api/compliance/score", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ businessId: bid }),
-      }).then(r => r.json());
-    })
-    .then((json: any) => {
-      if (json?.success && json?.data) setComputedScore(formatScore(json.data));
+      if (json.success && json.data) setComputedScore(formatScore(json.data));
     })
     .catch((err) => console.error("[Dashboard] Score fetch failed:", err));
   }, [data.business]);
@@ -349,18 +330,18 @@ function EmptyTasks({ onAddTask }: { onAddTask: () => void }) {
 
   if (setupMsg) {
     return (
-      <div className={styles.loading}>
-        <div className={styles.spinner} />
-        <p>{setupMsg}</p>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className={styles.loading}>
-        <div className={styles.spinner} />
-        <p>Loading your dashboard...</p>
+      <div className={styles.page}>
+        <div className={styles.skeleton} style={{ width: 280, height: 28, margin: "28px 0 8px" }} />
+        <div className={styles.skeleton} style={{ width: 200, height: 16, marginBottom: 28 }} />
+        <div className={styles.grid}>
+          <section className={styles.primary}>
+            <div className={styles.card} style={{ padding: 24 }}><div className={styles.skeleton} style={{ width: 160, height: 20, marginBottom: 20 }} /><div className={styles.skeleton} style={{ width: 80, height: 80, borderRadius: "50%", margin: "0 auto 16px" }} /><div className={styles.skeleton} style={{ width: "70%", height: 14, margin: "0 auto" }} /></div>
+            <div className={styles.card} style={{ padding: 24 }}><div className={styles.skeleton} style={{ width: 140, height: 20, marginBottom: 16 }} /><div className={styles.skeleton} style={{ width: "100%", height: 14, marginBottom: 8 }} /><div className={styles.skeleton} style={{ width: "80%", height: 14 }} /></div>
+          </section>
+          <aside className={styles.secondary}>
+            <div className={styles.card} style={{ padding: 24 }}><div className={styles.skeleton} style={{ width: 100, height: 20, marginBottom: 16 }} /><div className={styles.skeleton} style={{ width: "100%", height: 36 }} /></div>
+          </aside>
+        </div>
       </div>
     );
   }
@@ -387,7 +368,7 @@ function EmptyTasks({ onAddTask }: { onAddTask: () => void }) {
             <EmptyTasks onAddTask={() => hasBusiness === true && setShowCreate(true)} />
           )}
           <ReportsPreview />
-          <RegulatoryUpdates updates={regUpdates} />
+          <RegulatoryUpdates updates={dashData?.regulatoryUpdates || []} />
         </section>
         <aside className={styles.secondary}>
           <QuickActions onAddTask={() => hasBusiness === true && setShowCreate(true)} onUploadDocument={() => hasBusiness === true && setShowUploadDoc(true)} />
@@ -411,9 +392,9 @@ function EmptyTasks({ onAddTask }: { onAddTask: () => void }) {
             </div>
           )}
           <PastReportsWidget />
-          {subscription && <SubscriptionStatus sub={subscription} />}
+          {dashData?.subscription && <SubscriptionStatus sub={dashData.subscription} />}
           <BusinessOverview business={data.business} businessCount={businessCount} />
-          <RecentActivity activities={recentActivity} />
+          <RecentActivity activities={dashData?.recentActivity || []} />
         </aside>
       </div>
 

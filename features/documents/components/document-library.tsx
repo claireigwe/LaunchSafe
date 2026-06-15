@@ -213,8 +213,29 @@ export function DocumentLibrary() {
       </div>
 
       {isLoading ? (
-        <div style={{ padding: "48px 0", textAlign: "center", color: "var(--color-role-light-onSurfaceVariant)" }}>
-          Loading documents...
+        <div className={styles.table}>
+          <div className={styles.tableHeader}>
+            <span className={styles.th}>Name</span>
+            <span className={styles.th}>Type</span>
+            <span className={styles.th}>Size</span>
+            <span className={styles.th}>Date</span>
+            <span className={styles.th} style={{ textAlign: "right" }}>Actions</span>
+          </div>
+          {[1,2,3,4].map((i) => (
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 80px", alignItems: "center", padding: "12px 20px", gap: 12, borderBottom: "1px solid var(--color-role-light-outlineVariant)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div className="sk" style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0 }} />
+                <div className="sk" style={{ flex: 1, height: 14 }} />
+              </div>
+              <div className="sk" style={{ width: 60, height: 12 }} />
+              <div className="sk" style={{ width: 50, height: 12 }} />
+              <div className="sk" style={{ width: 70, height: 12 }} />
+              <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+                <div className="sk" style={{ width: 28, height: 28, borderRadius: 6 }} />
+                <div className="sk" style={{ width: 28, height: 28, borderRadius: 6 }} />
+              </div>
+            </div>
+          ))}
         </div>
       ) : filtered.length > 0 ? (
         view === "table" ? (

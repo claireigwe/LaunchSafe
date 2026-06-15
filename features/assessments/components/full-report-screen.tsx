@@ -76,8 +76,11 @@ export function FullReportScreen() {
     return (
       <div className={styles.wrapper}>
         <div className={styles.container}>
-          <div className={styles.spinner} />
-          <p className={styles.verifyingText}>Verifying your payment...</p>
+          <div className="sk" style={{ width: 200, height: 24, margin: "0 auto 8px" }} />
+          <div className="sk" style={{ width: 140, height: 14, margin: "0 auto 24px" }} />
+          <div className="sk" style={{ width: "100%", height: 160, marginBottom: 24 }} />
+          <div className="sk" style={{ width: "100%", height: 200, marginBottom: 24 }} />
+          <div className="sk" style={{ width: "100%", height: 120 }} />
         </div>
       </div>
     );

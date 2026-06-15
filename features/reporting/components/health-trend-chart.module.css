@@ -10,7 +10,12 @@
 .kpiRow { display: flex; gap: 64px; margin-bottom: 32px; flex-wrap: wrap; }
 @media (max-width: 640px) { .kpiRow { flex-direction: column; gap: 16px; } }
 .kpiCard { padding: 0; background: transparent; border: none; display: flex; flex-direction: column; gap: 4px; }
-.kpiLabel { font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 500; color: var(--color-role-light-onSurfaceVariant); text-transform: none; letter-spacing: 0; }
+.kpiLabel { font-family: var(--font-label-label-medium-fontFamily); font-size: 13px; font-weight: 500; color: var(--color-role-light-onSurfaceVariant); text-transform: none; letter-spacing: 0; display: flex; align-items: center; gap: 6px; }
+.kpiInfoWrap { position: relative; display: inline-flex; align-items: center; cursor: help; }
+.kpiInfoIcon { color: var(--color-role-light-outlineVariant); width: 14px; height: 14px; transition: color 0.15s; }
+.kpiInfoWrap:hover .kpiInfoIcon { color: var(--color-role-light-onSurfaceVariant); }
+.kpiTooltip { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--color-palette-neutral-10); color: #fff; font-family: var(--font-label-label-small-fontFamily); font-size: 11px; font-weight: 400; padding: 8px 12px; border-radius: 8px; white-space: nowrap; z-index: 10; pointer-events: none; line-height: 1.4; max-width: 260px; white-space: normal; text-align: center; }
+.kpiInfoWrap:hover .kpiTooltip { display: block; }
 .kpiValue { font-family: var(--font-headline-headline-large-fontFamily); font-size: 36px; font-weight: 700; color: var(--color-role-light-onSurface); display: flex; align-items: baseline; gap: 8px; }
 .kpiEmpty { color: var(--color-role-light-outlineVariant); }
 .kpiUp { color: var(--color-key-success); }

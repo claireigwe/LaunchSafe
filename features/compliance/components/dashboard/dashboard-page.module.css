@@ -28,6 +28,17 @@
   to { transform: rotate(360deg); }
 }
 
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.skeleton {
+  background: var(--color-role-light-surfaceContainer);
+  border-radius: 12px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
 .header {
   margin-bottom: 28px;
 }

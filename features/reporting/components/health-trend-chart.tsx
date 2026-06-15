@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { TrendingUp, TrendingDown, Minus, CheckCircle, XCircle } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, CheckCircle, XCircle, Info } from "lucide-react";
 import { loadTasks } from "@/features/compliance/api/tasks-api";
 import { useDocuments } from "@/features/documents/hooks/use-documents-query";
 import type { HealthTrendPoint } from "../types/reporting.types";
@@ -9,6 +9,15 @@ import styles from "./health-trend-chart.module.css";
 
 interface Props {
   data: HealthTrendPoint[];
+}
+
+function seededHash(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
 }
 
 function generateTimeSeries(range: "30d" | "90d" | "12m"): HealthTrendPoint[] {
@@ -22,7 +31,8 @@ function generateTimeSeries(range: "30d" | "90d" | "12m"): HealthTrendPoint[] {
   for (let i = months; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const label = d.toLocaleDateString("en-NG", { month: "short", year: i > 0 ? "numeric" : undefined }).replace(" ", " '");
-    const variance = Math.floor(Math.random() * 8) - 4;
+    const seed = seededHash(`${range}-${i}-${currentRate}`);
+    const variance = (seed % 9) - 4;
     const score = i === 0 ? currentRate : Math.min(100, Math.max(10, currentRate + variance + (months - i) * 2));
     points.push({ label, score });
   }
@@ -93,13 +103,25 @@ export function HealthTrendChart({ data }: Props) {
 
       <div className={styles.kpiRow}>
         <div className={styles.kpiCard}>
-          <span className={styles.kpiLabel}>Current Score</span>
+          <span className={styles.kpiLabel}>
+            Current Score
+            <span className={styles.kpiInfoWrap}>
+              <Info className={styles.kpiInfoIcon} />
+              <span className={styles.kpiTooltip}>Percentage of compliance tasks completed. Based on tasks marked as done vs total tasks in the selected period.</span>
+            </span>
+          </span>
           <span className={`${styles.kpiValue} ${hasRealData ? "" : styles.kpiEmpty}`}>
             {hasRealData ? `${current.score}%` : "—"}
           </span>
         </div>
         <div className={styles.kpiCard}>
-          <span className={styles.kpiLabel}>Period Change</span>
+          <span className={styles.kpiLabel}>
+            Period Change
+            <span className={styles.kpiInfoWrap}>
+              <Info className={styles.kpiInfoIcon} />
+              <span className={styles.kpiTooltip}>How your completion rate changed compared to the previous period. Positive means improvement, negative means decline.</span>
+            </span>
+          </span>
           <span className={`${styles.kpiValue} ${periodChange > 0 ? styles.kpiUp : periodChange < 0 ? styles.kpiDown : ""}`}>
             {periodChange !== 0 ? (
               <>{periodChange > 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />} {Math.abs(periodChange)}%</>

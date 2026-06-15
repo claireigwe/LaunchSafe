@@ -104,7 +104,7 @@ export function ReportModal({ reportId, isOpen, onClose }: { reportId: string | 
         </div>
 
         <div style={{ padding: "24px", overflowY: "auto", flex: 1 }}>
-          {loading && <div style={{ padding: "100px 0", textAlign: "center", color: "var(--color-role-light-onSurfaceVariant)" }}>Loading report...</div>}
+          {loading && <div style={{ padding: "40px 24px" }}><div className="sk" style={{ width: 160, height: 20, marginBottom: 20 }} /><div className="sk" style={{ width: "100%", height: 14, marginBottom: 8 }} /><div className="sk" style={{ width: "80%", height: 14, marginBottom: 8 }} /><div className="sk" style={{ width: "60%", height: 14 }} /></div>}
           
           {error && (
             <div style={{ padding: "100px 0", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>

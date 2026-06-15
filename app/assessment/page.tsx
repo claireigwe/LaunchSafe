@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function AssessmentPage() {
   return (
-    <Suspense fallback={<div style={{ padding: "100px 24px", textAlign: "center", color: "var(--color-role-light-onSurfaceVariant)" }}>Loading...</div>}>
+    <Suspense fallback={<div style={{ maxWidth: 700, margin: "0 auto", padding: "100px 24px" }}><div className="sk" style={{ width: 280, height: 28, margin: "0 auto 12px" }} /><div className="sk" style={{ width: 200, height: 16, margin: "0 auto 32px" }} /><div className="sk" style={{ width: "100%", height: 200 }} /></div>}>
       <AssessmentShell />
     </Suspense>
   );

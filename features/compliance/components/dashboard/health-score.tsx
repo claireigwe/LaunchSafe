@@ -12,9 +12,21 @@ export function HealthScore({ score }: Props) {
         <div className={styles.header}>
           <h2 className={styles.title}>Compliance Health</h2>
         </div>
-        <div className={styles.emptyBody}>
-          <div className={styles.emptyScore}>—</div>
-          <p className={styles.emptyText}>Complete your compliance setup to see your health score.</p>
+        <div className={styles.body}>
+          <div className={styles.scoreCol}>
+            <div style={{ width: 140, height: 140, borderRadius: "50%", background: "var(--color-role-light-surfaceContainer)", animation: "pulse 1.5s ease-in-out infinite" }} />
+          </div>
+          <div className={styles.details}>
+            <div style={{ width: "80%", height: 14, background: "var(--color-role-light-surfaceContainer)", borderRadius: 8, marginBottom: 20, animation: "pulse 1.5s ease-in-out infinite" }} />
+            <div className={styles.breakdown}>
+              {[1,2,3].map((i) => (
+                <div key={i} className={styles.stat}>
+                  <div style={{ width: 30, height: 16, background: "var(--color-role-light-surfaceContainer)", borderRadius: 6, animation: "pulse 1.5s ease-in-out infinite" }} />
+                  <div style={{ width: 50, height: 12, marginTop: 4, background: "var(--color-role-light-surfaceContainer)", borderRadius: 6, animation: "pulse 1.5s ease-in-out infinite" }} />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -42,9 +54,9 @@ export function HealthScore({ score }: Props) {
           <div className={`${styles.scoreCircle} ${styles[level]}`}>
             <span className={styles.scoreValue}>{score.score}%</span>
           </div>
-          {trendDiff != null && (
-            <span className={`${styles.trend} ${trendUp ? styles.trendUp : trendDown ? styles.trendDown : ""}`}>
-              {trendUp ? "↑" : trendDown ? "↓" : "–"} {trendDiff !== 0 ? Math.abs(trendDiff) + " pts" : "No change"}
+          {trendDiff != null && trendDiff !== 0 && (
+            <span className={`${styles.trend} ${trendUp ? styles.trendUp : styles.trendDown}`}>
+              {trendUp ? "↑" : "↓"} {Math.abs(trendDiff)} pts
             </span>
           )}
         </div>
@@ -58,10 +70,6 @@ export function HealthScore({ score }: Props) {
             <div className={styles.stat}>
               <span className={styles.statValue}>{score.breakdown.overdueCount}</span>
               <span className={styles.statLabel}>Overdue</span>
-            </div>
-            <div className={styles.stat}>
-              <span className={styles.statValue}>{score.breakdown.missingEvidence}</span>
-              <span className={styles.statLabel}>Missing evidence</span>
             </div>
             <div className={styles.stat}>
               <span className={styles.statValue}>{score.breakdown.upcomingDeadlineCount}</span>

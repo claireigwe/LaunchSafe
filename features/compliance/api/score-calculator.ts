@@ -114,7 +114,6 @@ export async function calculateComplianceScore(businessId: string): Promise<Scor
   let score = Math.round(completionRatio * 70);
 
   score -= overdueCount * 10;
-  score -= missingEvidence * 5;
   score -= expiredDocuments * 5;
   score -= upcomingDeadlineCount * 3;
 

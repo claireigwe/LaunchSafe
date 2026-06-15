@@ -58,13 +58,28 @@ export async function POST(request: Request) {
       );
     }
 
+    // Map client-side types to DB CHECK constraint values
+    const TYPE_MAP: Record<string, string> = {
+      task: "deadline_reminder",
+      deadline: "deadline_reminder",
+      deadline_reminder: "deadline_reminder",
+      compliance_overdue: "compliance_overdue",
+      document: "regulatory_update",
+      billing: "payment_success",
+      system: "deadline_reminder",
+      payment_success: "payment_success",
+      payment_failed: "payment_failed",
+      regulatory_update: "regulatory_update",
+    };
+    const dbType = TYPE_MAP[type] || "deadline_reminder";
+
     const { data, error } = await supabase
       .from("notifications")
       .insert({
         user_id: user.id,
         title,
         message,
-        type: type || "system",
+        type: dbType,
         action_url: actionUrl || null,
       })
       .select()

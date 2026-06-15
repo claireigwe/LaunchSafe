@@ -60,7 +60,7 @@ export function EditBusinessModal({ initial, onSave, onClose }: Props) {
   const currentIndustry = INDUSTRIES_WITH_SUB.find((i) => i.id === form.industry);
   const subIndustries = currentIndustry?.subIndustries || [];
 
-  useEffect(() => { getIndustries().then(setIndustries).catch(() => {}); }, []);
+  useEffect(() => { setIndustries(getIndustries()); }, []);
 
   useEffect(() => {
     if (!form.state) { setLgas([]); return; }

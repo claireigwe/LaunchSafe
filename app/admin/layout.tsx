@@ -35,7 +35,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (pathname === "/admin/login") return <>{children}</>;
 
-  if (checking) return <div style={{ padding: 40, textAlign: "center", color: "#888" }}>Loading...</div>;
+  if (checking) return <div style={{ display: "flex", minHeight: "100vh" }}><aside style={{ width: 220, padding: 20 }}><div className="sk" style={{ width: 100, height: 20, marginBottom: 24 }} /><div className="sk" style={{ width: "100%", height: 14, marginBottom: 8 }} /><div className="sk" style={{ width: "80%", height: 14, marginBottom: 8 }} /><div className="sk" style={{ width: "90%", height: 14 }} /></aside><main style={{ flex: 1, padding: 40 }}><div className="sk" style={{ width: 200, height: 28, marginBottom: 24 }} /><div className="sk" style={{ width: "100%", height: 300 }} /></main></div>;
   if (!authed) return null;
 
   return (

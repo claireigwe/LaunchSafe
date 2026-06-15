@@ -22,7 +22,7 @@ export default function BusinessOnboardingPage() {
         </Link>
       </div>
       <main>
-        <Suspense fallback={<div style={{ padding: "100px 24px", textAlign: "center", color: "var(--color-role-light-onSurfaceVariant)" }}>Loading...</div>}>
+        <Suspense fallback={<div style={{ maxWidth: 600, margin: "0 auto", padding: "100px 24px" }}><div className="sk" style={{ width: 200, height: 28, margin: "0 auto 12px" }} /><div className="sk" style={{ width: 160, height: 16, margin: "0 auto 32px" }} /><div className="sk" style={{ width: "100%", height: 300 }} /></div>}>
           <BusinessOnboardingWizard />
         </Suspense>
       </main>

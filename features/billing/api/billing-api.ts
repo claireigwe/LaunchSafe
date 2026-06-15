@@ -33,9 +33,11 @@ export interface SavedAssessmentPurchase {
   createdAt: string;
 }
 
-let cachedSubscription: SavedSubscription | null | undefined = undefined;
-let cachedPayments: SavedPayment[] | null = null;
-let cachedPurchases: SavedAssessmentPurchase[] | null = null;
+let cachedBillingData: {
+  subscription: SavedSubscription | null;
+  payments: SavedPayment[];
+  purchases: SavedAssessmentPurchase[];
+} | null = null;
 
 async function apiGet<T>(url: string): Promise<T | null> {
   try { const r = await fetch(url); const j = await r.json(); return j.success ? j.data : null; } catch { return null; }
@@ -45,27 +47,39 @@ async function apiPatch(url: string, body: any): Promise<boolean> {
   try { const r = await fetch(url, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); const j = await r.json(); return j.success; } catch { return false; }
 }
 
+export async function getBillingData(): Promise<{
+  subscription: SavedSubscription | null;
+  payments: SavedPayment[];
+  purchases: SavedAssessmentPurchase[];
+}> {
+  if (cachedBillingData) return cachedBillingData;
+  const data = await apiGet<{
+    subscription: SavedSubscription | null;
+    payments: SavedPayment[];
+    purchases: SavedAssessmentPurchase[];
+  }>("/api/billing/data");
+  cachedBillingData = data ?? { subscription: null, payments: [], purchases: [] };
+  return cachedBillingData;
+}
+
 export async function getSubscription(): Promise<SavedSubscription | null> {
-  const data = await apiGet<{ subscription: SavedSubscription | null }>("/api/billing/data");
-  cachedSubscription = data?.subscription ?? null;
-  return cachedSubscription;
+  const { subscription } = await getBillingData();
+  return subscription;
 }
 
 export async function getPayments(): Promise<SavedPayment[]> {
-  const data = await apiGet<{ payments: SavedPayment[] }>("/api/billing/data");
-  cachedPayments = data?.payments ?? [];
-  return (cachedPayments || []).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const { payments } = await getBillingData();
+  return [...payments].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function getAssessmentPurchases(): Promise<SavedAssessmentPurchase[]> {
-  const data = await apiGet<{ purchases: SavedAssessmentPurchase[] }>("/api/billing/data");
-  cachedPurchases = data?.purchases ?? [];
-  return (cachedPurchases || []).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const { purchases } = await getBillingData();
+  return [...purchases].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function cancelSubscription(): Promise<void> {
   await apiPatch("/api/billing/subscription", { action: "cancel" });
-  cachedSubscription = null;
+  cachedBillingData = null;
 }
 
 export async function schedulePlanChange(planId: string, planName: string, billingCycle: "monthly" | "annual"): Promise<void> {

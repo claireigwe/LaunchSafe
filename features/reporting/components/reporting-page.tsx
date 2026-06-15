@@ -47,7 +47,27 @@ export function ReportingPage() {
   }
 
   if (!data) {
-    return <div className={styles.loading}>Loading reports...</div>;
+    return (
+      <div className={styles.page}>
+        <div className={styles.header}>
+          <div>
+            <div className="sk" style={{ width: 200, height: 26, marginBottom: 4 }} />
+            <div className="sk" style={{ width: 280, height: 14 }} />
+          </div>
+          <div className={styles.headerMeta}>
+            <div className="sk" style={{ width: 80, height: 22, borderRadius: 6 }} />
+          </div>
+        </div>
+        <div className={styles.flow}>
+          <div className="sk" style={{ width: "100%", height: 240, borderRadius: 16 }} />
+          <div className={styles.twoColumnFlow}>
+            <div className="sk" style={{ width: "100%", height: 200, borderRadius: 16 }} />
+            <div className="sk" style={{ width: "100%", height: 200, borderRadius: 16 }} />
+          </div>
+          <div className="sk" style={{ width: "100%", height: 160, borderRadius: 16 }} />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -69,7 +89,7 @@ export function ReportingPage() {
       </div>
 
       <div className={styles.flow}>
-        <HealthTrendChart data={[]} />
+        <HealthTrendChart data={data.healthTrend} />
         <div className={styles.twoColumnFlow}>
           <ComplianceExecutionSection taskData={data.taskAnalytics} deadlineData={data.deadlinePerformance} />
           <RiskAssessmentSection data={data.riskReport} />

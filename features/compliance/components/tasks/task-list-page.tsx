@@ -114,7 +114,21 @@ export function TaskListPage() {
       </div>
 
       {isLoading ? (
-        <div className={styles.empty}><p className={styles.emptyText}>Loading tasks...</p></div>
+        <div className={styles.list}>
+          {[1,2,3,4,5].map((i) => (
+            <div key={i} style={{ display: "flex", flexDirection: "column", gap: 8, padding: "16px 20px", borderRadius: 14, background: "var(--color-role-light-surfaceContainerLowest)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div className="sk" style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0 }} />
+                <div className="sk" style={{ flex: 1, height: 14 }} />
+                <div className="sk" style={{ width: 60, height: 20, borderRadius: 6 }} />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, paddingLeft: 18 }}>
+                <div className="sk" style={{ width: 80, height: 12 }} />
+                <div className="sk" style={{ width: 40, height: 12 }} />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : filtered.length > 0 ? (
         <div className={styles.list}>
           {filtered.map((t) => <TaskCard key={t.id} task={t} onClick={setSelectedTask} />)}

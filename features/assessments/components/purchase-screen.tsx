@@ -79,7 +79,13 @@ export function PurchaseScreen() {
     return (
       <div className={styles.wrapper}>
         <div className={styles.container}>
-          <div className={styles.spinner} />
+          <div className="sk" style={{ width: 280, height: 28, margin: "0 auto 8px" }} />
+          <div className="sk" style={{ width: 200, height: 14, margin: "0 auto 24px" }} />
+          <div className="sk" style={{ width: "100%", height: 120, marginBottom: 16 }} />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 16 }}>
+            {[1,2,3].map((i) => <div key={i} className="sk" style={{ height: 80 }} />)}
+          </div>
+          <div className="sk" style={{ width: "100%", height: 200 }} />
         </div>
       </div>
     );

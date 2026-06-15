@@ -73,9 +73,21 @@ export function AssessmentSuccessContent() {
     return (
       <>
         <Header />
-        <main style={{ maxWidth: 700, margin: "80px auto", padding: "0 24px", textAlign: "center" }}>
-          <div style={{ width: 48, height: 48, borderRadius: "50%", border: "3px solid var(--color-role-light-primary)", borderTopColor: "transparent", animation: "spin 0.8s linear infinite", margin: "0 auto 24px" }} />
-          <p style={{ fontFamily: "var(--font-body-body-large-fontFamily)", fontSize: 16, color: "var(--color-role-light-onSurfaceVariant)" }}>Verifying your payment...</p>
+        <main style={{ maxWidth: 700, margin: "80px auto", padding: "0 24px" }}>
+          <div style={{ textAlign: "center", marginBottom: 32 }}>
+            <div className="sk" style={{ width: 56, height: 56, borderRadius: "50%", margin: "0 auto 16px" }} />
+            <div className="sk" style={{ width: 280, height: 24, margin: "0 auto 8px" }} />
+            <div className="sk" style={{ width: 200, height: 14, margin: "0 auto" }} />
+          </div>
+          <div className="sk" style={{ width: "100%", height: 80, marginBottom: 20 }} />
+          <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+            {[1,2].map((i) => <div key={i} className="sk" style={{ flex: 1, height: 48 }} />)}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
+            {[1,2,3].map((i) => <div key={i} className="sk" style={{ height: 64 }} />)}
+          </div>
+          <div className="sk" style={{ width: "100%", height: 60, marginBottom: 24 }} />
+          <div className="sk" style={{ width: "100%", height: 200, marginBottom: 24 }} />
         </main>
         <Footer />
       </>

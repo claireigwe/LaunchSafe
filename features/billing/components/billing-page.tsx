@@ -6,9 +6,7 @@ import { useRouter } from "next/navigation";
 import { CreditCard, Check, ChevronRight, ExternalLink, AlertCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  getSubscription,
-  getPayments,
-  getAssessmentPurchases,
+  getBillingData,
   cancelSubscription,
   clearPendingChange,
   getPlanFeatures,
@@ -53,19 +51,17 @@ export function BillingPage() {
   const [purchases, setPurchases] = useState<any[]>([]);
   const [showCancel, setShowCancel] = useState(false);
   const [showContactSales, setShowContactSales] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
-      const [s, p, pp] = await Promise.all([
-        getSubscription(),
-        getPayments(),
-        getAssessmentPurchases(),
-      ]);
-      setSub(s);
-      setPayments(p);
-      setPurchases(pp);
+      const data = await getBillingData();
+      setSub(data.subscription);
+      setPayments(data.payments);
+      setPurchases(data.purchases);
+      setLoading(false);
     }
-    load().catch(() => {});
+    load().catch(() => setLoading(false));
     trackEvent("Billing Page Viewed");
   }, []);
 
@@ -74,13 +70,45 @@ export function BillingPage() {
 
   async function handleCancel() {
     await cancelSubscription();
-    setSub(await getSubscription());
+    const data = await getBillingData();
+    setSub(data.subscription);
     setShowCancel(false);
     trackEvent("Subscription Cancelled");
   }
 
   function formatDate(iso: string) {
     return new Date(iso).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" });
+  }
+
+  if (loading) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.header}>
+          <div className="sk" style={{ width: 120, height: 28, marginBottom: 8 }} />
+          <div className="sk" style={{ width: 280, height: 16 }} />
+        </div>
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <div className="sk" style={{ width: 160, height: 18 }} />
+          </div>
+          <div className="sk" style={{ width: "100%", height: 200, marginTop: 16 }} />
+        </section>
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <div className="sk" style={{ width: 140, height: 18 }} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginTop: 16 }}>
+            {[1,2,3].map((i) => <div key={i} className="sk" style={{ height: 180 }} />)}
+          </div>
+        </section>
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <div className="sk" style={{ width: 120, height: 18 }} />
+          </div>
+          <div className="sk" style={{ width: "100%", height: 120, marginTop: 16 }} />
+        </section>
+      </div>
+    );
   }
 
   return (
@@ -133,7 +161,7 @@ export function BillingPage() {
                   <span className={styles.pendingTitle}>Plan change scheduled</span>
                   <span className={styles.pendingText}>Switching to <strong>{sub.pendingPlanName}</strong> at next renewal ({formatDate(sub.nextRenewal)}).</span>
                 </div>
-                <button type="button" className={styles.pendingCancel} onClick={async () => { await clearPendingChange(); setSub(await getSubscription()); }}>Cancel</button>
+                <button type="button" className={styles.pendingCancel} onClick={async () => { await clearPendingChange(); const d = await getBillingData(); setSub(d.subscription); }}>Cancel</button>
               </div>
             )}
           </>
