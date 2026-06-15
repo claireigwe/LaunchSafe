@@ -17,7 +17,21 @@ async function logEvent(supabase: any, userId: string, eventType: string, metada
   }
 }
 
-async function insertNotification(supabase: any, userId: string, title: string, message: string, actionUrl?: string) {
+async function sendEmail(userId: string, emailType: string, data?: Record<string, unknown>) {
+  try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const supabase = createAdminClient();
+    const { data: { user } } = await supabase.auth.admin.getUserById(userId);
+    if (!user?.email) return;
+    await fetch(`${appUrl}/api/notifications/send-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to: user.email, type: emailType, data }),
+    });
+  } catch {}
+}
+
+async function insertNotification(supabase: any, userId: string, title: string, message: string, actionUrl?: string, emailType?: string, emailData?: Record<string, unknown>) {
   try {
     await supabase.from("notifications").insert({
       user_id: userId,
@@ -26,6 +40,9 @@ async function insertNotification(supabase: any, userId: string, title: string, 
       message,
       action_url: actionUrl || null,
     });
+    if (emailType) {
+      sendEmail(userId, emailType, emailData);
+    }
   } catch (err) {
     console.error("[Paystack] Failed to insert notification:", err);
   }
@@ -99,7 +116,8 @@ async function handleChargeSuccess(supabase: any, eventData: any, rawEvent: any)
       userId,
       "Assessment Unlocked",
       "Your full compliance report is now available. View your requirements, costs, and roadmap.",
-      "/assessment"
+      "/assessment",
+      "assessment_unlocked"
     );
   }
 
@@ -157,7 +175,9 @@ async function handleChargeSuccess(supabase: any, eventData: any, rawEvent: any)
       userId,
       "Subscription Activated",
       `Your ${planName} plan is now active. Welcome to Compliance Autopilot.`,
-      "/dashboard"
+      "/dashboard",
+      "subscription_activated",
+      { planName }
     );
   }
 }
@@ -203,7 +223,8 @@ async function handleSubscriptionNotRenew(supabase: any, eventData: any) {
       subs.user_id,
       "Subscription Expired",
       "Your subscription has ended. Renew to continue accessing compliance management features.",
-      "/settings/billing"
+      "/settings/billing",
+      "subscription_expired"
     );
   }
 }
@@ -217,7 +238,8 @@ async function handleInvoiceFailed(supabase: any, eventData: any) {
     userId,
     "Payment Failed",
     "Your recent payment could not be processed. Please update your payment method to continue.",
-    "/settings/billing"
+    "/settings/billing",
+    "payment_failed"
   );
 }
 

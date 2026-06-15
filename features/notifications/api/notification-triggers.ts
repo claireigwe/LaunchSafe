@@ -26,7 +26,6 @@ export function triggerTaskCreated(task: ComplianceTaskItem): void {
     "/compliance",
     "View Task"
   );
-  fireEmail("task_created", { title: task.title, dueDate: task.dueDate });
 }
 
 export function triggerTaskCompleted(title: string): void {
@@ -61,7 +60,6 @@ export function triggerDocumentUploaded(title: string): void {
     "/documents",
     "View Document"
   );
-  fireEmail("document_uploaded", { title });
 }
 
 export function triggerSubscriptionActivated(planName: string): void {
@@ -124,46 +122,49 @@ export async function syncDeadlineNotifications(): Promise<void> {
     const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
     if (t.status === "overdue") {
-      const existing = await loadNotificationsForTask(t.id);
-      if (!existing.some((n) => n.title === "Task Overdue")) {
-        triggerTaskOverdue(t.title);
-      }
+      const existing = await loadNotificationsForTask(t.id, "overdue");
+      if (existing.length > 0) continue;
+      triggerTaskOverdue(t.title);
+      markNotified(t.id, "overdue");
     } else if (diffDays <= 0) {
-      const existing = await loadNotificationsForTask(t.id);
-      if (!existing.some((n) => n.title.includes("Due"))) {
-        createNotification("Due Today", `${t.title} is due today.`, "deadline", "critical", "/compliance", "View Task");
-        fireEmail("deadline_today", { title: t.title });
-      }
+      const existing = await loadNotificationsForTask(t.id, "due_today");
+      if (existing.length > 0) continue;
+      createNotification("Due Today", `${t.title} is due today.`, "deadline", "critical", "/compliance", "View Task");
+      fireEmail("deadline_today", { title: t.title });
+      markNotified(t.id, "due_today");
     } else if (diffDays === 1) {
-      const existing = await loadNotificationsForTask(t.id);
-      if (!existing.some((n) => n.title.includes("Due"))) {
-        createNotification("Due Tomorrow", `${t.title} is due tomorrow.`, "deadline", "critical", "/compliance", "View Task");
-        fireEmail("deadline_due_soon", { title: t.title, days: 1 });
-      }
+      const existing = await loadNotificationsForTask(t.id, "due_tomorrow");
+      if (existing.length > 0) continue;
+      createNotification("Due Tomorrow", `${t.title} is due tomorrow.`, "deadline", "critical", "/compliance", "View Task");
+      fireEmail("deadline_due_soon", { title: t.title, days: 1 });
+      markNotified(t.id, "due_tomorrow");
     } else if (diffDays <= 3) {
-      const existing = await loadNotificationsForTask(t.id);
-      if (!existing.some((n) => n.title === "Due Soon")) {
-        createNotification("Due Soon", `${t.title} is due in ${diffDays} days.`, "deadline", "warning", "/compliance", "View Task");
-        fireEmail("deadline_due_soon", { title: t.title, days: diffDays });
-      }
+      const existing = await loadNotificationsForTask(t.id, "due_soon");
+      if (existing.length > 0) continue;
+      createNotification("Due Soon", `${t.title} is due in ${diffDays} days.`, "deadline", "warning", "/compliance", "View Task");
+      fireEmail("deadline_due_soon", { title: t.title, days: diffDays });
+      markNotified(t.id, "due_soon");
     } else if (diffDays <= 7) {
-      const existing = await loadNotificationsForTask(t.id);
-      if (!existing.some((n) => n.title === "Deadline Approaching")) {
-        createNotification("Deadline Approaching", `${t.title} is due in ${diffDays} days.`, "deadline", "warning", "/compliance", "View Task");
-        fireEmail("deadline_approaching", { title: t.title, days: diffDays });
-      }
+      const existing = await loadNotificationsForTask(t.id, "deadline_approaching");
+      if (existing.length > 0) continue;
+      createNotification("Deadline Approaching", `${t.title} is due in ${diffDays} days.`, "deadline", "warning", "/compliance", "View Task");
+      fireEmail("deadline_approaching", { title: t.title, days: diffDays });
+      markNotified(t.id, "deadline_approaching");
     }
   }
 }
 
-async function loadNotificationsForTask(taskId: string): Promise<any[]> {
+async function loadNotificationsForTask(taskId: string, typeLabel: string): Promise<any[]> {
+  const DEDUP_KEY = `launchsafe-notif-${taskId}-${typeLabel}`;
   try {
-    const res = await fetch("/api/notifications");
-    const json = await res.json();
-    if (!json.success) return [];
-    const all = json.data || [];
-    return all.filter((n: any) =>
-      n.message?.includes(taskId) || n.title?.match(/Due|Overdue|Deadline/)
-    );
-  } catch { return []; }
+    const sent = localStorage.getItem(DEDUP_KEY);
+    if (sent) return [{ taskId }];
+  } catch {}
+  return [];
+}
+
+function markNotified(taskId: string, typeLabel: string): void {
+  try {
+    localStorage.setItem(`launchsafe-notif-${taskId}-${typeLabel}`, "1");
+  } catch {}
 }

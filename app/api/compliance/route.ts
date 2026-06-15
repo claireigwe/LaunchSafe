@@ -189,7 +189,7 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const user = await getRequiredUser();
-    const supabase = await createClient() as any;
+    const userSupabase = await createClient() as any;
     const body = await request.json();
     const { id, businessId } = body;
 
@@ -200,16 +200,15 @@ export async function DELETE(request: Request) {
       );
     }
 
-    if (!(await verifyTaskOwnership(supabase, id, user.id))) {
+    if (!(await verifyTaskOwnership(userSupabase, id, user.id))) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: { message: "Task not found" } },
         { status: 404 }
       );
     }
 
-    let deleteQuery = (supabase as any).from("compliance_tasks").delete().eq("id", id);
-    if (businessId) deleteQuery = deleteQuery.eq("business_id", businessId);
-    await deleteQuery;
+    const supabase = createAdminClient() as any;
+    await (supabase as any).from("compliance_tasks").delete().eq("id", id);
 
     return NextResponse.json<ApiResponse>({ success: true, data: { deleted: true } });
   } catch {

@@ -28,6 +28,8 @@ const BODY_BUILDERS: Record<string, (data: any) => string> = {
   subscription_renewed: (d) => subscriptionRenewedHtml(d.planName),
   payment_failed: () => paymentFailedHtml(),
   welcome: () => welcomeHtml(),
+  assessment_unlocked: (d) => subscriptionActivatedHtml(d.planName || "Full Compliance Report"),
+  subscription_expired: () => paymentFailedHtml(),
 };
 
 const TITLES: Record<string, string> = {
@@ -42,6 +44,8 @@ const TITLES: Record<string, string> = {
   subscription_renewed: "Subscription Renewed",
   payment_failed: "Payment Failed",
   welcome: "Welcome to LaunchSafe",
+  assessment_unlocked: "Your Compliance Report is Ready",
+  subscription_expired: "Subscription Expired",
 };
 
 const ACTION_DATA: Record<string, { url: string; label: string }> = {
@@ -56,6 +60,8 @@ const ACTION_DATA: Record<string, { url: string; label: string }> = {
   subscription_renewed: { url: "/settings/billing", label: "View Billing" },
   payment_failed: { url: "/settings/billing", label: "Update Payment Method" },
   welcome: { url: "/compliance", label: "Create First Task" },
+  assessment_unlocked: { url: "/assessment", label: "View Report" },
+  subscription_expired: { url: "/settings/billing", label: "Renew Subscription" },
 };
 
 export async function POST(request: Request) {

@@ -78,8 +78,11 @@ export async function GET(request: Request) {
       } else if (diffDays === 3) {
         notifType = "deadline_due_soon";
         typeLabel = "3_days";
-      } else if (diffDays < 0 && task.status === "overdue") {
-        // Send overdue reminder only once
+      } else if (diffDays < 0) {
+        // Mark as overdue in DB if not already (handles case where user never visited dashboard)
+        if (task.status !== "overdue") {
+          await (supabaseAdmin as any).from("compliance_tasks").update({ status: "overdue" }).eq("id", task.id);
+        }
         notifType = "task_overdue";
         typeLabel = "overdue";
       }

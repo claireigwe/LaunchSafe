@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import type { ApiResponse } from "@/types/api.types";
 
 export async function GET() {
@@ -47,7 +47,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const user = await getRequiredUser();
-    const supabase = await createClient() as any;
+    const supabase = createAdminClient() as any;
     const body = await request.json();
     const { title, message, type, actionUrl } = body;
 
