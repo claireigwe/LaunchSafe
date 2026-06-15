@@ -22,6 +22,7 @@ import { isInSetupMode } from "@/features/billing/api/setup-check";
 import { getUnreadCount } from "@/features/notifications/api/notifications-api";
 import { getActiveBusinessId, useAppStore } from "@/lib/stores/app-store";
 import { fetchAllBusinesses } from "@/features/businesses/api/onboarding-api";
+import { fetchProfileAndPrefs } from "@/features/settings/api/settings-api";
 import styles from "./app-sidebar.module.css";
 
 const NAV_ITEMS = [
@@ -43,6 +44,7 @@ export function AppSidebar() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [setupMode, setSetupMode] = useState(false);
   const [activeBizName, setActiveBizName] = useState("");
+  const [profile, setProfile] = useState<{ fullName: string; jobTitle: string } | null>(null);
   const [mounted, setMounted] = useState(false);
 
   const storeBizId = useAppStore((s) => s.activeBusinessId);
@@ -68,6 +70,13 @@ export function AppSidebar() {
     };
     refresh();
     const interval = setInterval(refresh, 15000);
+
+    fetchProfileAndPrefs().then((data) => {
+      if (data?.profile) {
+        setProfile({ fullName: data.profile.fullName, jobTitle: data.profile.jobTitle || "" });
+      }
+    }).catch(() => {});
+
     return () => clearInterval(interval);
   }, []);
 
@@ -90,12 +99,21 @@ export function AppSidebar() {
       </button>
 
       <aside className={cn(styles.sidebar, collapsed && styles.collapsed, mobileOpen && styles.mobileOpen)}>
+        <button
+          className={styles.collapseIconBtn}
+          onClick={() => setCollapsed((p) => !p)}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          <ChevronLeft size={14} className={cn(collapsed && styles.rotated)} />
+        </button>
+
         <div className={styles.logo}>
           <span className={styles.logoIcon}>⬡</span>
           {!collapsed && <span className={styles.logoText}>LaunchSafe</span>}
         </div>
 
         <nav className={styles.nav} aria-label="Main navigation">
+          {!collapsed && <div className={styles.sectionLabel}>MAIN</div>}
           {mounted && setupMode && (
             <Link
               href="/onboarding"
@@ -139,14 +157,17 @@ export function AppSidebar() {
           })}
         </nav>
 
-        <button
-          className={styles.collapseBtn}
-          onClick={() => setCollapsed((p) => !p)}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          <ChevronLeft size={16} className={cn(collapsed && styles.rotated)} />
-          {!collapsed && <span>Collapse</span>}
-        </button>
+        <div className={cn(styles.footer, collapsed && styles.footerCollapsed)}>
+          <div className={styles.userProfile}>
+            <img src="https://api.dicebear.com/9.x/micah/svg?seed=LaunchSafe&backgroundColor=f0f0f0" alt="User" className={styles.userAvatar} />
+            {!collapsed && (
+              <div className={styles.userInfo}>
+                <span className={styles.userName}>{profile?.fullName || "User"}</span>
+                {profile?.jobTitle && <span className={styles.userRole}>{profile.jobTitle}</span>}
+              </div>
+            )}
+          </div>
+        </div>
       </aside>
 
       {mobileOpen && <div className={styles.overlay} onClick={() => setMobileOpen(false)} />}
