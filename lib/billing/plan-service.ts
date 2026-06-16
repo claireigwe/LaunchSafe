@@ -91,8 +91,6 @@ export class PlanService {
     startDate: string;
     nextRenewal: string;
     cancelledAt: string | null;
-    pendingPlanId: string | null;
-    pendingPlanName: string | null;
   } | null> {
     const supabase = createAdminClient() as any;
 
@@ -109,16 +107,6 @@ export class PlanService {
     const plan = subs.plan_id ? await this.getPlanById(subs.plan_id) : null;
     const access = await resolveAccess(plan?.slug || null, subs.status);
 
-    let pendingSlug: string | null = null;
-    let pendingName: string | null = null;
-    if ((subs as any).pending_plan_id) {
-      const pendingPlan = await this.getPlanById((subs as any).pending_plan_id);
-      if (pendingPlan) {
-        pendingSlug = pendingPlan.slug;
-        pendingName = pendingPlan.name;
-      }
-    }
-
     return {
       planId: access.planId,
       planName: access.planName,
@@ -127,8 +115,6 @@ export class PlanService {
       startDate: subs.current_period_start,
       nextRenewal: subs.current_period_end,
       cancelledAt: subs.cancelled_at,
-      pendingPlanId: pendingSlug,
-      pendingPlanName: pendingName,
     };
   }
 

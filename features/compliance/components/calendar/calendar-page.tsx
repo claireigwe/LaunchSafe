@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { TaskCard } from "../tasks/task-card";
 import { TaskCreateModal } from "../tasks/task-create-modal";
 import { TaskDetailModal } from "../tasks/task-detail-modal";
-import { loadTasks, createTask, updateTask, deleteTask, reconcileTaskStatuses } from "../../api/tasks-api";
+import { useTasks } from "../../hooks/use-tasks-query";
+import { createTask, updateTask, deleteTask, reconcileTaskStatuses } from "../../api/tasks-api";
 import { SetupOverlay } from "@/features/billing/components/setup-overlay";
 import { useHasBusiness } from "@/features/businesses/hooks/use-has-business";
 import { BusinessRequiredOverlay } from "@/features/businesses/components/business-required-overlay";
@@ -18,7 +19,7 @@ import styles from "./calendar-page.module.css";
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function CalendarPage() {
-  const [tasks, setTasks] = useState<ComplianceTaskItem[]>([]);
+  const { data: tasks = [] } = useTasks();
   const [today] = useState(() => new Date());
   const [view, setView] = useState<"monthly" | "weekly">("monthly");
   const [cursor, setCursor] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
@@ -28,7 +29,6 @@ export function CalendarPage() {
 
   useEffect(() => {
     reconcileTaskStatuses().catch(() => {});
-    setTasks(loadTasks());
     trackEvent("Calendar Viewed");
   }, []);
 
@@ -54,21 +54,18 @@ export function CalendarPage() {
   async function handleCreate(input: CreateTaskInput) {
     await createTask(input, getActiveBusinessId() || undefined);
     trackEvent("Task Created", { title: input.title });
-    setTasks(loadTasks());
     setShowCreate(false);
   }
 
   async function handleUpdate(id: string, input: UpdateTaskInput) {
     await updateTask(id, input);
     if (input.status === "completed") trackEvent("Task Completed", { id });
-    setTasks(loadTasks());
     setSelectedTask(null);
   }
 
   async function handleDelete(id: string) {
     await deleteTask(id);
     trackEvent("Task Deleted", { id });
-    setTasks(loadTasks());
     setSelectedTask(null);
   }
 

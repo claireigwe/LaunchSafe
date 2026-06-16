@@ -62,9 +62,9 @@ export function BusinessPage() {
           info: {
             businessName: d.name || "",
             businessType: det.businessType || "",
-            industry: d.industryId || "",
+            industry: d.industrySlug || d.industryId || "",
             subIndustry: subIndustry || "",
-            state: d.stateId || "",
+            state: d.stateName || d.stateId || "",
             lga: lga || d.lgaId || "",
             website: d.website || "",
             description: "",
@@ -204,11 +204,12 @@ export function BusinessPage() {
   useEffect(() => {
     const lgaId = info?.lga;
     if (!lgaId || lgaNames[lgaId]) return;
-    const stateId = info?.state;
-    if (!stateId) return;
-    const state = ASSESSMENT_COUNTRIES[0]?.states.find((s) => s.id === stateId);
-    if (!state) return;
-    fetch(`/api/lgas?state=${encodeURIComponent(state.name)}`)
+    const stateVal = info?.state;
+    if (!stateVal) return;
+    // stateVal could be a slug (lagos), a name (Lagos), or a UUID
+    const stateEntry = ASSESSMENT_COUNTRIES[0]?.states.find((s) => s.id === stateVal);
+    const stateName = stateEntry?.name || stateLabels[stateVal] || stateVal;
+    fetch(`/api/lgas?state=${encodeURIComponent(stateName)}`)
       .then((r) => r.json())
       .then((json) => {
         if (json.success) {

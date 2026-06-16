@@ -1,29 +1,16 @@
 import type { AppNotification, NotificationCategory, NotificationPriority } from "../types/notifications.types";
-
-/* ----- API helpers ----- */
-async function apiGet<T>(url: string): Promise<T | null> {
-  try { const r = await fetch(url); const j = await r.json(); return j.success ? j.data : null; } catch { return null; }
-}
-async function apiPost<T>(url: string, body: any): Promise<T | null> {
-  try { const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); const j = await r.json(); return j.success ? j.data : null; } catch { return null; }
-}
-async function apiPatch(url: string, body: any): Promise<boolean> {
-  try { const r = await fetch(url, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); const j = await r.json(); return j.success; } catch { return false; }
-}
-async function apiDelete(url: string, body: any): Promise<boolean> {
-  try { const r = await fetch(url, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); const j = await r.json(); return j.success; } catch { return false; }
-}
+import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api/base";
 
 /* ----- Public API ----- */
 
-export async function fetchNotifications(): Promise<AppNotification[]> {
-  const server = await apiGet<AppNotification[]>("/api/notifications");
+export async function fetchNotifications(limit = 50): Promise<AppNotification[]> {
+  const server = await apiGet<AppNotification[]>(`/api/notifications?limit=${limit}`);
   return server || [];
 }
 
 export async function getUnreadCount(): Promise<number> {
-  const server = await apiGet<AppNotification[]>("/api/notifications");
-  return (server || []).filter((n) => !n.isRead).length;
+  const data = await apiGet<{ unread: number }>("/api/notifications?count=true");
+  return data?.unread ?? 0;
 }
 
 export async function createNotification(
@@ -48,4 +35,3 @@ export async function markAllAsRead(): Promise<void> {
 export async function deleteNotification(id: string): Promise<void> {
   await apiDelete("/api/notifications", { id });
 }
-

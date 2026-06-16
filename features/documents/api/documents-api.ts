@@ -3,35 +3,7 @@ import { triggerDocumentUploaded } from "@/features/notifications/api/notificati
 import { logActivity } from "@/features/activity/api/activity-api";
 import { audit } from "@/features/audit/api/audit-api";
 import { getActiveBusinessId } from "@/lib/stores/app-store";
-
-/* ----- API helpers ----- */
-async function apiGet<T>(url: string): Promise<T | null> {
-  try {
-    const res = await fetch(url);
-    const json = await res.json();
-    return json.success ? json.data : null;
-  } catch { return null; }
-}
-
-async function apiPatch<T>(url: string, body: any): Promise<T | null> {
-  try {
-    const res = await fetch(url, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    const json = await res.json();
-    return json.success ? json.data : null;
-  } catch { return null; }
-}
-
-async function apiDelete(url: string): Promise<boolean> {
-  try {
-    const res = await fetch(url, { method: "DELETE" });
-    const json = await res.json();
-    return json.success;
-  } catch { return false; }
-}
+import { apiGet, apiPatch, apiDelete } from "@/lib/api/base";
 
 /* ----- Public API ----- */
 
@@ -98,11 +70,6 @@ export function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
 
-export async function getDocumentsByType(type: DocType): Promise<AppDocument[]> {
-  const allDocs = await getDocuments();
-  return allDocs.filter((d) => d.docType === type);
-}
-
 export async function downloadDocument(doc: AppDocument): Promise<void> {
   if (!doc.fileUrl) return;
   try {
@@ -120,14 +87,3 @@ export async function downloadDocument(doc: AppDocument): Promise<void> {
   } catch {}
 }
 
-export async function searchDocuments(query: string, typeFilter?: string): Promise<AppDocument[]> {
-  let docs = await getDocuments();
-  if (typeFilter && typeFilter !== "all") {
-    docs = docs.filter((d) => d.docType === typeFilter);
-  }
-  if (query.trim()) {
-    const q = query.toLowerCase();
-    docs = docs.filter((d) => d.title.toLowerCase().includes(q) || d.description.toLowerCase().includes(q));
-  }
-  return docs;
-}

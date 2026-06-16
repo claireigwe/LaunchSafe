@@ -48,8 +48,6 @@ interface AppState {
   setActiveBusinessId: (id: string | null) => void;
   sidebarCollapsed: boolean;
   setSidebarCollapsed: (v: boolean) => void;
-  taskFilter: string;
-  setTaskFilter: (v: string) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -61,6 +59,4 @@ export const useAppStore = create<AppState>((set) => ({
   },
   sidebarCollapsed: false,
   setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
-  taskFilter: "all",
-  setTaskFilter: (v) => set({ taskFilter: v }),
 }));

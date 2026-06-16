@@ -154,12 +154,120 @@ export class BusinessService {
     return { id: data.id, name: data.name };
   }
 
-  static async list(userId: string): Promise<any[]> {
+  static async getById(businessId: string, userId: string): Promise<any> {
     const supabase = createAdminClient() as any;
 
     const { data, error } = await supabase
       .from("businesses")
       .select("*")
+      .eq("id", businessId)
+      .eq("user_id", userId)
+      .single();
+
+    if (error || !data) return null;
+
+    // Resolve industry UUID to slug for display
+    let industrySlug = "";
+    if (data.industry_id) {
+      const { data: ind } = await supabase.from("industries").select("slug").eq("id", data.industry_id).maybeSingle();
+      if (ind) industrySlug = ind.slug;
+    }
+
+    // Resolve state UUID to name for display
+    let stateName = "";
+    if (data.state_id) {
+      const { data: st } = await supabase.from("states").select("name").eq("id", data.state_id).maybeSingle();
+      if (st) stateName = st.name;
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description || "",
+      industryId: data.industry_id,
+      industrySlug,
+      subIndustryId: data.sub_industry_id,
+      stateId: data.state_id,
+      stateName,
+      lgaId: data.lga_id,
+      status: data.status,
+      employeeCount: data.employee_count,
+      website: data.website,
+      details: data.details || {},
+      createdAt: data.created_at,
+    };
+  }
+
+  static async update(businessId: string, userId: string, updates: Record<string, any>): Promise<{ id: string; name: string } | null> {
+    const supabase = createAdminClient() as any;
+
+    const dbUpdates: Record<string, any> = {};
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.description !== undefined) dbUpdates.description = updates.description;
+    if (updates.website !== undefined) dbUpdates.website = updates.website;
+    if (updates.employeeCount !== undefined) dbUpdates.employee_count = parseInt(updates.employeeCount, 10) || null;
+    if (updates.details !== undefined) dbUpdates.details = updates.details;
+
+    if (updates.industrySlug) {
+      const { data: ind } = await supabase.from("industries").select("id").eq("slug", updates.industrySlug).maybeSingle();
+      if (ind) dbUpdates.industry_id = ind.id;
+    }
+
+    if (updates.subIndustrySlug !== undefined && updates.industrySlug) {
+      const { data: ind } = await supabase.from("industries").select("id").eq("slug", updates.industrySlug).maybeSingle();
+      if (ind && updates.subIndustrySlug) {
+        const { data: sub } = await supabase.from("sub_industries").select("id").eq("slug", updates.subIndustrySlug).eq("industry_id", ind.id).maybeSingle();
+        if (sub) dbUpdates.sub_industry_id = sub.id;
+      } else if (ind) {
+        dbUpdates.sub_industry_id = null;
+      }
+    }
+
+    if (updates.stateSlug) {
+      const { data: st } = await supabase.from("states").select("id").ilike("name", updates.stateSlug).maybeSingle();
+      if (st) dbUpdates.state_id = st.id;
+    }
+
+    if (updates.lgaId !== undefined) dbUpdates.lga_id = updates.lgaId || null;
+
+    const { data, error } = await supabase
+      .from("businesses")
+      .update(dbUpdates)
+      .eq("id", businessId)
+      .eq("user_id", userId)
+      .select()
+      .single();
+
+    if (error || !data) return null;
+    return { id: data.id, name: data.name };
+  }
+
+  static async delete(businessId: string, userId: string): Promise<boolean> {
+    const supabase = createAdminClient() as any;
+
+    const { data: business } = await supabase
+      .from("businesses")
+      .select("id")
+      .eq("id", businessId)
+      .eq("user_id", userId)
+      .single();
+
+    if (!business) return false;
+
+    const { error } = await supabase
+      .from("businesses")
+      .delete()
+      .eq("id", businessId);
+
+    return !error;
+  }
+
+  static async list(userId: string): Promise<any[]> {
+    const supabase = createAdminClient() as any;
+
+    const { data, error } = await supabase
+      .from("businesses")
+      .select("*, industries!left(slug), states!left(name)")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
@@ -170,7 +278,9 @@ export class BusinessService {
       name: row.name,
       description: row.description || "",
       industryId: row.industry_id,
+      industrySlug: row.industries?.slug || "",
       stateId: row.state_id,
+      stateName: row.states?.name || "",
       status: row.status,
       employeeCount: row.employee_count,
       website: row.website,

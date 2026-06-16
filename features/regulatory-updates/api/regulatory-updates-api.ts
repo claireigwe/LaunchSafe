@@ -27,6 +27,4 @@ export async function getRegulatoryUpdates(): Promise<RegulatoryUpdate[]> {
     .sort((a, b) => new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime());
 }
 
-export function getRegulatoryUpdate(id: string): RegulatoryUpdate | undefined {
-  return undefined;
-}
+

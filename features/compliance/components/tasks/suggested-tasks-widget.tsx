@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Lightbulb, X, Check } from "lucide-react";
-import type { SuggestedTask } from "../../types/tasks.types";
+import type { SuggestedTask, ComplianceTaskItem } from "../../types/tasks.types";
 import { generateTaskSuggestions } from "../../data/task-suggestions";
 import { fetchAITaskSuggestions } from "../../api/ai-suggestions";
 import { canAccess } from "@/features/billing/api/feature-access";
 import { getBusinessData, fetchAllBusinesses } from "@/features/businesses/api/onboarding-api";
-import { addSuggestedTask, loadTasks } from "../../api/tasks-api";
+import { addSuggestedTask } from "../../api/tasks-api";
 import { getActiveBusinessId, useAppStore } from "@/lib/stores/app-store";
 import { trackEvent } from "@/features/assessments/api/assessment-api";
 import styles from "./suggested-tasks-widget.module.css";
@@ -79,7 +79,8 @@ export function SuggestedTasksWidget({ onTaskAdded }: SuggestedTasksWidgetProps)
         aiBased = await fetchAITaskSuggestions(profile);
       }
       const all = [...ruleBased, ...aiBased];
-      const existingTitles = new Set(loadTasks().map((t) => t.title));
+      const existingTasks = queryClient.getQueryData<ComplianceTaskItem[]>(["tasks", activeBusinessId]) || [];
+      const existingTitles = new Set(existingTasks.map((t) => t.title));
       const filtered = all.filter((s) => !existingTitles.has(s.title));
       setSuggestions(filtered);
     }

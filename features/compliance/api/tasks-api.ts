@@ -3,41 +3,7 @@ import { triggerTaskCreated, triggerTaskCompleted, triggerTaskOverdue, syncDeadl
 import { logActivity } from "@/features/activity/api/activity-api";
 import { audit } from "@/features/audit/api/audit-api";
 import { getActiveBusinessId } from "@/lib/stores/app-store";
-
-/* ----- API helpers ----- */
-async function apiGet<T>(url: string): Promise<T | null> {
-  try {
-    const res = await fetch(url + (url.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store' });
-    const json = await res.json();
-    return json.success ? json.data : null;
-  } catch { return null; }
-}
-
-async function apiPost<T>(url: string, body: any): Promise<T | null> {
-  try {
-    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    const json = await res.json();
-    return json.success ? json.data : null;
-  } catch { return null; }
-}
-
-async function apiPatch<T>(url: string, body: any): Promise<T | null> {
-  try {
-    const res = await fetch(url, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    const json = await res.json();
-    return json.success ? json.data : null;
-  } catch {
-    return null;
-  }
-}
-
-async function apiDelete(url: string, body: any): Promise<boolean> {
-  try {
-    const res = await fetch(url, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    const json = await res.json();
-    return json.success;
-  } catch { return false; }
-}
+import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api/base";
 
 /* ----- In-memory cache (source of truth for the session) ----- */
 let tasksCache: ComplianceTaskItem[] | null = null;
@@ -90,12 +56,7 @@ export function loadTasks(): ComplianceTaskItem[] {
     return tasksCache;
   }
 
-  // Hydrate cache from localStorage
-  const local = hydrateFromLocal(bid || undefined);
-  tasksCache = local;
-  cacheBusinessId = bid || null;
-
-  // Trigger background server refresh
+  // Trigger background server refresh to populate cache
   if (bid) {
     refreshTasks(bid).then((server) => {
       tasksCache = server;
@@ -103,17 +64,11 @@ export function loadTasks(): ComplianceTaskItem[] {
     }).catch(() => {});
   }
 
-  return tasksCache;
+  return tasksCache || [];
 }
 
 export async function ensureTasksSynced(): Promise<ComplianceTaskItem[]> {
   return refreshTasks();
-}
-
-export function saveTasks(tasks: ComplianceTaskItem[], businessId?: string): void {
-  tasksCache = tasks;
-  cacheBusinessId = businessId || getActiveBusinessId() || null;
-  persistToLocal(tasks, businessId);
 }
 
 /* ----- Mutations (server-first) ----- */

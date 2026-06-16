@@ -28,24 +28,17 @@ export async function generateReportData(): Promise<ReportData> {
 }
 
 function computeHealthTrend(): HealthTrendPoint[] {
-  const now = new Date();
-  const points: HealthTrendPoint[] = [];
-
-  for (let i = 4; i >= 0; i--) {
-    const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const label = month.toLocaleDateString("en-NG", { month: "short" });
-    const base = 60 + Math.floor(Math.random() * 15) + i * 5;
-    points.push({ label, score: Math.min(100, base + Math.floor(Math.random() * 10)) });
-  }
-
   const tasks = loadTasks();
-  if (tasks.length > 0) {
-    const completed = tasks.filter((t) => t.status === "completed").length;
-    const realRate = Math.round((completed / tasks.length) * 100);
-    points[points.length - 1] = { label: now.toLocaleDateString("en-NG", { month: "short" }), score: realRate };
-  }
+  if (tasks.length === 0) return [];
 
-  return points;
+  const now = new Date();
+  const completed = tasks.filter((t) => t.status === "completed").length;
+  const currentRate = Math.round((completed / tasks.length) * 100);
+
+  return [{
+    label: now.toLocaleDateString("en-NG", { month: "short" }),
+    score: currentRate,
+  }];
 }
 
 function computeTaskAnalytics(): TaskAnalytics {
@@ -168,15 +161,7 @@ async function computeActivityReport(docs: any[]): Promise<ActivityReport> {
   const documentsUploaded = activity.filter((a) => a.type === "document_uploaded").length + docs.length;
   const events = activity.filter((a) => a.type === "subscription_activated" || a.type === "notification_triggered").length;
 
-  const trendDays: { date: string; count: number }[] = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    const dateStr = d.toLocaleDateString("en-NG", { weekday: "short" });
-    trendDays.push({ date: dateStr, count: Math.floor(Math.random() * 3) + 1 });
-  }
-
-  return { tasksCreated, tasksCompleted, documentsUploaded, events, trendDays };
+  return { tasksCreated, tasksCompleted, documentsUploaded, events, trendDays: [] };
 }
 
 export function canAccessReporting(planId: string): boolean {

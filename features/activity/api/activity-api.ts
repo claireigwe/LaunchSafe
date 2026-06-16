@@ -16,13 +16,7 @@ function saveLocal(entries: ActivityEntry[]): void { try { localStorage.setItem(
 
 function genId(): string { return `act-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`; }
 
-async function apiGet<T>(url: string): Promise<T | null> {
-  try { const r = await fetch(url); const j = await r.json(); return j.success ? j.data : null; } catch { return null; }
-}
-
-async function apiPost(url: string, body: any): Promise<void> {
-  try { await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); } catch {}
-}
+import { apiGet } from "@/lib/api/base";
 
 export async function getRecentActivity(limit = 5): Promise<ActivityEntry[]> {
   try {
@@ -44,5 +38,5 @@ export function logActivity(
   entries.unshift({ id: genId(), type, title, description, timestamp: new Date().toISOString() });
   if (entries.length > 50) entries.length = 50;
   saveLocal(entries);
-  apiPost("/api/activity", { type, title, description });
+  fetch("/api/activity", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type, title, description }) }).catch(() => {});
 }

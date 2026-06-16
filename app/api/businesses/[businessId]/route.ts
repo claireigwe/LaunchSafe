@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { BusinessService } from "@/features/businesses/services/business-service";
 import type { ApiResponse } from "@/types/api.types";
 
 export async function GET(
@@ -10,16 +10,10 @@ export async function GET(
   try {
     const user = await getRequiredUser();
     const { businessId } = await params;
-    const supabase = await createClient() as any;
 
-    const { data, error } = await supabase
-      .from("businesses")
-      .select("*")
-      .eq("id", businessId)
-      .eq("user_id", user.id)
-      .single();
+    const data = await BusinessService.getById(businessId, user.id);
 
-    if (error || !data) {
+    if (!data) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: { message: "Business not found" } },
         { status: 404 }
@@ -28,20 +22,7 @@ export async function GET(
 
     return NextResponse.json<ApiResponse>({
       success: true,
-      data: {
-        id: data.id,
-        name: data.name,
-        description: data.description || "",
-        industryId: data.industry_id,
-        subIndustryId: data.sub_industry_id,
-        stateId: data.state_id,
-        lgaId: data.lga_id,
-        status: data.status,
-        employeeCount: data.employee_count,
-        website: data.website,
-        details: data.details || {},
-        createdAt: data.created_at,
-      },
+      data,
     });
   } catch {
     return NextResponse.json<ApiResponse>(
@@ -58,50 +39,18 @@ export async function PATCH(
   try {
     const user = await getRequiredUser();
     const { businessId } = await params;
-    const supabase = createAdminClient() as any;
     const body = await request.json();
 
-    const updates: any = {};
-    if (body.name !== undefined) updates.name = body.name;
-    if (body.description !== undefined) updates.description = body.description;
-    if (body.website !== undefined) updates.website = body.website;
-    if (body.employeeCount !== undefined) updates.employee_count = parseInt(body.employeeCount, 10) || null;
-    if (body.details !== undefined) updates.details = body.details;
-    if (body.industrySlug) {
-      const { data: ind } = await supabase.from("industries").select("id").eq("slug", body.industrySlug).maybeSingle();
-      if (ind) updates.industry_id = ind.id;
-    }
-    if (body.subIndustrySlug !== undefined && body.industrySlug) {
-      const { data: ind } = await supabase.from("industries").select("id").eq("slug", body.industrySlug).maybeSingle();
-      if (ind && body.subIndustrySlug) {
-        const { data: sub } = await supabase.from("sub_industries").select("id").eq("slug", body.subIndustrySlug).eq("industry_id", ind.id).maybeSingle();
-        if (sub) updates.sub_industry_id = sub.id;
-      } else if (ind) {
-        updates.sub_industry_id = null;
-      }
-    }
-    if (body.stateSlug) {
-      const { data: st } = await supabase.from("states").select("id").ilike("name", body.stateSlug).maybeSingle();
-      if (st) updates.state_id = st.id;
-    }
-    if (body.lgaId !== undefined) updates.lga_id = body.lgaId || null;
+    const result = await BusinessService.update(businessId, user.id, body);
 
-    const { data, error } = await supabase
-      .from("businesses")
-      .update(updates)
-      .eq("id", businessId)
-      .eq("user_id", user.id)
-      .select()
-      .single();
-
-    if (error || !data) {
+    if (!result) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: { message: "Business not found" } },
         { status: 404 }
       );
     }
 
-    return NextResponse.json<ApiResponse>({ success: true, data: { id: data.id, name: data.name } });
+    return NextResponse.json<ApiResponse>({ success: true, data: result });
   } catch {
     return NextResponse.json<ApiResponse>(
       { success: false, error: { message: "Unauthorized" } },
@@ -117,29 +66,15 @@ export async function DELETE(
   try {
     const user = await getRequiredUser();
     const { businessId } = await params;
-    const supabase = await createClient() as any;
 
-    const { data: business, error: findError } = await supabase
-      .from("businesses")
-      .select("id")
-      .eq("id", businessId)
-      .eq("user_id", user.id)
-      .single();
+    const deleted = await BusinessService.delete(businessId, user.id);
 
-    if (findError || !business) {
+    if (!deleted) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: { message: "Business not found" } },
         { status: 404 }
       );
     }
-
-    const adminSupabase = createAdminClient() as any;
-    const { error } = await adminSupabase
-      .from("businesses")
-      .delete()
-      .eq("id", businessId);
-
-    if (error) throw error;
 
     return NextResponse.json<ApiResponse>({ success: true, data: { deleted: true } });
   } catch (error) {

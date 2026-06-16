@@ -1,4 +1,5 @@
 import type { SubscriptionStatus } from "@/types/domain/billing";
+import { apiGet, apiPatch } from "@/lib/api/base";
 
 export interface SavedSubscription {
   planId: string;
@@ -8,9 +9,6 @@ export interface SavedSubscription {
   startDate: string;
   nextRenewal: string;
   cancelledAt: string | null;
-  pendingPlanId: string | null;
-  pendingPlanName: string | null;
-  pendingBillingCycle: "monthly" | "annual" | null;
   paystackSubscriptionCode?: string | null;
 }
 
@@ -38,14 +36,6 @@ let cachedBillingData: {
   payments: SavedPayment[];
   purchases: SavedAssessmentPurchase[];
 } | null = null;
-
-async function apiGet<T>(url: string): Promise<T | null> {
-  try { const r = await fetch(url); const j = await r.json(); return j.success ? j.data : null; } catch { return null; }
-}
-
-async function apiPatch(url: string, body: any): Promise<boolean> {
-  try { const r = await fetch(url, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); const j = await r.json(); return j.success; } catch { return false; }
-}
 
 export async function getBillingData(): Promise<{
   subscription: SavedSubscription | null;
@@ -80,14 +70,6 @@ export async function getAssessmentPurchases(): Promise<SavedAssessmentPurchase[
 export async function cancelSubscription(): Promise<void> {
   await apiPatch("/api/billing/subscription", { action: "cancel" });
   cachedBillingData = null;
-}
-
-export async function schedulePlanChange(planId: string, planName: string, billingCycle: "monthly" | "annual"): Promise<void> {
-  await apiPatch("/api/billing/subscription", { action: "schedule_change", planId, planName, billingCycle });
-}
-
-export async function clearPendingChange(): Promise<void> {
-  await apiPatch("/api/billing/subscription", { action: "clear_pending" });
 }
 
 const PLAN_FEATURES: Record<string, string[]> = {

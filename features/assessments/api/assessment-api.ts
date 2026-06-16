@@ -1,35 +1,12 @@
 import type { ApiResponse } from "@/types/api.types";
 import type { Assessment, AssessmentSummary } from "@/types/domain/assessment";
 import type { WizardData, WizardStep } from "../types/wizard.types";
+import { apiGet, apiPost } from "@/lib/api/base";
 
 const STORAGE_KEY = "launchsafe-assessment-data";
 const STEP_KEY = "launchsafe-assessment-step";
 const SUMMARY_KEY = "launchsafe-assessment-summary";
 const ASSESSMENT_ID_KEY = "launchsafe-assessment-id";
-
-async function apiPost<T>(url: string, body: any): Promise<T | null> {
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const json = await res.json();
-    return json.success ? json.data : null;
-  } catch {
-    return null;
-  }
-}
-
-async function apiGet<T>(url: string): Promise<T | null> {
-  try {
-    const res = await fetch(url);
-    const json = await res.json();
-    return json.success ? json.data : null;
-  } catch {
-    return null;
-  }
-}
 
 export async function saveAssessmentToLocalStorage(data: WizardData, step: WizardStep): Promise<void> {
   try {

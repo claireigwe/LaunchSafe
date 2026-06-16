@@ -3,12 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CreditCard, Check, ChevronRight, ExternalLink, AlertCircle, Clock } from "lucide-react";
+import { CreditCard, Check, ChevronRight, ExternalLink, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   getBillingData,
   cancelSubscription,
-  clearPendingChange,
   getPlanFeatures,
   getPlanPrice,
   getPlanAnnualTotal,
@@ -154,16 +153,6 @@ export function BillingPage() {
                 )}
               </div>
             </div>
-            {sub.pendingPlanId && (
-              <div className={styles.pendingBanner}>
-                <Clock size={16} className={styles.pendingIcon} />
-                <div className={styles.pendingBody}>
-                  <span className={styles.pendingTitle}>Plan change scheduled</span>
-                  <span className={styles.pendingText}>Switching to <strong>{sub.pendingPlanName}</strong> at next renewal ({formatDate(sub.nextRenewal)}).</span>
-                </div>
-                <button type="button" className={styles.pendingCancel} onClick={async () => { await clearPendingChange(); const d = await getBillingData(); setSub(d.subscription); }}>Cancel</button>
-              </div>
-            )}
           </>
         ) : (
           <div className={styles.emptyCard}>

@@ -1,19 +1,32 @@
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { createNotification } from "@/features/notifications/services/notification-service";
 import type { ApiResponse } from "@/types/api.types";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const user = await getRequiredUser();
     const supabase = await createClient() as any;
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get("limit") || "50", 10);
+    const countOnly = searchParams.get("count") === "true";
+
+    if (countOnly) {
+      const { count } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("is_read", false);
+      return NextResponse.json<ApiResponse>({ success: true, data: { unread: count || 0 } });
+    }
 
     const { data, error } = await supabase
       .from("notifications")
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(limit);
 
     if (error) throw error;
 
@@ -47,7 +60,6 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const user = await getRequiredUser();
-    const supabase = createAdminClient() as any;
     const body = await request.json();
     const { title, message, type, actionUrl } = body;
 
@@ -58,7 +70,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Map client-side types to DB CHECK constraint values
     const TYPE_MAP: Record<string, string> = {
       task: "deadline_reminder",
       deadline: "deadline_reminder",
@@ -71,21 +82,16 @@ export async function POST(request: Request) {
       payment_failed: "payment_failed",
       regulatory_update: "regulatory_update",
     };
-    const dbType = TYPE_MAP[type] || "deadline_reminder";
 
-    const { data, error } = await supabase
-      .from("notifications")
-      .insert({
-        user_id: user.id,
-        title,
-        message,
-        type: dbType,
-        action_url: actionUrl || null,
-      })
-      .select()
-      .single();
+    const data = await createNotification({
+      userId: user.id,
+      type: TYPE_MAP[type] || "deadline_reminder",
+      title,
+      message,
+      actionUrl: actionUrl || undefined,
+    });
 
-    if (error) throw error;
+    if (!data) throw new Error("Failed to create notification");
 
     return NextResponse.json<ApiResponse>({ success: true, data }, { status: 201 });
   } catch {

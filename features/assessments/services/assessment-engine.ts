@@ -22,9 +22,6 @@ export class AssessmentEngine {
     // Map frontend country identifiers to DB codes
     const COUNTRY_CODES: Record<string, string> = {
       nigeria: "NG",
-      ghana: "GH",
-      kenya: "KE",
-      "south-africa": "ZA",
     };
     const dbCountryCode = COUNTRY_CODES[countrySlug] || countrySlug;
 

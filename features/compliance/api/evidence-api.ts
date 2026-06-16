@@ -1,13 +1,16 @@
 export interface EvidenceRecord {
   id: string;
-  documentId?: string; // Optional, kept for backward compatibility with UI that expects it
+  documentId?: string;
+  businessId?: string;
   documentTitle: string;
   complianceTaskId: string;
   requirementId?: string;
-  uploadedAt: string;
+  description?: string;
   fileUrl?: string;
   fileType?: string;
   fileSizeBytes?: number;
+  isArchived?: boolean;
+  uploadedAt: string;
 }
 
 export async function fetchEvidence(): Promise<EvidenceRecord[]> {

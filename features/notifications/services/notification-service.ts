@@ -52,7 +52,7 @@ export async function createNotification(params: {
   metadata?: Record<string, any>;
 }) {
   const supabase = createAdminClient();
-  const { error } = await (supabase as any).from("notifications").insert({
+  const { data, error } = await (supabase as any).from("notifications").insert({
     user_id: params.userId,
     business_id: params.businessId || null,
     type: params.type,
@@ -60,13 +60,13 @@ export async function createNotification(params: {
     message: params.message,
     action_url: params.actionUrl || null,
     metadata: params.metadata || {},
-  });
+  }).select().single();
 
   if (error) {
     console.error("[createNotification] Error:", error);
-    return false;
+    return null;
   }
-  return true;
+  return data;
 }
 
 export async function markAsRead(userId: string, notificationId?: string) {

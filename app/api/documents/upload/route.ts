@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
 import { createAdminClient } from "@/lib/supabase/server";
+import { DocumentService } from "@/features/documents/services/document-service";
 import { uploadFile, getFileUrl } from "@/lib/supabase/storage";
 import type { ApiResponse } from "@/types/api.types";
 
@@ -22,32 +23,17 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = createAdminClient() as any;
-
-    let activeBusinessId: string | null = businessId || null;
-    if (activeBusinessId) {
-      const { data: b } = await supabase.from("businesses").select("id").eq("id", activeBusinessId).eq("user_id", user.id).single();
-      if (!b) activeBusinessId = null;
-    }
-
-    if (!activeBusinessId) {
-      const { data: businesses } = await supabase
-        .from("businesses")
-        .select("id")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1);
-      if (businesses && businesses.length > 0) {
-        activeBusinessId = businesses[0].id;
-      }
-    }
-
-    if (!activeBusinessId) {
+    let activeBusinessId: string;
+    try {
+      activeBusinessId = await DocumentService.resolveBusinessId(user.id, businessId || undefined);
+    } catch {
       return NextResponse.json<ApiResponse>(
-        { success: false, error: { message: "No active business found for document upload" } },
+        { success: false, error: { message: "No active business found. Create a business first." } },
         { status: 400 }
       );
     }
+
+    const supabase = createAdminClient() as any;
 
     const MAX_SIZE = 10 * 1024 * 1024;
     if (file.size > MAX_SIZE) {

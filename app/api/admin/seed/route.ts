@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { INDUSTRIES } from "@/features/assessments/data/industries";
 import { SUBSCRIPTION_PLANS } from "@/features/businesses/data/subscription-plans";
-import { COUNTRIES } from "@/features/assessments/data/countries-data";
+import { ASSESSMENT_COUNTRIES as COUNTRIES } from "@/features/assessments/data/countries-data";
 import { REGULATORY_UPDATES } from "@/features/regulatory-updates/data/regulatory-updates-data";
 import type { ApiResponse } from "@/types/api.types";
 

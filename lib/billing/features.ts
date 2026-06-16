@@ -1,10 +1,7 @@
-import { createAdminClient } from "@/lib/supabase/server";
-
 export type FeatureFlag =
   | "multi_business"
   | "advanced_reporting"
   | "team_collaboration"
-  | "priority_support"
   | "ai_compliance";
 
 export interface AccessInfo {
@@ -18,7 +15,7 @@ export interface AccessInfo {
 const PLAN_FEATURES: Record<string, FeatureFlag[]> = {
   starter: [],
   growth: ["multi_business", "advanced_reporting"],
-  enterprise: ["multi_business", "advanced_reporting", "team_collaboration", "priority_support", "ai_compliance"],
+  enterprise: ["multi_business", "advanced_reporting", "team_collaboration", "ai_compliance"],
 };
 
 const PLAN_LIMITS: Record<string, Record<string, number>> = {
@@ -31,14 +28,6 @@ const PLAN_NAMES: Record<string, string> = {
   starter: "Starter",
   growth: "Growth",
   enterprise: "Enterprise",
-};
-
-const FEATURE_FLAG_MAP: Record<string, FeatureFlag> = {
-  multi_business: "multi_business",
-  advanced_reporting: "advanced_reporting",
-  team_collaboration: "team_collaboration",
-  priority_support: "priority_support",
-  ai_compliance: "ai_compliance",
 };
 
 export async function resolveAccess(planSlug: string | null, planStatus: string | null): Promise<AccessInfo> {

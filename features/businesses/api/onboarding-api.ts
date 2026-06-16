@@ -3,39 +3,7 @@ const BUSINESS_DATA_KEY = "launchsafe-business-data";
 const ALL_BIZ_KEY = "launchsafe-all-businesses";
 
 import { audit } from "@/features/audit/api/audit-api";
-
-/* ----- API helpers ----- */
-async function apiGet<T>(url: string): Promise<T | null> {
-  try {
-    const cacheBuster = url.includes("?") ? `&t=${Date.now()}` : `?t=${Date.now()}`;
-    const res = await fetch(url + cacheBuster, { cache: "no-store" });
-    const json = await res.json();
-    return json.success ? json.data : null;
-  } catch { return null; }
-}
-
-async function apiPost<T>(url: string, body: any): Promise<T | null> {
-  try {
-    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    const json = await res.json();
-    return json.success ? json.data : null;
-  } catch { return null; }
-}
-
-async function apiPatch<T>(url: string, body: any): Promise<T | null> {
-  try {
-    const res = await fetch(url, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    const json = await res.json();
-    return json.success ? json.data : null;
-  } catch { return null; }
-}
-
-async function apiDelete(url: string): Promise<boolean> {
-  try {
-    const res = await fetch(url, { method: "DELETE" });
-    return res.ok;
-  } catch { return false; }
-}
+import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api/base";
 
 /* ----- Single business (backward compat) ----- */
 export function saveBusinessData(data: Record<string, unknown>): void {
@@ -108,9 +76,9 @@ export async function fetchAllBusinesses(): Promise<StoredBusiness[]> {
         return {
           id: b.id,
           name: b.name,
-          industry: industry,
+          industry: b.industrySlug || industry,
           type: type,
-          state: state,
+          state: b.stateName || state,
           createdAt: b.createdAt,
           fullData: fullData,
         };

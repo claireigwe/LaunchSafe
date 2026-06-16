@@ -24,9 +24,4 @@ export const ALLOWED_DOCUMENT_TYPES = ["application/pdf"];
 export const COMPLIANCE_SCORE_MAX = 100;
 export const COMPLIANCE_SCORE_MIN = 0;
 
-// Assessment limits per plan
-export const FREE_ASSESSMENT_LIMIT = 1;
-export const PRO_ASSESSMENT_LIMIT = 5;
 
-// Paystack amounts are in kobo (1 NGN = 100 kobo)
-export const KOBO_MULTIPLIER = 100;
