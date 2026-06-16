@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getBillingData } from "@/features/billing/api/billing-api";
 import { BusinessInfo } from "./steps/business-info";
@@ -17,10 +17,11 @@ import styles from "./business-onboarding-wizard.module.css";
 
 export function BusinessOnboardingWizard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
   const [step, setStep] = useState<OnboardingStep>(1);
   const [data, setData] = useState<OnboardingData>(createEmptyOnboardingData());
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(searchParams.get("plan") || null);
   const [isAnnual, setIsAnnual] = useState(true);
   const [hasSubscription, setHasSubscription] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -105,6 +106,8 @@ export function BusinessOnboardingWizard() {
   async function handleStep3Next() {
     if (hasSubscription) {
       await handleCreateDirectly();
+    } else if (selectedPlan) {
+      setStep(5 as OnboardingStep);
     } else {
       setStep(4 as OnboardingStep);
     }

@@ -33,9 +33,11 @@ export function SignupForm() {
     try { localStorage.removeItem("launchsafe-intent"); } catch {}
   }, []);
 
-  const redirectTo = typeof window !== "undefined"
-    ? new URLSearchParams(window.location.search).get("redirect") || "/onboarding"
-    : "/onboarding";
+  const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const planParam = searchParams.get("plan");
+  const redirectTo = planParam
+    ? `/business-onboarding?plan=${planParam}`
+    : searchParams.get("redirect") || "/onboarding";
 
   const appOrigin = typeof window !== "undefined" ? window.location.origin : "";
   const appEmailUrl = process.env.NEXT_PUBLIC_APP_URL || appOrigin;

@@ -180,9 +180,10 @@ export function BillingPage() {
             { slug: "enterprise", name: "Enterprise", badge: null, isEnterprise: true },
           ].map((meta) => {
             const plan = plans.find((p: any) => p.slug === meta.slug);
-            const monthly = plan?.priceMonthly || 0;
-            const yearly = plan?.priceYearly || 0;
-            const annualTotal = yearly * 12;
+            // DB stores prices in kobo; divide by 100 for display
+            const monthlyAmount = (plan?.priceMonthly || 0) / 100;
+            const annualTotalAmount = (plan?.priceYearly || 0) / 100;
+            const annualMonthlyAmount = annualTotalAmount / 12;
             const isCurrent = sub?.planId === meta.slug;
             return (
               <div key={meta.slug} className={`${styles.planCard} ${isCurrent ? styles.planCurrent : ""}`}>
@@ -191,11 +192,11 @@ export function BillingPage() {
                 {!meta.isEnterprise ? (
                   <>
                     <div className={styles.planPrice}>
-                      <span className={styles.priceValue}>{formatCurrency(monthly)}</span>
+                      <span className={styles.priceValue}>{formatCurrency(monthlyAmount)}</span>
                       <span className={styles.pricePeriod}>/month</span>
                     </div>
                     <div className={styles.planAnnual}>
-                      {formatCurrency(yearly)}/month · {formatCurrency(annualTotal)} billed annually
+                      {formatCurrency(annualMonthlyAmount)}/month · {formatCurrency(annualTotalAmount)} billed annually
                     </div>
                   </>
                 ) : (
