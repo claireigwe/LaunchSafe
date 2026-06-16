@@ -5,11 +5,8 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, FileText, AlertTriangle, Building2, Shield, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generatePdfFromHtml } from "@/lib/pdf/generator";
+import { formatKobo } from "@/lib/utils/currency";
 import type { AssessmentFullReport } from "@/types/domain/assessment";
-
-function formatCurrency(amount: number) {
-  return `₦${Math.round(amount / 100).toLocaleString("en-US")}`;
-}
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
@@ -73,9 +70,9 @@ export function ReportContent({ report, businessInfo, reportId }: Props) {
           <div style={{ padding: "20px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
             <DetailRow label="Total Requirements" value={String(report.requirements?.length || 0)} />
             <DetailRow label="Risk Level" value={report.riskLevel} />
-            <DetailRow label="Official Costs" value={`${formatCurrency(report.officialCosts?.min || 0)} – ${formatCurrency(report.officialCosts?.max || 0)}`} />
-            <DetailRow label="Setup Costs" value={`${formatCurrency(report.commonSetupCostRange?.min || 0)} – ${formatCurrency(report.commonSetupCostRange?.max || 0)}`} />
-            <DetailRow label="Budget Estimate" value={`${formatCurrency(report.estimatedBudget?.min || 0)} – ${formatCurrency(report.estimatedBudget?.max || 0)}+`} />
+            <DetailRow label="Official Costs" value={`${formatKobo(report.officialCosts?.min || 0)} – ${formatKobo(report.officialCosts?.max || 0)}`} />
+            <DetailRow label="Setup Costs" value={`${formatKobo(report.commonSetupCostRange?.min || 0)} – ${formatKobo(report.commonSetupCostRange?.max || 0)}`} />
+            <DetailRow label="Budget Estimate" value={`${formatKobo(report.estimatedBudget?.min || 0)} – ${formatKobo(report.estimatedBudget?.max || 0)}+`} />
           </div>
         </div>
 
@@ -122,11 +119,11 @@ export function ReportContent({ report, businessInfo, reportId }: Props) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
           <div style={{ background: "rgba(255,255,255,0.75)", backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.9)", borderRadius: 16, padding: 16 }}>
             <span style={{ display: "block", fontFamily: "var(--font-label-label-small-fontFamily)", fontSize: 10, color: "var(--color-role-light-onSurfaceVariant)", marginBottom: 4 }}>OFFICIAL COSTS</span>
-            <span style={{ fontFamily: "var(--font-label-label-medium-fontFamily)", fontSize: 16, fontWeight: 700, color: "var(--color-key-success)" }}>{formatCurrency(report.officialCosts?.min || 0)} – {formatCurrency(report.officialCosts?.max || 0)}</span>
+            <span style={{ fontFamily: "var(--font-label-label-medium-fontFamily)", fontSize: 16, fontWeight: 700, color: "var(--color-key-success)" }}>{formatKobo(report.officialCosts?.min || 0)} – {formatKobo(report.officialCosts?.max || 0)}</span>
           </div>
           <div style={{ background: "rgba(255,255,255,0.75)", backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.9)", borderRadius: 16, padding: 16 }}>
             <span style={{ display: "block", fontFamily: "var(--font-label-label-small-fontFamily)", fontSize: 10, color: "var(--color-role-light-onSurfaceVariant)", marginBottom: 4 }}>SETUP COSTS</span>
-            <span style={{ fontFamily: "var(--font-label-label-medium-fontFamily)", fontSize: 16, fontWeight: 700, color: "#d97706" }}>{report.commonSetupCostRange ? `${formatCurrency(report.commonSetupCostRange.min)} – ${formatCurrency(report.commonSetupCostRange.max)}` : "Varies"}</span>
+            <span style={{ fontFamily: "var(--font-label-label-medium-fontFamily)", fontSize: 16, fontWeight: 700, color: "#d97706" }}>{report.commonSetupCostRange ? `${formatKobo(report.commonSetupCostRange.min)} – ${formatKobo(report.commonSetupCostRange.max)}` : "Varies"}</span>
           </div>
           <div style={{ background: "rgba(255,255,255,0.75)", backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.9)", borderRadius: 16, padding: 16 }}>
             <span style={{ display: "block", fontFamily: "var(--font-label-label-small-fontFamily)", fontSize: 10, color: "var(--color-role-light-onSurfaceVariant)", marginBottom: 4 }}>LOCAL COSTS</span>
@@ -136,7 +133,7 @@ export function ReportContent({ report, businessInfo, reportId }: Props) {
         <div style={{ background: "rgba(255,255,255,0.75)", backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.9)", borderLeft: "4px solid var(--color-role-light-primary)", borderRadius: 12, padding: "14px 16px", marginBottom: 24 }}>
           <span style={{ display: "block", fontFamily: "var(--font-label-label-small-fontFamily)", fontSize: 11, color: "var(--color-role-light-onSurfaceVariant)", marginBottom: 2 }}>ESTIMATED LAUNCH BUDGET</span>
           <span style={{ fontFamily: "var(--font-label-label-large-fontFamily)", fontSize: 22, fontWeight: 700, color: "var(--color-role-light-primary)" }}>
-            {formatCurrency(report.estimatedBudget?.min || 0)} – {formatCurrency(report.estimatedBudget?.max || 0)}+
+            {formatKobo(report.estimatedBudget?.min || 0)} – {formatKobo(report.estimatedBudget?.max || 0)}+
           </span>
         </div>
 
@@ -215,8 +212,8 @@ export function ReportContent({ report, businessInfo, reportId }: Props) {
                   <div style={{ display: "flex", gap: 12, flexWrap: "wrap", fontSize: 11, color: "var(--color-role-light-onSurfaceVariant)" }}>
                     <span>{req.agencyName}</span>
                     <span>· {req.frequency}</span>
-                    {req.officialCost != null && req.officialCost > 0 && <span style={{ color: "var(--color-key-success)" }}>Official: {formatCurrency(req.officialCost)}</span>}
-                    {req.estimatedCost != null && req.estimatedCost > 0 && <span style={{ color: "#d97706" }}>Est: {formatCurrency(req.estimatedCost)}</span>}
+                    {req.officialCost != null && req.officialCost > 0 && <span style={{ color: "var(--color-key-success)" }}>Official: {formatKobo(req.officialCost)}</span>}
+                    {req.estimatedCost != null && req.estimatedCost > 0 && <span style={{ color: "#d97706" }}>Est: {formatKobo(req.estimatedCost)}</span>}
                   </div>
                 </div>
               ))}

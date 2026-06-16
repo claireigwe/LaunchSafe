@@ -1,5 +1,6 @@
 import { AlertTriangle } from "lucide-react";
 import type { RiskReport } from "../types/reporting.types";
+import { formatRiskInsights } from "../api/reporting-format";
 import styles from "./risk-report-card.module.css";
 
 interface Props {
@@ -28,7 +29,7 @@ export function RiskReportCard({ data }: Props) {
         </div>
         <div>
           <div className={`${styles.levelBadge} ${styles[level.cls]}`}>{level.label}</div>
-          <p className={styles.insights}>{data.insights}</p>
+          <p className={styles.insights}>{formatRiskInsights(data)}</p>
         </div>
       </div>
       {data.factors.length > 0 && (

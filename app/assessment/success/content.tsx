@@ -3,9 +3,11 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { generatePdfFromHtml } from "@/lib/pdf/generator";
+import { formatKobo } from "@/lib/utils/currency";
 import { Header } from "@/components/shared/header";
 import { Footer } from "@/components/shared/footer";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
 import { CheckCircle, Download, UserPlus, Building2, Clock, Shield } from "lucide-react";
 import type { AssessmentFullReport, AssessmentRequirement } from "@/types/domain/assessment";
 
@@ -17,12 +19,17 @@ export function AssessmentSuccessContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   const assessmentId = searchParams.get("assessmentId");
   const trxref = searchParams.get("trxref");
 
   useEffect(() => {
+    createClient().auth.getSession().then(({ data: { session } }) => {
+      setSignedIn(!!session);
+    }).catch(() => {});
+
     if (!assessmentId || !trxref) {
       setError("Missing payment information.");
       setLoading(false);
@@ -51,10 +58,6 @@ export function AssessmentSuccessContent() {
       import("html2pdf.js/dist/html2pdf.bundle.js").catch(() => {});
     });
   }, [assessmentId, trxref]);
-
-  function formatCurrency(amount: number) {
-    return `₦${Math.round(amount / 100).toLocaleString("en-US")}`;
-  }
 
   async function downloadPdf() {
     setDownloading(true);
@@ -165,11 +168,11 @@ export function AssessmentSuccessContent() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
               <div style={{ background: "var(--color-role-light-surfaceContainerLow)", borderRadius: 16, padding: 16 }}>
                 <span style={{ display: "block", fontFamily: "var(--font-label-label-small-fontFamily)", fontSize: 10, color: "var(--color-role-light-onSurfaceVariant)", marginBottom: 4 }}>OFFICIAL COSTS</span>
-                <span style={{ fontFamily: "var(--font-label-label-medium-fontFamily)", fontSize: 16, fontWeight: 700, color: "var(--color-key-success)" }}>{formatCurrency(report.officialCosts.min)} – {formatCurrency(report.officialCosts.max)}</span>
+                <span style={{ fontFamily: "var(--font-label-label-medium-fontFamily)", fontSize: 16, fontWeight: 700, color: "var(--color-key-success)" }}>{formatKobo(report.officialCosts.min)} – {formatKobo(report.officialCosts.max)}</span>
               </div>
               <div style={{ background: "var(--color-role-light-surfaceContainerLow)", borderRadius: 16, padding: 16 }}>
                 <span style={{ display: "block", fontFamily: "var(--font-label-label-small-fontFamily)", fontSize: 10, color: "var(--color-role-light-onSurfaceVariant)", marginBottom: 4 }}>SETUP COSTS</span>
-                <span style={{ fontFamily: "var(--font-label-label-medium-fontFamily)", fontSize: 16, fontWeight: 700, color: "var(--color-palette-warning-40)" }}>{formatCurrency(report.commonSetupCostRange.min)} – {formatCurrency(report.commonSetupCostRange.max)}</span>
+                <span style={{ fontFamily: "var(--font-label-label-medium-fontFamily)", fontSize: 16, fontWeight: 700, color: "var(--color-palette-warning-40)" }}>{formatKobo(report.commonSetupCostRange.min)} – {formatKobo(report.commonSetupCostRange.max)}</span>
               </div>
               <div style={{ background: "var(--color-role-light-surfaceContainerLow)", borderRadius: 16, padding: 16 }}>
                 <span style={{ display: "block", fontFamily: "var(--font-label-label-small-fontFamily)", fontSize: 10, color: "var(--color-role-light-onSurfaceVariant)", marginBottom: 4 }}>LOCAL COSTS</span>
@@ -179,7 +182,7 @@ export function AssessmentSuccessContent() {
             <div style={{ background: "var(--color-role-light-surfaceBright)", borderLeft: "4px solid var(--color-role-light-primary)", borderRadius: 12, padding: "14px 16px", marginBottom: 24 }}>
               <span style={{ display: "block", fontFamily: "var(--font-label-label-small-fontFamily)", fontSize: 11, color: "var(--color-role-light-onSurfaceVariant)", marginBottom: 2 }}>ESTIMATED LAUNCH BUDGET</span>
               <span style={{ fontFamily: "var(--font-label-label-large-fontFamily)", fontSize: 22, fontWeight: 700, color: "var(--color-role-light-primary)" }}>
-                {formatCurrency(report.estimatedBudget.min)} – {formatCurrency(report.estimatedBudget.max)}+
+                {formatKobo(report.estimatedBudget.min)} – {formatKobo(report.estimatedBudget.max)}+
               </span>
             </div>
 
@@ -258,8 +261,8 @@ export function AssessmentSuccessContent() {
                     <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                       <span style={{ fontSize: 11, color: "var(--color-role-light-onSurfaceVariant)" }}>{req.agencyName}</span>
                       <span style={{ fontSize: 11, color: "var(--color-role-light-onSurfaceVariant)" }}>· {req.frequency}</span>
-                      {req.officialCost != null && req.officialCost > 0 && <span style={{ fontSize: 11, color: "var(--color-key-success)" }}>Official: {formatCurrency(req.officialCost)}</span>}
-                      {req.estimatedCost != null && req.estimatedCost > 0 && <span style={{ fontSize: 11, color: "#d97706" }}>Est: {formatCurrency(req.estimatedCost)}</span>}
+                      {req.officialCost != null && req.officialCost > 0 && <span style={{ fontSize: 11, color: "var(--color-key-success)" }}>Official: {formatKobo(req.officialCost)}</span>}
+                      {req.estimatedCost != null && req.estimatedCost > 0 && <span style={{ fontSize: 11, color: "#d97706" }}>Est: {formatKobo(req.estimatedCost)}</span>}
                     </div>
                   </div>
                 ))}
@@ -331,23 +334,25 @@ export function AssessmentSuccessContent() {
           </Button>
         </div>
 
-        <div style={{ background: "linear-gradient(135deg, var(--color-role-light-primaryContainer), var(--color-role-light-surfaceBright))", borderRadius: 16, padding: 24, textAlign: "center" }}>
-          <UserPlus size={24} style={{ color: "var(--color-role-light-primary)", marginBottom: 12 }} />
-          <h3 style={{ fontFamily: "var(--font-title-title-large-fontFamily)", fontSize: 18, fontWeight: 600, color: "var(--color-role-light-onSurface)", margin: "0 0 8px" }}>Don't Lose Your Report</h3>
-          <p style={{ fontFamily: "var(--font-body-body-large-fontFamily)", fontSize: 14, color: "var(--color-role-light-onSurfaceVariant)", margin: "0 0 20px", lineHeight: 1.5 }}>
-            Create a free account to save your report permanently, track compliance deadlines, and manage your regulatory obligations.
-          </p>
-          <Button variant="primary" size="lg" fullWidth onClick={() => router.push(`/signup?redirect=/reports/assessment/${assessmentId}`)}>
-            Create Free Account
-          </Button>
-          <button
-            type="button"
-            style={{ background: "none", border: "none", marginTop: 12, fontFamily: "var(--font-label-label-medium-fontFamily)", fontSize: 13, color: "var(--color-role-light-onSurfaceVariant)", cursor: "pointer" }}
-            onClick={() => router.push("/")}
-          >
-            Maybe Later
-          </button>
-        </div>
+        {!signedIn && (
+          <div style={{ background: "linear-gradient(135deg, var(--color-role-light-primaryContainer), var(--color-role-light-surfaceBright))", borderRadius: 16, padding: 24, textAlign: "center" }}>
+            <UserPlus size={24} style={{ color: "var(--color-role-light-primary)", marginBottom: 12 }} />
+            <h3 style={{ fontFamily: "var(--font-title-title-large-fontFamily)", fontSize: 18, fontWeight: 600, color: "var(--color-role-light-onSurface)", margin: "0 0 8px" }}>Don't Lose Your Report</h3>
+            <p style={{ fontFamily: "var(--font-body-body-large-fontFamily)", fontSize: 14, color: "var(--color-role-light-onSurfaceVariant)", margin: "0 0 20px", lineHeight: 1.5 }}>
+              Create a free account to save your report permanently, track compliance deadlines, and manage your regulatory obligations.
+            </p>
+            <Button variant="primary" size="lg" fullWidth onClick={() => router.push(`/signup?redirect=/reports/assessment/${assessmentId}`)}>
+              Create Free Account
+            </Button>
+            <button
+              type="button"
+              style={{ background: "none", border: "none", marginTop: 12, fontFamily: "var(--font-label-label-medium-fontFamily)", fontSize: 13, color: "var(--color-role-light-onSurfaceVariant)", cursor: "pointer" }}
+              onClick={() => router.push("/")}
+            >
+              Maybe Later
+            </button>
+          </div>
+        )}
       </main>
       <Footer />
     </>

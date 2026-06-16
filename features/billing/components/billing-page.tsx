@@ -8,13 +8,10 @@ import { Button } from "@/components/ui/button";
 import {
   getBillingData,
   cancelSubscription,
-  getPlanFeatures,
-  getPlanPrice,
-  getPlanAnnualTotal,
   formatCurrency,
-  type SavedSubscription,
 } from "../api/billing-api";
-import { trackEvent } from "@/features/assessments/api/assessment-api";
+import type { SavedSubscription, SavedPayment, SavedAssessmentPurchase } from "@/types/domain/billing";
+import { trackEvent } from "@/lib/analytics/track";
 import { initiateSubscriptionPayment } from "@/features/businesses/api/onboarding-api";
 import { ContactSalesModal } from "./contact-sales-modal";
 import styles from "./billing-page.module.css";
@@ -28,36 +25,26 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   suspended: { label: "Suspended", className: "statusError" },
 };
 
-interface PlanInfo {
-  id: string;
-  name: string;
-  monthly?: number;
-  annual?: number;
-  annualTotal?: number;
-  badge: string | null;
-}
-
-const PLANS: PlanInfo[] = [
-  { id: "starter", name: "Starter", monthly: 10000, annual: 8500, annualTotal: 102000, badge: null },
-  { id: "growth", name: "Growth", monthly: 20000, annual: 18000, annualTotal: 216000, badge: "Most Popular" },
-  { id: "enterprise", name: "Enterprise", badge: null },
-];
-
 export function BillingPage() {
   const router = useRouter();
   const [sub, setSub] = useState<SavedSubscription | null>(null);
   const [payments, setPayments] = useState<any[]>([]);
   const [purchases, setPurchases] = useState<any[]>([]);
+  const [plans, setPlans] = useState<any[]>([]);
   const [showCancel, setShowCancel] = useState(false);
   const [showContactSales, setShowContactSales] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
-      const data = await getBillingData();
+      const [data, plansRes] = await Promise.all([
+        getBillingData(),
+        fetch("/api/billing/plans").then(r => r.json()).catch(() => ({ data: [] })),
+      ]);
       setSub(data.subscription);
       setPayments(data.payments);
       setPurchases(data.purchases);
+      setPlans(plansRes.data || []);
       setLoading(false);
     }
     load().catch(() => setLoading(false));
@@ -170,7 +157,7 @@ export function BillingPage() {
             <h2 className={styles.sectionTitle}>Plan Details — {sub.planName}</h2>
           </div>
           <div className={styles.featuresList}>
-            {getPlanFeatures(sub.planId).map((f) => (
+            {(plans.find((p: any) => p.slug === sub?.planId)?.features || []).map((f: string) => (
               <div key={f} className={styles.featureRow}>
                 <Check size={14} className={styles.checkIcon} />
                 <span>{f}</span>
@@ -187,20 +174,28 @@ export function BillingPage() {
           <h2 className={styles.sectionTitle}>Plan Management</h2>
         </div>
         <div className={styles.plansGrid}>
-          {PLANS.map((plan) => {
-            const isCurrent = sub?.planId === plan.id;
+          {[
+            { slug: "starter", name: "Starter", badge: null, isEnterprise: false },
+            { slug: "growth", name: "Growth", badge: "Most Popular", isEnterprise: false },
+            { slug: "enterprise", name: "Enterprise", badge: null, isEnterprise: true },
+          ].map((meta) => {
+            const plan = plans.find((p: any) => p.slug === meta.slug);
+            const monthly = plan?.priceMonthly || 0;
+            const yearly = plan?.priceYearly || 0;
+            const annualTotal = yearly * 12;
+            const isCurrent = sub?.planId === meta.slug;
             return (
-              <div key={plan.id} className={`${styles.planCard} ${isCurrent ? styles.planCurrent : ""}`}>
-                {plan.badge && <span className={styles.planBadge}>{plan.badge}</span>}
-                <h3 className={styles.planName}>{plan.name}</h3>
-                {plan.monthly ? (
+              <div key={meta.slug} className={`${styles.planCard} ${isCurrent ? styles.planCurrent : ""}`}>
+                {meta.badge && <span className={styles.planBadge}>{meta.badge}</span>}
+                <h3 className={styles.planName}>{plan?.name || meta.name}</h3>
+                {!meta.isEnterprise ? (
                   <>
                     <div className={styles.planPrice}>
-                      <span className={styles.priceValue}>{formatCurrency(plan.monthly)}</span>
+                      <span className={styles.priceValue}>{formatCurrency(monthly)}</span>
                       <span className={styles.pricePeriod}>/month</span>
                     </div>
                     <div className={styles.planAnnual}>
-                      {formatCurrency(plan.annual!)}/month · {formatCurrency(plan.annualTotal!)} billed annually
+                      {formatCurrency(yearly)}/month · {formatCurrency(annualTotal)} billed annually
                     </div>
                   </>
                 ) : (
@@ -209,7 +204,7 @@ export function BillingPage() {
                   </div>
                 )}
                 {isCurrent && <span className={styles.currentBadge}>Current Plan</span>}
-                {isCurrent && plan.id === "enterprise" && !sub?.paystackSubscriptionCode && (
+                {isCurrent && meta.slug === "enterprise" && !sub?.paystackSubscriptionCode && (
                   <Button variant="primary" size="sm" fullWidth onClick={async () => {
                     try {
                       const { authorizationUrl } = await initiateSubscriptionPayment("enterprise", "monthly");
@@ -221,8 +216,8 @@ export function BillingPage() {
                     Set up Payment
                   </Button>
                 )}
-                {!isCurrent && isActive && plan.monthly && <Button variant="outline" size="sm" fullWidth onClick={() => router.push("/business-onboarding?mode=change-plan")}>Switch Plan</Button>}
-                {!isCurrent && isActive && !plan.monthly && <Button variant="outline" size="sm" fullWidth onClick={() => setShowContactSales(true)}>Contact Sales</Button>}
+                {!isCurrent && isActive && !meta.isEnterprise && <Button variant="outline" size="sm" fullWidth onClick={() => router.push("/business-onboarding?mode=change-plan")}>Switch Plan</Button>}
+                {!isCurrent && isActive && meta.isEnterprise && <Button variant="outline" size="sm" fullWidth onClick={() => setShowContactSales(true)}>Contact Sales</Button>}
               </div>
             );
           })}

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
-import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { trackEvent } from "@/lib/analytics/track";
 import { ProfileSection } from "./sections/profile-section";
 import { NotificationsSection } from "./sections/notifications-section";
 import { SecuritySection } from "./sections/security-section";

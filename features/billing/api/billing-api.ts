@@ -1,35 +1,5 @@
-import type { SubscriptionStatus } from "@/types/domain/billing";
+import type { SavedSubscription, SavedPayment, SavedAssessmentPurchase } from "@/types/domain/billing";
 import { apiGet, apiPatch } from "@/lib/api/base";
-
-export interface SavedSubscription {
-  planId: string;
-  planName: string;
-  billingCycle: "monthly" | "annual";
-  status: SubscriptionStatus;
-  startDate: string;
-  nextRenewal: string;
-  cancelledAt: string | null;
-  paystackSubscriptionCode?: string | null;
-}
-
-export interface SavedPayment {
-  id: string;
-  amount: number;
-  currency: string;
-  status: "paid" | "pending" | "failed" | "refunded";
-  paymentType: "subscription" | "assessment";
-  reference: string;
-  description: string;
-  createdAt: string;
-}
-
-export interface SavedAssessmentPurchase {
-  id: string;
-  reportName: string;
-  amount: number;
-  status: "paid" | "pending" | "failed";
-  createdAt: string;
-}
 
 let cachedBillingData: {
   subscription: SavedSubscription | null;

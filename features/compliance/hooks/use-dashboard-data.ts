@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { SavedSubscription } from "@/features/billing/api/billing-api";
+import type { SavedSubscription } from "@/types/domain/billing";
 import type { RegulatoryUpdate } from "@/types/domain/regulatory";
 
 const CACHE_KEY = "launchsafe-dashboard";

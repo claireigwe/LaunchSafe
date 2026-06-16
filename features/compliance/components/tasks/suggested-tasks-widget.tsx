@@ -10,7 +10,7 @@ import { canAccess } from "@/features/billing/api/feature-access";
 import { getBusinessData, fetchAllBusinesses } from "@/features/businesses/api/onboarding-api";
 import { addSuggestedTask } from "../../api/tasks-api";
 import { getActiveBusinessId, useAppStore } from "@/lib/stores/app-store";
-import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { trackEvent } from "@/lib/analytics/track";
 import styles from "./suggested-tasks-widget.module.css";
 
 function getDismissedKey(businessId: string | null): string {

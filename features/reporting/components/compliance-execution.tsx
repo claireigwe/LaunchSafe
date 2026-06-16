@@ -79,12 +79,6 @@ export function ComplianceExecutionSection({ taskData, deadlineData }: Props) {
           <span className={styles.metricValue}>{deadlineData.upcoming}</span>
           <span className={styles.metricLabel}>Upcoming</span>
         </div>
-        <div className={styles.metricCard}>
-          <div className={styles.progressBar}>
-            <div className={styles.progressFill} style={{ width: `${taskData.completionRate}%` }} />
-          </div>
-          <span className={styles.metricLabel}>Completion Rate</span>
-        </div>
       </div>
 
       <div className={styles.insightBox}>

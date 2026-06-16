@@ -1,132 +1,67 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { createNotification, getNotificationPreferences } from "@/features/notifications/services/notification-service";
+import { fetchDueTasks, buildSentMap, determineReminder, markTaskOverdue } from "@/features/notifications/services/reminder-service";
 
 export async function GET(request: Request) {
-  // 1. Verify Vercel Cron Secret
   const authHeader = request.headers.get("authorization");
-  if (
-    process.env.NODE_ENV !== "development" &&
-    authHeader !== `Bearer ${process.env.CRON_SECRET}`
-  ) {
+  if (process.env.NODE_ENV !== "development" && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const supabaseAdmin = createAdminClient();
-
-    // 2. Fetch all non-completed tasks with a due date
-    const { data: tasks, error } = await supabaseAdmin
-      .from("compliance_tasks")
-      .select(`
-        id,
-        requirement_name,
-        due_date,
-        status,
-        business_id,
-        businesses ( user_id )
-      `)
-      .neq("status", "completed")
-      .not("due_date", "is", null);
-
-    if (error) {
-      console.error("[Cron Reminders] Error fetching tasks:", error);
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-    }
-
-    // 3. Fetch all users to map user_id to email
     const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
-    const userMap = new Map(users.map(u => [u.id, u.email]));
+    const userMap = new Map(users.map((u: any) => [u.id, u.email]));
 
-    // 4. Fetch all recently sent deadline_reminder notifications to avoid spamming
-    const { data: recentNotifs } = await supabaseAdmin
-      .from("notifications")
-      .select("id, user_id, metadata")
-      .in("type", ["deadline_reminder"]);
-
-    const sentMap = new Set<string>();
-    if (recentNotifs) {
-      for (const n of recentNotifs as any[]) {
-        if (n.metadata?.taskId) {
-          sentMap.add(`${n.user_id}_${n.metadata.taskId}_${n.metadata.typeLabel}`);
-        }
-      }
-    }
-
+    const tasks = await fetchDueTasks();
+    const sentMap = await buildSentMap();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     let sentCount = 0;
 
-    for (const task of (tasks as any[]) || []) {
-      const businessUserId = (task.businesses as any)?.user_id;
-      if (!businessUserId) continue;
-
-      const email = userMap.get(businessUserId);
+    for (const task of tasks) {
+      const email = userMap.get(task.user_id);
       if (!email) continue;
 
-      const dueDate = new Date(task.due_date);
-      const diffTime = dueDate.getTime() - today.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const action = determineReminder(task, today);
+      if (!action) continue;
 
-      let notifType = null;
-      let typeLabel = null;
-
-      if (diffDays === 7) {
-        notifType = "deadline_approaching";
-        typeLabel = "7_days";
-      } else if (diffDays === 3) {
-        notifType = "deadline_due_soon";
-        typeLabel = "3_days";
-      } else if (diffDays < 0) {
-        // Mark as overdue in DB if not already (handles case where user never visited dashboard)
-        if (task.status !== "overdue") {
-          await (supabaseAdmin as any).from("compliance_tasks").update({ status: "overdue" }).eq("id", task.id);
-        }
-        notifType = "task_overdue";
-        typeLabel = "overdue";
-      }
-
-      if (!notifType) continue;
-
-      // Check if we already sent this specific reminder
-      const signature = `${businessUserId}_${task.id}_${typeLabel}`;
+      const signature = `${action.userId}_${action.taskId}_${action.typeLabel}`;
       if (sentMap.has(signature)) continue;
 
+      // Mark overdue tasks
+      if (action.type === "task_overdue" && task.status !== "overdue") {
+        await markTaskOverdue(task.id);
+      }
+
       // Check user preferences
-      const prefs = await getNotificationPreferences(businessUserId);
+      const prefs = await getNotificationPreferences(action.userId);
       const emailAllowed = prefs ? prefs.email_deadline_reminders : true;
       const inAppAllowed = prefs ? prefs.in_app_deadline_reminders : true;
 
       if (inAppAllowed) {
         await createNotification({
-          userId: businessUserId,
-          businessId: task.business_id,
-          type: "deadline_reminder", // General db type
-          title: notifType === "task_overdue" ? "Task Overdue" : "Deadline Approaching",
-          message: notifType === "task_overdue"
-            ? `${task.requirement_name} is overdue!`
-            : `${task.requirement_name} is due in ${diffDays} day(s).`,
-          actionUrl: `/compliance`,
-          metadata: { taskId: task.id, typeLabel, priority: notifType === "task_overdue" ? "critical" : "high" },
+          userId: action.userId,
+          businessId: action.businessId,
+          type: "deadline_reminder",
+          title: action.type === "task_overdue" ? "Task Overdue" : "Deadline Approaching",
+          message: action.type === "task_overdue"
+            ? `${action.taskName} is overdue!`
+            : `${action.taskName} is due in ${action.diffDays} day(s).`,
+          actionUrl: "/compliance",
+          metadata: { taskId: action.taskId, typeLabel: action.typeLabel, priority: action.type === "task_overdue" ? "critical" : "high" },
         });
       }
 
       if (emailAllowed) {
-        try {
-          const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-          await fetch(`${appUrl}/api/notifications/send-email`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              to: email,
-              type: notifType,
-              data: { title: task.requirement_name, days: diffDays, dueDate: task.due_date }
-            }),
-          });
-        } catch (e) {
-          console.error("Failed to trigger email API for", email, e);
-        }
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+        fetch(`${appUrl}/api/notifications/send-email`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ to: email, type: action.type, data: { title: action.taskName, days: action.diffDays, dueDate: action.dueDate } }),
+        }).catch((e) => console.error("Failed to trigger email API for", email, e));
       }
 
       sentCount++;

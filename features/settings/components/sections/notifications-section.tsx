@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { fetchProfileAndPrefs, updateNotificationPrefs } from "../../api/settings-api";
-import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { trackEvent } from "@/lib/analytics/track";
 import { Section, ToggleRow } from "./shared";
 import type { NotificationPrefs } from "../../types/settings.types";
 import styles from "../settings-page.module.css";

@@ -13,7 +13,7 @@ import { reconcileTaskStatuses } from "../../api/tasks-api";
 import { getActiveBusinessId } from "@/lib/stores/app-store";
 import { SetupOverlay } from "@/features/billing/components/setup-overlay";
 import { isInSetupMode } from "@/features/billing/api/setup-check";
-import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { trackEvent } from "@/lib/analytics/track";
 import { useHasBusiness } from "@/features/businesses/hooks/use-has-business";
 import { BusinessRequiredOverlay } from "@/features/businesses/components/business-required-overlay";
 import type { ComplianceTaskItem, CreateTaskInput, UpdateTaskInput } from "../../types/tasks.types";

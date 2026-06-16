@@ -6,7 +6,7 @@ import { BarChart, ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generateReportData, canExport } from "../api/reporting-engine";
 import { canAccess, getCurrentPlanId } from "@/features/billing/api/feature-access";
-import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { trackEvent } from "@/lib/analytics/track";
 import { useHasBusiness } from "@/features/businesses/hooks/use-has-business";
 import { BusinessRequiredOverlay } from "@/features/businesses/components/business-required-overlay";
 import { HealthTrendChart } from "./health-trend-chart";
@@ -31,7 +31,8 @@ export function ReportingPage() {
     trackEvent("Advanced Reporting Viewed");
   }, []);
 
-  if (!hasAccess) {
+  // Wait for both access check and report data before showing upgrade banner
+  if (!hasAccess && data && getCurrentPlanId() !== null) {
     return (
       <div className={styles.page}>
         <div className={styles.upgradeBanner}>

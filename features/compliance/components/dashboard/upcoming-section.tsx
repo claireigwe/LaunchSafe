@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ClipboardList } from "lucide-react";
+import { daysUntil } from "@/lib/utils/time";
 import type { ComplianceTaskItem } from "../../types/tasks.types";
 import styles from "./dashboard-page.module.css";
 
@@ -16,7 +17,7 @@ export function UpcomingSection({ items }: Props) {
         <Link href="/compliance" className={styles.cardAction}>View All</Link>
       </div>
       {items.map((t) => {
-        const days = t.dueDate ? Math.ceil((new Date(t.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
+        const days = t.dueDate ? daysUntil(t.dueDate) : null;
         return (
           <Link key={t.id} href="/compliance" className={styles.cardItem}>
             <span style={{ fontFamily: "var(--font-label-label-medium-fontFamily)", fontSize: 15, fontWeight: 500, color: "var(--color-role-light-onSurface)" }}>{t.title}</span>

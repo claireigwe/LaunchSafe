@@ -43,6 +43,39 @@ export interface AssessmentPurchase {
   updatedAt: string;
 }
 
+/** Client-side subscription representation returned by /api/billing/data */
+export interface SavedSubscription {
+  planId: string | null;
+  planName: string;
+  billingCycle: "monthly" | "annual";
+  status: SubscriptionStatus;
+  startDate: string;
+  nextRenewal: string;
+  cancelledAt: string | null;
+  paystackSubscriptionCode?: string | null;
+}
+
+/** Client-side payment representation returned by /api/billing/data */
+export interface SavedPayment {
+  id: string;
+  amount: number;
+  currency: string;
+  status: "paid" | "pending" | "failed" | "refunded";
+  paymentType: "subscription" | "assessment";
+  reference: string;
+  description: string;
+  createdAt: string;
+}
+
+/** Client-side assessment purchase representation returned by /api/billing/data */
+export interface SavedAssessmentPurchase {
+  id: string;
+  reportName: string;
+  amount: number;
+  status: "paid" | "pending" | "failed";
+  createdAt: string;
+}
+
 export interface SubscriptionPlan {
   id: string;
   name: string;

@@ -6,6 +6,7 @@ import { X, Download, FileText, AlertTriangle, Building2, Clock, Shield } from "
 import { Button } from "@/components/ui/button";
 import { initiateAssessmentPayment } from "../api/assessment-api";
 import { generatePdfFromHtml } from "@/lib/pdf/generator";
+import { formatKobo } from "@/lib/utils/currency";
 import type { AssessmentFullReport } from "@/types/domain/assessment";
 
 function DetailRow({ label, value }: { label: string; value: string }) {
@@ -155,9 +156,9 @@ export function ReportModal({ reportId, isOpen, onClose }: { reportId: string | 
                 <div style={{ padding: "20px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
                   <DetailRow label="Total Requirements" value={String(report.requirements?.length || 0)} />
                   <DetailRow label="Risk Level" value={report.riskLevel} />
-                  <DetailRow label="Official Costs" value={`₦${Math.round((report.officialCosts?.min || 0) / 100).toLocaleString("en-US")} – ₦${Math.round((report.officialCosts?.max || 0) / 100).toLocaleString("en-US")}`} />
-                  <DetailRow label="Setup Costs" value={`₦${Math.round((report.commonSetupCostRange?.min || 0) / 100).toLocaleString("en-US")} – ₦${Math.round((report.commonSetupCostRange?.max || 0) / 100).toLocaleString("en-US")}`} />
-                  <DetailRow label="Budget Estimate" value={`₦${Math.round((report.estimatedBudget?.min || 0) / 100).toLocaleString("en-US")} – ₦${Math.round((report.estimatedBudget?.max || 0) / 100).toLocaleString("en-US")}+`} />
+                  <DetailRow label="Official Costs" value={`${formatKobo(report.officialCosts?.min || 0)} – ${formatKobo(report.officialCosts?.max || 0)}`} />
+                  <DetailRow label="Setup Costs" value={`${formatKobo(report.commonSetupCostRange?.min || 0)} – ${formatKobo(report.commonSetupCostRange?.max || 0)}`} />
+                  <DetailRow label="Budget Estimate" value={`${formatKobo(report.estimatedBudget?.min || 0)} – ${formatKobo(report.estimatedBudget?.max || 0)}+`} />
                 </div>
               </div>
 
@@ -227,8 +228,8 @@ export function ReportModal({ reportId, isOpen, onClose }: { reportId: string | 
                         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", fontSize: 11, color: "var(--color-role-light-onSurfaceVariant)" }}>
                           <span>{req.agencyName}</span>
                           <span>· {req.frequency}</span>
-                          {req.officialCost != null && req.officialCost > 0 && <span style={{ color: "var(--color-key-success)" }}>Official: ₦{Math.round(req.officialCost / 100).toLocaleString("en-US")}</span>}
-                          {req.estimatedCost != null && req.estimatedCost > 0 && <span style={{ color: "#d97706" }}>Est: ₦{Math.round(req.estimatedCost / 100).toLocaleString("en-US")}</span>}
+                          {req.officialCost != null && req.officialCost > 0 && <span style={{ color: "var(--color-key-success)" }}>Official: {formatKobo(req.officialCost)}</span>}
+                          {req.estimatedCost != null && req.estimatedCost > 0 && <span style={{ color: "#d97706" }}>Est: {formatKobo(req.estimatedCost)}</span>}
                         </div>
                       </div>
                     ))}

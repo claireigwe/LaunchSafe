@@ -8,7 +8,7 @@ import { DOC_TYPE_TO_TEMPLATE } from "../data/document-templates";
 import { getBusinessData, getBusinessDataById } from "@/features/businesses/api/onboarding-api";
 import { getActiveBusinessId } from "@/lib/stores/app-store";
 import { generatePdfFromText } from "@/lib/pdf/generator";
-import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { trackEvent } from "@/lib/analytics/track";
 import type { DocumentType } from "@/types/domain/document";
 import styles from "./document-generator-modal.module.css";
 

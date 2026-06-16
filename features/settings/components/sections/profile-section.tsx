@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { fetchProfileAndPrefs, updateProfile } from "../../api/settings-api";
-import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { trackEvent } from "@/lib/analytics/track";
 import { audit } from "@/features/audit/api/audit-api";
 import { Section } from "./shared";
 import type { ProfileData } from "../../types/settings.types";

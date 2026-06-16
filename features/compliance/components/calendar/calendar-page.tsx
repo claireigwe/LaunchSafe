@@ -12,7 +12,7 @@ import { SetupOverlay } from "@/features/billing/components/setup-overlay";
 import { useHasBusiness } from "@/features/businesses/hooks/use-has-business";
 import { BusinessRequiredOverlay } from "@/features/businesses/components/business-required-overlay";
 import { getActiveBusinessId } from "@/lib/stores/app-store";
-import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { trackEvent } from "@/lib/analytics/track";
 import type { ComplianceTaskItem, CreateTaskInput, UpdateTaskInput } from "../../types/tasks.types";
 import styles from "./calendar-page.module.css";
 

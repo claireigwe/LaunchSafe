@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils/cn";
+import { daysUntil } from "@/lib/utils/time";
 import type { ComplianceTaskItem } from "../../types/tasks.types";
 import styles from "./task-card.module.css";
 
@@ -28,9 +29,7 @@ const PRIORITY_LABELS: Record<string, string> = {
 };
 
 export function TaskCard({ task, onClick }: Props) {
-  const daysUntilDue = task.dueDate
-    ? Math.ceil((new Date(task.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-    : null;
+  const daysUntilDue = task.dueDate ? daysUntil(task.dueDate) : null;
 
   return (
     <button

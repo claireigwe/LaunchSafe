@@ -5,7 +5,7 @@ import { Download, FileText, ListChecks, ShieldAlert, FolderOpen } from "lucide-
 import { Button } from "@/components/ui/button";
 import { getBusinessData } from "@/features/businesses/api/onboarding-api";
 import { generatePdfFromText } from "@/lib/pdf/generator";
-import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { trackEvent } from "@/lib/analytics/track";
 import styles from "./export-section.module.css";
 
 export function ExportSection() {

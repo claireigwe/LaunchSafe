@@ -15,7 +15,7 @@ import { DOC_TYPE_LABELS_GEN } from "../api/document-generation";
 import type { DocType, AppDocument } from "../types/documents.types";
 import { SetupOverlay } from "@/features/billing/components/setup-overlay";
 import { isInSetupMode } from "@/features/billing/api/setup-check";
-import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { trackEvent } from "@/lib/analytics/track";
 import { useHasBusiness } from "@/features/businesses/hooks/use-has-business";
 import { BusinessRequiredOverlay } from "@/features/businesses/components/business-required-overlay";
 import styles from "./document-library.module.css";

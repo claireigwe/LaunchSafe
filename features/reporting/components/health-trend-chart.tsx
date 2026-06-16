@@ -11,43 +11,14 @@ interface Props {
   data: HealthTrendPoint[];
 }
 
-function seededHash(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return Math.abs(hash);
-}
-
-function generateTimeSeries(range: "30d" | "90d" | "12m"): HealthTrendPoint[] {
-  const tasks = loadTasks();
-  const completed = tasks.filter((t) => t.status === "completed").length;
-  const currentRate = tasks.length > 0 ? Math.round((completed / tasks.length) * 100) : 0;
-  const now = new Date();
-  const months = range === "30d" ? 1 : range === "90d" ? 3 : 6;
-  const points: HealthTrendPoint[] = [];
-
-  for (let i = months; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const label = d.toLocaleDateString("en-NG", { month: "short", year: i > 0 ? "numeric" : undefined }).replace(" ", " '");
-    const seed = seededHash(`${range}-${i}-${currentRate}`);
-    const variance = (seed % 9) - 4;
-    const score = i === 0 ? currentRate : Math.min(100, Math.max(10, currentRate + variance + (months - i) * 2));
-    points.push({ label, score });
-  }
-
-  return points;
-}
-
 export function HealthTrendChart({ data }: Props) {
   const [hovered, setHovered] = useState<number | null>(null);
   const [timeRange, setTimeRange] = useState<"30d" | "90d" | "12m">("90d");
 
   const chartData = useMemo(() => {
-    return generateTimeSeries(timeRange);
-  }, [timeRange]);
-
+    // Show all available data; when more historical data exists, this can be filtered
+    return data;
+  }, [data, timeRange]);
   const current = chartData[chartData.length - 1] || { score: 0 };
   const previous = chartData[chartData.length - 2] || { score: 0 };
   const periodChange = current.score - previous.score;

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { formatRelativeTime } from "@/lib/utils/time";
 import { fetchNotifications, getUnreadCount, markAsRead } from "../api/notifications-api";
 import type { AppNotification } from "../types/notifications.types";
 import styles from "./notification-bell.module.css";
@@ -75,7 +76,7 @@ export function NotificationBell() {
                     <div className={styles.itemBody}>
                       <span className={styles.itemTitle}>{n.title}</span>
                       <span className={styles.itemMessage}>{n.message}</span>
-                      <span className={styles.itemTime}>{formatTime(n.createdAt)}</span>
+                      <span className={styles.itemTime}>{formatRelativeTime(n.createdAt)}</span>
                     </div>
                   </button>
                 </li>
@@ -96,12 +97,4 @@ export function NotificationBell() {
   );
 }
 
-function formatTime(iso: string): string {
-  const d = new Date(iso);
-  const now = new Date();
-  const diff = now.getTime() - d.getTime();
-  if (diff < 60000) return "Just now";
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-  return d.toLocaleDateString("en-NG", { day: "numeric", month: "short" });
-}
+

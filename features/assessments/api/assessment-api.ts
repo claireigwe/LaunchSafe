@@ -187,16 +187,7 @@ export async function initiateAssessmentPayment(
   return json.data;
 }
 
-export function trackEvent(event: string, data?: Record<string, unknown>): void {
-  if (typeof window === "undefined") return;
-  try {
-    if (typeof (window as any).gtag !== "undefined") {
-      (window as any).gtag("event", event, data);
-    }
-    console.log("[Analytics]", event, data);
-  } catch {
-  }
-}
+export { trackEvent } from "@/lib/analytics/track";
 
 export async function deleteAssessment(assessmentId: string): Promise<boolean> {
   try {

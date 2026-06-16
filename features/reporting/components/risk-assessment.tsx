@@ -2,6 +2,7 @@
 
 import { AlertTriangle, CheckCircle, ArrowRight } from "lucide-react";
 import type { RiskReport } from "../types/reporting.types";
+import { formatRiskInsights } from "../api/reporting-format";
 import styles from "./risk-assessment.module.css";
 
 interface Props {
@@ -35,7 +36,7 @@ export function RiskAssessmentSection({ data }: Props) {
             <AlertTriangle size={14} />
             {data.level === "low" ? "Low Risk" : data.level === "medium" ? "Medium Risk" : "High Risk"}
           </span>
-          <p className={styles.insight}>{data.insights}</p>
+          <p className={styles.insight}>{formatRiskInsights(data)}</p>
         </div>
       </div>
 

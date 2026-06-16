@@ -134,6 +134,7 @@ export function BusinessPage() {
   function handleSelectBusiness(id: string) {
     setSelectedId(id);
     setActiveBusinessId(id);
+    setSaved(null);
   }
 
   const selected = businesses.find((b) => b.id === selectedId);

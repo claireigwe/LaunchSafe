@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { trackEvent } from "@/lib/analytics/track";
 import { audit } from "@/features/audit/api/audit-api";
 import { Section } from "./shared";
 import styles from "../settings-page.module.css";

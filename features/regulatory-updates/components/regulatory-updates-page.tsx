@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Bell, ExternalLink, AlertTriangle } from "lucide-react";
 import { getRegulatoryUpdates } from "../api/regulatory-updates-api";
-import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { trackEvent } from "@/lib/analytics/track";
 import type { RegulatoryUpdate } from "@/types/domain/regulatory";
 import styles from "./regulatory-updates-page.module.css";
 

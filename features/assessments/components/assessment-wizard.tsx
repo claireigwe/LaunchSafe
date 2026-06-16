@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { WizardProgress } from "./wizard-progress";
 import { BusinessBasics } from "./steps/business-basics";
 import { BusinessActivities } from "./steps/business-activities";
@@ -22,7 +23,6 @@ import {
   loadSummaryFromLocalStorage,
   saveAssessmentIdToLocalStorage,
   loadAssessmentIdFromLocalStorage,
-  savePendingUnlockIntent,
   initiateAssessmentPayment,
 } from "../api/assessment-api";
 import type { AssessmentSummary } from "@/types/domain/assessment";
@@ -110,23 +110,43 @@ export function AssessmentWizard() {
     goToStep("processing");
   }, [data, goToStep]);
 
+  const [showPayForm, setShowPayForm] = useState(false);
+  const [payErr, setPayErr] = useState("");
+  const [payLoading, setPayLoading] = useState(false);
+  const [payEmail, setPayEmail] = useState("");
+
   const handleUnlockReport = useCallback(async () => {
     trackEvent("Unlock Report Clicked");
-
-    const id = assessmentId || loadAssessmentIdFromLocalStorage();
-    const savedSummary = summary || await loadSummaryFromLocalStorage();
-
-    if (savedSummary) {
-      savePendingUnlockIntent({ summary: savedSummary, assessmentId: id });
+    if (session?.user?.email) {
+      // Logged in — go straight to payment
+      setPayLoading(true);
+      const id = assessmentId || loadAssessmentIdFromLocalStorage();
+      if (!id) { setPayLoading(false); return; }
+      try {
+        const { authorizationUrl } = await initiateAssessmentPayment(id, session.user.email);
+        window.location.href = authorizationUrl;
+      } catch { setPayLoading(false); }
+    } else {
+      // Not logged in — show email form on the summary screen
+      setShowPayForm(true);
     }
+  }, [session, assessmentId]);
 
-    router.push("/assessment/unlock");
-  }, [assessmentId, summary, router]);
-
-  const handleSignupComplete = useCallback(() => {
-    setShowUnlockPrompt(false);
-    handleUnlockReport();
-  }, [handleUnlockReport]);
+  async function handlePaySubmit() {
+    setPayErr("");
+    setPayLoading(true);
+    const id = assessmentId || loadAssessmentIdFromLocalStorage();
+    if (!id) { setPayErr("Assessment ID is missing."); setPayLoading(false); return; }
+    const userEmail = payEmail.trim();
+    if (!userEmail) { setPayErr("Please enter your email address."); setPayLoading(false); return; }
+    try {
+      const { authorizationUrl } = await initiateAssessmentPayment(id, userEmail);
+      window.location.href = authorizationUrl;
+    } catch (err: any) {
+      setPayErr(err.message || "Payment failed.");
+      setPayLoading(false);
+    }
+  }
 
   const handleEditAnswers = useCallback(() => {
     goToStep(1);
@@ -248,7 +268,22 @@ export function AssessmentWizard() {
       </div>
 
       {showUnlockPrompt && (
-        <UnlockPrompt onSignupComplete={handleSignupComplete} />
+        <UnlockPrompt onSignupComplete={() => setShowUnlockPrompt(false)} />
+      )}
+
+      {showPayForm && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ background: "#fff", borderRadius: 24, padding: 32, maxWidth: 420, width: "100%", boxShadow: "0 24px 48px rgba(0,0,0,0.2)" }}>
+            <h2 style={{ fontFamily: "var(--font-headline-headline-small-fontFamily)", fontSize: 20, fontWeight: 600, margin: "0 0 8px" }}>Unlock Your Report</h2>
+            <p style={{ fontFamily: "var(--font-body-body-medium-fontFamily)", fontSize: 14, color: "var(--color-role-light-onSurfaceVariant)", margin: "0 0 24px" }}>Enter your email to receive the report and payment receipt.</p>
+            <input type="email" value={payEmail} onChange={(e) => setPayEmail(e.target.value)} placeholder="you@example.com" style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: "1.5px solid var(--color-role-light-outlineVariant)", fontFamily: "var(--font-body-body-medium-fontFamily)", fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 12 }} />
+            {payErr && <p style={{ color: "var(--color-role-light-error)", fontSize: 13, margin: "0 0 12px" }}>{payErr}</p>}
+            <div style={{ display: "flex", gap: 12 }}>
+              <button type="button" onClick={() => { setShowPayForm(false); setPayErr(""); }} style={{ flex: 1, padding: "12px", borderRadius: 10, border: "1px solid var(--color-role-light-outlineVariant)", background: "transparent", fontFamily: "var(--font-label-label-medium-fontFamily)", fontSize: 14, fontWeight: 500, cursor: "pointer" }}>Cancel</button>
+              <Button variant="primary" size="md" fullWidth onClick={handlePaySubmit} isLoading={payLoading}>Pay ₦10,000</Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

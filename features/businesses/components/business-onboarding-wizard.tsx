@@ -10,7 +10,7 @@ import { BusinessOperations } from "./steps/business-operations";
 import { SubscriptionSelect } from "./steps/subscription-select";
 import { PaymentProcessing } from "./steps/payment-processing";
 import { clearUserIntent, saveUserIntent } from "../api/onboarding-api";
-import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { trackEvent } from "@/lib/analytics/track";
 import type { OnboardingStep, OnboardingData } from "../types/onboarding.types";
 import { createEmptyOnboardingData, ONBOARDING_STEPS } from "../types/onboarding.types";
 import styles from "./business-onboarding-wizard.module.css";

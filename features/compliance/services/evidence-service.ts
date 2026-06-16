@@ -107,16 +107,10 @@ export class EvidenceService {
       .maybeSingle();
 
     if (!existingTask) {
-      await supabase.from("compliance_tasks").insert({
-        id: complianceTaskId,
-        business_id: resolvedBusinessId || "",
-        requirement_name: "Compliance Task",
-        agency_name: "",
-        status: "not_started",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-    } else if (!resolvedBusinessId) {
+      throw new Error("Compliance task not found. Create the task before linking evidence.");
+    }
+
+    if (!resolvedBusinessId) {
       resolvedBusinessId = existingTask.business_id;
     }
 

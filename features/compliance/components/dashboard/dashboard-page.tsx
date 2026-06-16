@@ -28,7 +28,7 @@ import { getActiveBusinessId } from "@/lib/stores/app-store";
 import { type UploadDocumentInput } from "@/features/documents/api/documents-api";
 
 import { SetupOverlay } from "@/features/billing/components/setup-overlay";
-import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { trackEvent } from "@/lib/analytics/track";
 import type { CreateTaskInput } from "../../types/tasks.types";
 import { useDocuments, useUploadDocument } from "@/features/documents/hooks/use-documents-query";
 import styles from "./dashboard-page.module.css";

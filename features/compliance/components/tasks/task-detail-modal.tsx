@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils/cn";
 import { AlertTriangle, Loader2, Upload, Sparkles, X } from "lucide-react";
+import { daysUntil } from "@/lib/utils/time";
 import { fetchEvidence, linkDocumentAsEvidenceAPI, removeEvidence } from "@/features/compliance/api/evidence-api";
 import { getDocuments, uploadDocument, downloadDocument } from "@/features/documents/api/documents-api";
 import { DocumentUploadModal } from "@/features/documents/components/document-upload-modal";
@@ -130,7 +131,7 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
   }
 
   const daysOverdue = task.dueDate && task.status !== "completed"
-    ? Math.ceil((Date.now() - new Date(task.dueDate).getTime()) / (1000 * 60 * 60 * 24))
+    ? -daysUntil(task.dueDate)
     : null;
 
   return (

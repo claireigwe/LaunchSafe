@@ -11,7 +11,8 @@ import {
   markAllAsRead,
   deleteNotification,
 } from "../api/notifications-api";
-import { trackEvent } from "@/features/assessments/api/assessment-api";
+import { trackEvent } from "@/lib/analytics/track";
+import { formatRelativeTime } from "@/lib/utils/time";
 import type { AppNotification, NotificationCategory } from "../types/notifications.types";
 import styles from "./notification-center.module.css";
 
@@ -121,7 +122,7 @@ export function NotificationCenter() {
                   <p className={styles.cardMessage}>{n.message}</p>
                   <div className={styles.cardMeta}>
                     <span className={styles.cardType}>{n.type}</span>
-                    <span className={styles.cardTime}>{formatDate(n.createdAt)}</span>
+                    <span className={styles.cardTime}>{formatRelativeTime(n.createdAt)}</span>
                     {!n.isRead && <span className={styles.unreadDot} />}
                   </div>
                 </div>
@@ -158,12 +159,4 @@ export function NotificationCenter() {
   );
 }
 
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  const now = new Date();
-  const diff = now.getTime() - d.getTime();
-  if (diff < 60000) return "Just now";
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-  return d.toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" });
-}
+

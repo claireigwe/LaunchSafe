@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { loadAssessmentFromLocalStorage, trackEvent, clearPendingUnlockIntent } from "../api/assessment-api";
+import { formatKobo } from "@/lib/utils/currency";
 import type { AssessmentFullReport } from "@/types/domain/assessment";
 import styles from "./full-report-screen.module.css";
 
@@ -109,9 +110,6 @@ export function FullReportScreen() {
 
   if (!report) return null;
 
-  const formatCurrency = (amount: number) =>
-    `₦${Math.round(amount / 100).toLocaleString("en-US")}`;
-
   async function downloadPdf() {
     setDownloading(true);
     try {
@@ -162,7 +160,7 @@ export function FullReportScreen() {
                   </span>
                   {req.officialCost !== null && (
                     <span className={styles.metaItem}>
-                      <strong>Official Cost:</strong> {formatCurrency(req.officialCost)}
+                      <strong>Official Cost:</strong> {formatKobo(req.officialCost)}
                     </span>
                   )}
                   <span className={styles.metaItem}>
@@ -211,12 +209,12 @@ export function FullReportScreen() {
           <div className={styles.costGrid}>
             <div className={styles.costCard}>
               <span className={styles.costLabel}>Official Compliance Costs</span>
-              <span className={styles.costValue}>{formatCurrency(report.officialCosts.min)} – {formatCurrency(report.officialCosts.max)}</span>
+              <span className={styles.costValue}>{formatKobo(report.officialCosts.min)} – {formatKobo(report.officialCosts.max)}</span>
               <span className={styles.costNote}>Verified regulatory fees</span>
             </div>
             <div className={styles.costCard}>
               <span className={styles.costLabel}>Common Setup Costs</span>
-              <span className={styles.costValue}>{formatCurrency(report.commonSetupCostRange.min)} – {formatCurrency(report.commonSetupCostRange.max)}</span>
+              <span className={styles.costValue}>{formatKobo(report.commonSetupCostRange.min)} – {formatKobo(report.commonSetupCostRange.max)}</span>
               <span className={styles.costNote}>Legal, documentation, processing</span>
             </div>
             <div className={styles.costCard}>
@@ -226,7 +224,7 @@ export function FullReportScreen() {
             </div>
             <div className={styles.costCard} style={{ borderColor: "var(--color-role-light-primary)", background: "var(--color-role-light-surfaceBright)" }}>
               <span className={styles.costLabel} style={{ fontWeight: 600, color: "var(--color-role-light-primary)" }}>Estimated Launch Budget</span>
-              <span className={styles.costValue} style={{ color: "var(--color-role-light-primary)", fontSize: 28 }}>{formatCurrency(report.estimatedBudget.min)} – {formatCurrency(report.estimatedBudget.max)}+</span>
+              <span className={styles.costValue} style={{ color: "var(--color-role-light-primary)", fontSize: 28 }}>{formatKobo(report.estimatedBudget.min)} – {formatKobo(report.estimatedBudget.max)}+</span>
               <span className={styles.costNote}>Combined estimate across all categories</span>
             </div>
           </div>
