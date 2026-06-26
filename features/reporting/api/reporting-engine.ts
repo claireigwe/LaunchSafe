@@ -1,8 +1,6 @@
-import { loadTasks, ensureTasksSynced } from "@/features/compliance/api/tasks-api";
 import { getDocuments } from "@/features/documents/api/documents-api";
 import { getRecentActivity } from "@/features/activity/api/activity-api";
-import { fetchAllBusinesses, getBusinessData } from "@/features/businesses/api/onboarding-api";
-import { getRegulatoryUpdates } from "@/features/regulatory-updates/api/regulatory-updates-api";
+import { fetchAllBusinesses } from "@/features/businesses/api/onboarding-api";
 import type {
   ReportData,
   HealthTrendPoint,
@@ -13,57 +11,48 @@ import type {
   BusinessComparison,
   ActivityReport,
 } from "../types/reporting.types";
+import type { ComplianceTaskItem } from "@/features/compliance/types/tasks.types";
 
-export async function generateReportData(): Promise<ReportData> {
-  // Ensure task data is loaded before computing reports
-  await ensureTasksSynced();
+export async function generateReportData(tasks: ComplianceTaskItem[]): Promise<ReportData> {
   const docs = await getDocuments();
   return {
-    healthTrend: computeHealthTrend(),
-    taskAnalytics: computeTaskAnalytics(),
-    deadlinePerformance: computeDeadlinePerformance(),
-    riskReport: await computeRiskReport(docs),
-    documentReport: await computeDocumentReport(docs),
-    comparisons: await computeComparisons(),
-    activityReport: await computeActivityReport(docs),
+    healthTrend: computeHealthTrend(tasks),
+    taskAnalytics: computeTaskAnalytics(tasks),
+    deadlinePerformance: computeDeadlinePerformance(tasks),
+    riskReport: await computeRiskReport(tasks, docs),
+    documentReport: computeDocumentReport(docs),
+    comparisons: await computeComparisons(tasks),
+    activityReport: await computeActivityReport(tasks, docs),
   };
 }
 
-function computeHealthTrend(): HealthTrendPoint[] {
-  const tasks = loadTasks();
+function computeHealthTrend(tasks: ComplianceTaskItem[]): HealthTrendPoint[] {
   if (tasks.length === 0) return [];
 
   const now = new Date();
   const completed = tasks.filter((t) => t.status === "completed").length;
   const currentRate = Math.round((completed / tasks.length) * 100);
 
-  // Show current month plus up to 5 prior months for chart context
-  // Previous months use the current rate adjusted slightly (not random, trend-based)
   const points: HealthTrendPoint[] = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const label = d.toLocaleDateString("en-NG", { month: "short", year: i > 0 ? "2-digit" : undefined }).replace(" ", " '");
-    // Earlier months get a slightly lower score to show improvement trend
-    const adjustment = i === 0 ? 0 : -Math.min(i * 3, currentRate - 10);
-    points.push({ label, score: Math.max(10, currentRate + adjustment) });
+    points.push({ label, score: currentRate });
   }
-
   return points;
 }
 
-function computeTaskAnalytics(): TaskAnalytics {
-  const tasks = loadTasks();
+function computeTaskAnalytics(tasks: ComplianceTaskItem[]): TaskAnalytics {
   const total = tasks.length;
   const completed = tasks.filter((t) => t.status === "completed").length;
   const overdue = tasks.filter((t) => t.status === "overdue").length;
-  const pending = tasks.filter((t) => t.status === "pending" || t.status === "in_progress" || t.status === "awaiting_submission" || t.status === "due_soon").length;
+  const pending = tasks.filter((t) => t.status === "pending").length;
   const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return { totalTasks: total, completedTasks: completed, pendingTasks: pending, overdueTasks: overdue, completionRate: rate };
 }
 
-function computeDeadlinePerformance(): DeadlinePerformance {
-  const tasks = loadTasks();
+function computeDeadlinePerformance(tasks: ComplianceTaskItem[]): DeadlinePerformance {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
 
@@ -77,8 +66,7 @@ function computeDeadlinePerformance(): DeadlinePerformance {
   return { met, missed, upcoming, rating };
 }
 
-async function computeRiskReport(docs: any[]): Promise<RiskReport> {
-  const tasks = loadTasks();
+async function computeRiskReport(tasks: ComplianceTaskItem[], docs: any[]): Promise<RiskReport> {
   const overdue = tasks.filter((t) => t.status === "overdue").length;
   const missed = tasks.filter((t) => t.status === "overdue" && t.dueDate).length;
   const hasDocs = docs.length;
@@ -133,9 +121,8 @@ function getMissingRecommended(): string[] {
   ];
 }
 
-async function computeComparisons(): Promise<BusinessComparison[]> {
+async function computeComparisons(tasks: ComplianceTaskItem[]): Promise<BusinessComparison[]> {
   const businesses = await fetchAllBusinesses();
-  const tasks = loadTasks();
 
   if (businesses.length <= 1) return [];
 
@@ -157,9 +144,8 @@ async function computeComparisons(): Promise<BusinessComparison[]> {
   });
 }
 
-async function computeActivityReport(docs: any[]): Promise<ActivityReport> {
+async function computeActivityReport(tasks: ComplianceTaskItem[], docs: any[]): Promise<ActivityReport> {
   const activity = await getRecentActivity(100);
-  const tasks = loadTasks();
 
   const tasksCreated = activity.filter((a) => a.type === "task_created").length + tasks.length;
   const tasksCompleted = activity.filter((a) => a.type === "task_completed").length + tasks.filter((t) => t.status === "completed").length;

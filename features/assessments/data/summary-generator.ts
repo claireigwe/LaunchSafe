@@ -116,9 +116,13 @@ export function generateAssessmentSummary(data: WizardData): AssessmentSummary {
     (industry.baseAgencyCount + Math.floor(totalModifier / 3)) * stageMult
   );
 
-  const rawComplexity =
-    industry.complexityModifier + totalModifier * 2 + (stageMult - 0.6) * 20;
-  const complexityScore = Math.min(100, Math.max(5, Math.round(rawComplexity)));
+  // Use the same scoring formula as the assessment engine.
+  // Engine formula: 20 + requirements.length * 2 + activity bonuses, clamped to [5, 100]
+  let complexityScore = 20 + requirementCount * 2;
+  if (data.activities.willManufacture) complexityScore += 10;
+  if (data.activities.willImport) complexityScore += 8;
+  if (data.activities.willExport) complexityScore += 8;
+  complexityScore = Math.min(100, Math.max(5, complexityScore));
 
   const categories = getUniqueCategories(industry.categories, data);
 

@@ -18,7 +18,6 @@ export function getIndustries(): IndustryOption[] {
   return STATIC_INDUSTRIES;
 }
 
-/** @deprecated Use getIndustries() instead — both are synchronous now. */
 export function getIndustriesSync(): IndustryOption[] {
   return getIndustries();
 }

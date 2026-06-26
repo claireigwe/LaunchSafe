@@ -14,14 +14,6 @@ export interface AppNotification {
   actionLabel: string | null;
   createdAt: string;
   readAt: string | null;
-  deliveryChannel: string | null;
-  emailSent: boolean;
-  pushSent: boolean;
 }
 
-export interface NotificationPreferences {
-  deadlineReminders: boolean;
-  billingNotifications: boolean;
-  systemUpdates: boolean;
-  regulatoryUpdates: boolean;
-}
+

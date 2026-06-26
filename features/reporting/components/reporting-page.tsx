@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BarChart, ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTasks } from "@/features/compliance/hooks/use-tasks-query";
 import { generateReportData, canExport } from "../api/reporting-engine";
 import { canAccess, getCurrentPlanId } from "@/features/billing/api/feature-access";
 import { trackEvent } from "@/lib/analytics/track";
@@ -24,12 +25,14 @@ export function ReportingPage() {
   const hasAccess = canAccess("advanced_reporting");
   const canExportReport = canExport(planId);
   const hasBusiness = useHasBusiness();
+  const { data: tasks = [] } = useTasks();
   const [data, setData] = useState<ReportData | null>(null);
 
   useEffect(() => {
-    generateReportData().then(setData);
+    if (tasks.length === 0) return;
+    generateReportData(tasks).then(setData);
     trackEvent("Advanced Reporting Viewed");
-  }, []);
+  }, [tasks]);
 
   // Wait for both access check and report data before showing upgrade banner
   if (!hasAccess && data && getCurrentPlanId() !== null) {

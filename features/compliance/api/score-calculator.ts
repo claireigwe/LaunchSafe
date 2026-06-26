@@ -4,8 +4,6 @@ export interface ScoreBreakdown {
   completedTasks: number;
   totalTasks: number;
   overdueCount: number;
-  missingEvidence: number;
-  expiredDocuments: number;
   upcomingDeadlineCount: number;
 }
 
@@ -33,24 +31,6 @@ export async function calculateComplianceScore(businessId: string): Promise<Scor
     throw new Error("Failed to fetch compliance tasks for score calculation");
   }
 
-  const { data: evidence, error: evidenceError } = await supabase
-    .from("evidence")
-    .select("compliance_task_id")
-    .eq("business_id", businessId);
-
-  if (evidenceError) {
-    throw new Error("Failed to fetch evidence for score calculation");
-  }
-
-  const { data: documents, error: docsError } = await supabase
-    .from("compliance_documents")
-    .select("id")
-    .eq("business_id", businessId);
-
-  if (docsError) {
-    throw new Error("Failed to fetch documents for score calculation");
-  }
-
   const { data: previousScores } = await supabase
     .from("compliance_scores")
     .select("score")
@@ -59,15 +39,11 @@ export async function calculateComplianceScore(businessId: string): Promise<Scor
     .limit(1);
 
   const allTasks = tasks || [];
-  const allEvidence = evidence || [];
-  const allDocuments = documents || [];
-
-  const evidenceTaskIds = new Set(allEvidence.map((e: any) => e.compliance_task_id).filter(Boolean));
 
   if (allTasks.length === 0) {
     return {
       score: 0,
-      breakdown: { completedTasks: 0, totalTasks: 0, overdueCount: 0, missingEvidence: 0, expiredDocuments: 0, upcomingDeadlineCount: 0 },
+      breakdown: { completedTasks: 0, totalTasks: 0, overdueCount: 0, upcomingDeadlineCount: 0 },
       previousScore: previousScores?.[0]?.score ?? null,
     };
   }
@@ -77,12 +53,10 @@ export async function calculateComplianceScore(businessId: string): Promise<Scor
 
   let completedTasks = 0;
   let overdueCount = 0;
-  let missingEvidence = 0;
   let upcomingDeadlineCount = 0;
 
   for (const task of allTasks) {
     const isCompleted = task.status === "completed";
-    const hasEvidence = evidenceTaskIds.has(task.id);
 
     let isOverdue = task.status === "overdue";
     if (!isCompleted && task.due_date) {
@@ -94,9 +68,6 @@ export async function calculateComplianceScore(businessId: string): Promise<Scor
 
     if (isCompleted) {
       completedTasks++;
-      if (!hasEvidence) {
-        missingEvidence++;
-      }
     } else if (isOverdue) {
       overdueCount++;
     } else if (task.due_date) {
@@ -108,13 +79,10 @@ export async function calculateComplianceScore(businessId: string): Promise<Scor
     }
   }
 
-  const expiredDocuments = 0;
-
   const completionRatio = completedTasks / allTasks.length;
   let score = Math.round(completionRatio * 70);
 
   score -= overdueCount * 10;
-  score -= expiredDocuments * 5;
   score -= upcomingDeadlineCount * 3;
 
   const tasksDueToday = allTasks.filter((t: any) => {
@@ -137,8 +105,6 @@ export async function calculateComplianceScore(businessId: string): Promise<Scor
       completedTasks,
       totalTasks: allTasks.length,
       overdueCount,
-      missingEvidence,
-      expiredDocuments,
       upcomingDeadlineCount,
     },
     previousScore: previousScores?.[0]?.score ?? null,

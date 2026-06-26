@@ -51,16 +51,23 @@ export class DocumentService {
     }
   }
 
-  static async generateAndSave(
+  static async generate(
+    docType: DocumentType,
+    context: string,
+    businessId: string,
+    templateSlug?: string
+  ): Promise<{ title: string; content: string }> {
+    return generateDocumentWithAI(docType, context, businessId, templateSlug);
+  }
+
+  static async save(
     userId: string,
     businessId: string,
     docType: DocumentType,
-    context: string,
-    templateSlug?: string
+    title: string,
+    content: string
   ): Promise<Record<string, any>> {
     const supabase = createAdminClient() as any;
-
-    const result = await generateDocumentWithAI(docType, context, businessId, templateSlug);
 
     const { data: newDoc, error: insertError } = await supabase
       .from("compliance_documents")
@@ -68,8 +75,8 @@ export class DocumentService {
         user_id: userId,
         business_id: businessId,
         document_type: docType,
-        title: result.title,
-        content: result.content,
+        title,
+        content,
         status: "final",
         version: 1,
         generated_at: new Date().toISOString(),

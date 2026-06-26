@@ -12,7 +12,7 @@ export async function logEvent(supabase: any, userId: string, eventType: string,
   }
 }
 
-export async function sendEmail(userId: string, emailType: string, data?: Record<string, unknown>) {
+async function sendEmail(userId: string, emailType: string, data?: Record<string, unknown>) {
   try {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const supabase = createAdminClient();

@@ -22,13 +22,4 @@ export interface Notification {
   readAt: string | null;
 }
 
-export interface NotificationPreferences {
-  userId: string;
-  emailDeadlineReminders: boolean;
-  emailPaymentAlerts: boolean;
-  emailRegulatoryUpdates: boolean;
-  inAppDeadlineReminders: boolean;
-  inAppPaymentAlerts: boolean;
-  inAppRegulatoryUpdates: boolean;
-  reminderDaysBefore: number;
-}
+

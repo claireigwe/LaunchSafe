@@ -16,8 +16,8 @@ import { UnlockPrompt } from "./steps/unlock-prompt";
 import { useAssessmentWizard } from "../hooks/use-assessment-wizard";
 import { createClient } from "@/lib/supabase/client";
 import { generateAssessmentSummary } from "../data/summary-generator";
+import { trackEvent } from "@/lib/analytics/track";
 import {
-  trackEvent,
   createAssessment,
   saveSummaryToLocalStorage,
   loadSummaryFromLocalStorage,
@@ -65,22 +65,20 @@ export function AssessmentWizard() {
 
   useEffect(() => {
     if (currentStep === "summary" && !summary) {
-      (async () => {
-        const savedSummary = await loadSummaryFromLocalStorage();
-        const pending = typeof window !== "undefined"
-          ? localStorage.getItem("launchsafe-pending-unlock")
-          : null;
-        if (savedSummary && pending) {
-          setSummary(savedSummary);
-        }
-        const savedId = loadAssessmentIdFromLocalStorage();
-        if (savedId && pending) {
-          setAssessmentId(savedId);
-        }
-        if (!pending) {
-          goToStep(1);
-        }
-      })();
+      const savedSummary = loadSummaryFromLocalStorage();
+      const pending = typeof window !== "undefined"
+        ? localStorage.getItem("launchsafe-pending-unlock")
+        : null;
+      if (savedSummary && pending) {
+        setSummary(savedSummary);
+      }
+      const savedId = loadAssessmentIdFromLocalStorage();
+      if (savedId && pending) {
+        setAssessmentId(savedId);
+      }
+      if (!pending) {
+        goToStep(1);
+      }
     }
   }, [currentStep, summary]);
 
@@ -95,7 +93,7 @@ export function AssessmentWizard() {
       // Use the server-returned summary (real DB count, matches post-payment)
       if (assessment.summaryJson) {
         setSummary(assessment.summaryJson);
-        await saveSummaryToLocalStorage(assessment.summaryJson);
+        saveSummaryToLocalStorage(assessment.summaryJson);
       }
 
       trackEvent("Assessment Saved", { assessmentId: assessment.id });
@@ -104,7 +102,7 @@ export function AssessmentWizard() {
       // Fallback to local estimate if server is unavailable
       const fallbackSummary = generateAssessmentSummary(data);
       setSummary(fallbackSummary);
-      await saveSummaryToLocalStorage(fallbackSummary);
+      saveSummaryToLocalStorage(fallbackSummary);
     }
 
     goToStep("processing");

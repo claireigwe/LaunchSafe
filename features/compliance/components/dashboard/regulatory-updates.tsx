@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Bell } from "lucide-react";
+import { formatDate } from "@/lib/utils/time";
 import type { RegulatoryUpdate } from "@/types/domain/regulatory";
 import styles from "./regulatory-updates.module.css";
 
@@ -21,7 +22,7 @@ export function RegulatoryUpdates({ updates }: Props) {
             <li key={u.id} className={styles.item}>
               <div className={styles.itemHeader}>
                 <span className={`${styles.impact} ${styles[`i_${u.impactLevel}`]}`}>{u.impactLevel}</span>
-                <span className={styles.date}>Eff. {new Date(u.effectiveDate).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}</span>
+                {u.effectiveDate && <span className={styles.date}>Eff. {formatDate(u.effectiveDate, { day: "numeric", month: "short", year: "numeric" })}</span>}
               </div>
               <h3 className={styles.itemTitle}>{u.title}</h3>
               <p className={styles.itemSummary}>{u.summary}</p>

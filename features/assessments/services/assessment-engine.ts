@@ -136,7 +136,6 @@ export class AssessmentEngine {
         requirementType: r.requirement_type,
         officialCost: official,
         estimatedCost: estimated,
-        communityReportedCost: community,
         deadline: null,
         frequency: r.frequency,
         confidenceLevel: r.confidence_level || "estimated",
@@ -227,27 +226,7 @@ export class AssessmentEngine {
       throw new Error("Report data is unavailable");
     }
 
-    // Upgrade old-format reports to the new 3-category cost structure
     const report = assessment.results_json as any;
-    if (report.totalOfficialCost !== undefined && !report.officialCosts) {
-      const officialMin = report.totalOfficialCost || 0;
-      const officialMax = Math.round(officialMin * 1.3) + (report.totalEstimatedCost || 0);
-      report.officialCosts = { label: "Official Compliance Costs", min: officialMin, max: officialMax };
-      report.commonSetupCosts = [
-        { label: "Legal & Documentation Services", range: "₦50,000 – ₦150,000", reason: "Professional fees for business registration and legal advice" },
-        { label: "Business Registration Processing", range: "₦20,000 – ₦50,000", reason: "Filing fees and processing charges" },
-      ];
-      report.commonSetupCostRange = { label: "Common Setup Costs", min: 7000000, max: 20000000 };
-      report.localCosts = [
-        { label: "Local Government Development Levy", note: "Annual levy charged by some LGAs" },
-        { label: "Market or Trade Association Fees", note: "May be required depending on location" },
-      ];
-      report.localCostNote = "These costs vary significantly by location. Verify locally before budgeting.";
-      report.estimatedBudget = { label: "Estimated Launch Budget", min: officialMin + 7000000, max: officialMax + 20000000 };
-      delete report.totalOfficialCost;
-      delete report.totalEstimatedCost;
-    }
-
     return report as AssessmentFullReport;
   }
 

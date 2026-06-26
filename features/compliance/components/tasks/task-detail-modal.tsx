@@ -106,16 +106,35 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
   }
 
   async function handleLinkDoc(docId: string, docTitle: string) {
+    const doc = availableDocs.find((d: any) => d.id === docId);
+    const tempId = `temp_${crypto.randomUUID()}`;
+
+    // Optimistic: show evidence immediately
+    setEvidence((prev) => [
+      ...prev,
+      {
+        id: tempId,
+        documentId: docId,
+        businessId: task.businessId,
+        complianceTaskId: task.id,
+        documentTitle: doc.title || docTitle,
+        fileUrl: doc?.fileUrl,
+        fileType: doc?.fileType,
+        fileSizeBytes: doc?.fileSize,
+        isArchived: false,
+        uploadedAt: new Date().toISOString(),
+      },
+    ]);
+    setShowLinkDoc(false);
+
+    // Background: persist to DB
     try {
-      setIsLinking(true);
       const newEvidence = await linkDocumentAsEvidenceAPI(docId, docTitle, task.id, task.businessId);
-      setEvidence((prev) => [...prev, newEvidence]);
-      setShowLinkDoc(false);
+      setEvidence((prev) => prev.map((e) => (e.id === tempId ? newEvidence : e)));
     } catch (err: any) {
+      setEvidence((prev) => prev.filter((e) => e.id !== tempId));
       console.error("Failed to link document", err);
       alert(err?.message || "Failed to link document as evidence.");
-    } finally {
-      setIsLinking(false);
     }
   }
 
@@ -165,7 +184,7 @@ export function TaskDetailModal({ task, onUpdate, onDelete, onClose }: Props) {
               </div>
               <div className={styles.field}>
                 <label className={styles.label}>Status</label>
-                <Select value={status} onChange={(e) => setStatus(e.target.value as TaskStatus)} options={["pending","in_progress","awaiting_submission","submitted","approved","due_soon","completed","overdue"]} />
+                <Select value={status} onChange={(e) => setStatus(e.target.value as TaskStatus)} options={["pending","completed","overdue"]} />
               </div>
               <div className={styles.actions}>
                 <Button type="button" variant="ghost" size="md" onClick={() => setEditing(false)}>Cancel</Button>

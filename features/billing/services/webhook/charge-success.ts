@@ -1,6 +1,7 @@
 import { recordPayment, getPaymentByReference } from "./payment-service";
 import { unlockAssessment } from "./assessment-service";
 import { activateSubscription } from "./subscription-service";
+import { insertNotification } from "./webhook-helpers";
 
 export async function handleChargeSuccess(supabase: any, eventData: any, rawEvent: any) {
   const metadata = eventData.metadata || {};
@@ -23,7 +24,6 @@ export async function handleChargeSuccess(supabase: any, eventData: any, rawEven
       }
     } else {
       // No assessmentId — just send the notification
-      const { insertNotification } = await import("./webhook-helpers");
       await insertNotification(
         supabase,
         userId,

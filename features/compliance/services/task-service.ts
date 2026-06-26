@@ -31,7 +31,7 @@ export function mapTask(row: any): any {
     description: row.agency_name || notesObj.description || "",
     dueDate: row.due_date || null,
     priority: notesObj.priority || "medium",
-    status: row.status === "not_started" ? "pending" : row.status,
+    status: row.status === "not_started" || row.status === "in_progress" || row.status === "awaiting_submission" || row.status === "submitted" || row.status === "approved" || row.status === "due_soon" ? "pending" : row.status,
     source: notesObj.source || "manual",
     suggestionReason: notesObj.suggestionReason || null,
     reminderDate: null,

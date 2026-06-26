@@ -7,7 +7,7 @@ export interface CreateBusinessResult {
 }
 
 export class BusinessService {
-  static async checkSubscription(userId: string): Promise<{ planSlug: string | null; limit: number }> {
+  static async validateSubscription(userId: string): Promise<string | null> {
     const supabase = createAdminClient() as any;
 
     const { data: sub } = await supabase
@@ -23,19 +23,20 @@ export class BusinessService {
       throw Object.assign(new Error("A subscription is required to create a business. Please subscribe to a plan first."), { code: "payment_required", status: 402 });
     }
 
-    let planSlug: string | null = null;
-    if (sub.plan_id) {
-      const { data: plan } = await supabase
-        .from("subscription_plans")
-        .select("slug")
-        .eq("id", sub.plan_id)
-        .maybeSingle();
-      if (plan) planSlug = plan.slug;
-    }
+    if (!sub.plan_id) return null;
 
+    const { data: plan } = await supabase
+      .from("subscription_plans")
+      .select("slug")
+      .eq("id", sub.plan_id)
+      .maybeSingle();
+
+    return plan?.slug || null;
+  }
+
+  static async getBusinessLimit(planSlug: string | null): Promise<number> {
     const access = await resolveAccess(planSlug, "active");
-    const limit = access.limits.businesses || 1;
-    return { planSlug, limit };
+    return access.limits.businesses || 1;
   }
 
   static async checkBusinessLimit(userId: string, limit: number): Promise<void> {

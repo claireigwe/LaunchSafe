@@ -1,0 +1,13 @@
+.table { background: var(--color-role-light-surfaceContainerLowest); border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 14px; overflow: hidden; }
+.tableHeader { display: grid; gap: 12px; padding: 12px 20px; background: var(--color-role-light-surfaceContainer); border-bottom: 1px solid var(--color-role-light-outlineVariant); }
+.th { font-family: var(--font-label-label-small-fontFamily); font-size: 11px; font-weight: 600; color: var(--color-role-light-onSurfaceVariant); text-transform: uppercase; }
+.tableRow { display: grid; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--color-role-light-outlineVariant); }
+.tableRow:last-child { border-bottom: none; }
+.td { font-family: var(--font-label-label-small-fontFamily); font-size: 13px; color: var(--color-role-light-onSurface); display: flex; align-items: center; }
+.refCell { font-family: monospace; font-size: 11px; color: var(--color-role-light-onSurfaceVariant); }
+.payBadge { font-family: var(--font-label-label-small-fontFamily); font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 6px; }
+.pay_paid { background: var(--color-role-light-successContainer); color: var(--color-role-light-onSuccessContainer); }
+.pay_pending { background: var(--color-role-light-warningContainer); color: var(--color-role-light-onWarningContainer); }
+.pay_failed { background: var(--color-role-light-errorContainer); color: var(--color-role-light-onErrorContainer); }
+.pay_refunded { background: var(--color-role-light-surfaceContainer); color: var(--color-role-light-onSurfaceVariant); }

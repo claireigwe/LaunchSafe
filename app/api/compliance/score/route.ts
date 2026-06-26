@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     const user = await getRequiredUser();
     const supabase = createAdminClient() as any;
     const body = await request.json();
-    const { businessId, score: clientScore, breakdown: clientBreakdown } = body;
+    const { businessId } = body;
 
     if (!businessId) {
       return NextResponse.json<ApiResponse>(
@@ -71,17 +71,7 @@ export async function POST(request: Request) {
       );
     }
 
-    let score: number;
-    let breakdown: any;
-
-    if (clientScore !== undefined && clientBreakdown !== undefined) {
-      score = clientScore;
-      breakdown = clientBreakdown;
-    } else {
-      const result = await calculateComplianceScore(businessId);
-      score = result.score;
-      breakdown = result.breakdown;
-    }
+    const { score, breakdown } = await calculateComplianceScore(businessId);
 
     const { data: previousScores } = await supabase
       .from("compliance_scores")

@@ -1,16 +1,11 @@
 import { NextResponse } from "next/server";
 import { getRequiredUser } from "@/lib/auth/get-session";
 import { createAdminClient } from "@/lib/supabase/server";
+import { PlanService } from "@/lib/billing/plan-service";
 import type { ApiResponse } from "@/types/api.types";
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_API = "https://api.paystack.co/transaction/initialize";
-
-const PLANS: Record<string, { monthly: number; annual: number }> = {
-  starter: { monthly: 10000, annual: 102000 },
-  growth: { monthly: 20000, annual: 216000 },
-  enterprise: { monthly: 35000, annual: 384000 },
-};
 
 export async function POST(request: Request) {
   try {
@@ -19,7 +14,15 @@ export async function POST(request: Request) {
     const body = await request.json() as { planId?: string; billingCycle?: string };
     const { planId, billingCycle } = body;
 
-    if (!planId || !PLANS[planId]) {
+    if (!planId) {
+      return NextResponse.json<ApiResponse>(
+        { success: false, error: { message: "Invalid plan" } },
+        { status: 400 }
+      );
+    }
+
+    const plan = await PlanService.getPlanBySlug(planId);
+    if (!plan) {
       return NextResponse.json<ApiResponse>(
         { success: false, error: { message: "Invalid plan" } },
         { status: 400 }
@@ -27,25 +30,12 @@ export async function POST(request: Request) {
     }
 
     if (planId === "enterprise") {
-      const { data: entPlan } = await supabase
-        .from("subscription_plans")
-        .select("id")
-        .eq("slug", "enterprise")
-        .single();
-
-      if (!entPlan) {
-        return NextResponse.json<ApiResponse>(
-          { success: false, error: { message: "Enterprise plan not configured." } },
-          { status: 500 }
-        );
-      }
-
       const { data: existingSub } = await supabase
         .from("subscriptions")
         .select("id")
         .eq("user_id", user.id)
-        .eq("plan_id", entPlan.id)
-        .in("status", ["suspended", "active", "trial"])
+        .eq("plan_id", plan.id)
+        .in("status", ["active", "trial"])
         .maybeSingle();
 
       if (!existingSub) {
@@ -70,7 +60,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const amount = PLANS[planId][billingCycle as "monthly" | "annual"];
+    const amount = billingCycle === "annual" ? plan.priceYearly : plan.priceMonthly;
     const amountInKobo = amount * 100;
     const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard?subscription=success&plan=${planId}&billing=${billingCycle}`;
 

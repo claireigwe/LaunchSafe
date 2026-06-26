@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import type { ComplianceTask } from "@/types/domain/compliance";
 import styles from "./compliance-tasks.module.css";
 
-type FilterValue = "all" | "pending" | "in_progress" | "completed";
+type FilterValue = "all" | "pending" | "completed";
 
 interface Props {
   tasks: ComplianceTask[];
@@ -16,7 +16,6 @@ interface Props {
 const FILTERS: { value: FilterValue; label: string }[] = [
   { value: "all", label: "All" },
   { value: "pending", label: "Pending" },
-  { value: "in_progress", label: "In Progress" },
   { value: "completed", label: "Completed" },
 ];
 
@@ -25,9 +24,8 @@ export function ComplianceTasks({ tasks }: Props) {
 
   const filtered = tasks.filter((t) => {
     if (filter === "all") return true;
-    if (filter === "pending") return t.status === "not_started" || t.status === "due_soon";
-    if (filter === "in_progress") return t.status === "in_progress" || t.status === "awaiting_submission";
-    if (filter === "completed") return t.status === "completed" || t.status === "approved";
+    if (filter === "pending") return t.status === "pending";
+    if (filter === "completed") return t.status === "completed";
     return true;
   });
 

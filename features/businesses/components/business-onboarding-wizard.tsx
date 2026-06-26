@@ -22,7 +22,7 @@ export function BusinessOnboardingWizard() {
   const [step, setStep] = useState<OnboardingStep>(1);
   const [data, setData] = useState<OnboardingData>(createEmptyOnboardingData());
   const [selectedPlan, setSelectedPlan] = useState<string | null>(searchParams.get("plan") || null);
-  const [isAnnual, setIsAnnual] = useState(true);
+  const [isAnnual, setIsAnnual] = useState(false);
   const [hasSubscription, setHasSubscription] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
@@ -41,7 +41,7 @@ export function BusinessOnboardingWizard() {
 
   useEffect(() => {
     getBillingData().then((d) => {
-      if (d.subscription?.status === "active" || d.subscription?.status === "trial") {
+      if (d.subscription?.status === "active") {
         setHasSubscription(true);
       }
     }).catch(() => {});

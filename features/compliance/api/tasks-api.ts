@@ -1,28 +1,13 @@
 import type { ComplianceTaskItem, CreateTaskInput, UpdateTaskInput, TaskSource } from "../types/tasks.types";
-import { triggerTaskCreated, triggerTaskCompleted, triggerTaskOverdue, syncDeadlineNotifications } from "@/features/notifications/api/notification-triggers";
+import { triggerTaskCreated, triggerTaskCompleted, triggerTaskOverdue } from "@/features/notifications/api/notification-triggers";
 import { logActivity } from "@/features/activity/api/activity-api";
 import { audit } from "@/features/audit/api/audit-api";
 import { getActiveBusinessId } from "@/lib/stores/app-store";
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api/base";
 
-/* ----- In-memory cache (source of truth for the session) ----- */
+/* ----- Module-level cache (for synchronous reads by utilities) ----- */
 let tasksCache: ComplianceTaskItem[] | null = null;
 let cacheBusinessId: string | null = null;
-
-function cacheKey(businessId?: string): string {
-  return `launchsafe-tasks-${businessId || getActiveBusinessId() || "default"}`;
-}
-
-function hydrateFromLocal(businessId?: string): ComplianceTaskItem[] {
-  try {
-    const raw = localStorage.getItem(cacheKey(businessId));
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
-
-function persistToLocal(tasks: ComplianceTaskItem[], businessId?: string): void {
-  try { localStorage.setItem(cacheKey(businessId), JSON.stringify(tasks)); } catch {}
-}
 
 /* ----- Server fetch ----- */
 
@@ -34,29 +19,22 @@ export async function refreshTasks(businessId?: string): Promise<ComplianceTaskI
   if (server) {
     tasksCache = server;
     cacheBusinessId = bid;
-    persistToLocal(server, bid);
     return server;
   }
 
-  // Server down — fall back to cache or localStorage
   if (tasksCache && cacheBusinessId === bid) return tasksCache;
-  const local = hydrateFromLocal(bid);
-  tasksCache = local;
-  cacheBusinessId = bid;
-  return local;
+  return [];
 }
 
-/* ----- Synchronous read (returns cached data, triggers background refresh) ----- */
+/* ----- Synchronous read ----- */
 
 export function loadTasks(): ComplianceTaskItem[] {
   const bid = getActiveBusinessId();
 
-  // Return cache if it matches the current business
   if (tasksCache && cacheBusinessId === bid) {
     return tasksCache;
   }
 
-  // Trigger background server refresh to populate cache
   if (bid) {
     refreshTasks(bid).then((server) => {
       tasksCache = server;
@@ -71,7 +49,7 @@ export async function ensureTasksSynced(): Promise<ComplianceTaskItem[]> {
   return refreshTasks();
 }
 
-/* ----- Mutations (server-first) ----- */
+/* ----- Mutations (server-first, cache managed by React Query) ----- */
 
 export async function createTask(input: CreateTaskInput & { source?: TaskSource; suggestionReason?: string | null }, businessId?: string): Promise<ComplianceTaskItem> {
   const bid = businessId || getActiveBusinessId() || "";
@@ -87,12 +65,10 @@ export async function createTask(input: CreateTaskInput & { source?: TaskSource;
     throw new Error("Failed to create task on server. Please try again.");
   }
 
-  // Update cache
-  const tasks = tasksCache && cacheBusinessId === bid ? [...tasksCache] : [];
-  tasks.push(server);
-  tasksCache = tasks;
-  cacheBusinessId = bid;
-  persistToLocal(tasks, bid);
+  // Update in-memory cache for instant visibility
+  if (tasksCache && cacheBusinessId === bid) {
+    tasksCache = [server, ...tasksCache];
+  }
 
   triggerTaskCreated(server);
   logActivity("task_created", "New Task Created", server.title);
@@ -112,21 +88,17 @@ export async function updateTask(id: string, input: UpdateTaskInput): Promise<Co
   if (!json.success) {
     throw new Error(json.error?.message || `Server error (${res.status})`);
   }
-  const server = json.data;
 
-  // Update cache
-  if (tasksCache) {
+  // Update in-memory cache for instant visibility
+  if (tasksCache && json.data) {
     const idx = tasksCache.findIndex((t) => t.id === id);
     if (idx >= 0) {
       tasksCache = [...tasksCache];
-      tasksCache[idx] = server;
-    } else {
-      tasksCache = [...tasksCache, server];
+      tasksCache[idx] = json.data;
     }
-    persistToLocal(tasksCache, businessId || undefined);
   }
 
-  return server;
+  return json.data;
 }
 
 export async function deleteTask(id: string): Promise<void> {
@@ -135,11 +107,8 @@ export async function deleteTask(id: string): Promise<void> {
   if (!ok) {
     throw new Error("Failed to delete task on server. Please try again.");
   }
-
-  // Update cache
   if (tasksCache) {
     tasksCache = tasksCache.filter((t) => t.id !== id);
-    persistToLocal(tasksCache, businessId || undefined);
   }
 }
 
@@ -164,7 +133,6 @@ export async function reconcileTaskStatuses(): Promise<void> {
   const bid = getActiveBusinessId();
   if (!bid) return;
 
-  // Fetch fresh data from server
   const server = await apiGet<ComplianceTaskItem[]>(`/api/compliance?businessId=${bid}`);
   if (!server) return;
 
@@ -184,7 +152,6 @@ export async function reconcileTaskStatuses(): Promise<void> {
   });
 
   if (changed) {
-    // Update each overdue task on the server
     for (const t of updated) {
       if (t.status === "overdue") {
         await apiPatch("/api/compliance", { id: t.id, status: "overdue", businessId: bid });
@@ -195,6 +162,4 @@ export async function reconcileTaskStatuses(): Promise<void> {
 
   tasksCache = updated;
   cacheBusinessId = bid;
-  persistToLocal(updated, bid);
-  syncDeadlineNotifications().catch(() => {});
 }

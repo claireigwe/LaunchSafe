@@ -3,12 +3,8 @@
 import { useState, useCallback, useEffect } from "react";
 import type { WizardData, WizardStep } from "../types/wizard.types";
 import { createEmptyWizardData } from "../types/wizard.types";
-import {
-  saveAssessmentToLocalStorage,
-  loadAssessmentFromLocalStorage,
-  clearAssessmentFromLocalStorage,
-  trackEvent,
-} from "../api/assessment-api";
+import { saveAssessmentToLocalStorage, loadAssessmentFromLocalStorage, clearAssessmentFromLocalStorage } from "../api/assessment-api";
+import { trackEvent } from "@/lib/analytics/track";
 
 interface UseAssessmentWizardReturn {
   data: WizardData;
@@ -37,17 +33,15 @@ export function useAssessmentWizard(): UseAssessmentWizardReturn {
 
   useEffect(() => {
     if (!initialized) {
-      (async () => {
-        const saved = await loadAssessmentFromLocalStorage();
-        if (saved.data) {
-          setDataState(saved.data);
-          const restoredStep = typeof saved.step === "number" && saved.step >= 1 && saved.step <= 5
-            ? saved.step
-            : 1;
-          setCurrentStep(restoredStep as WizardStep);
-        }
-        setInitialized(true);
-      })();
+      const saved = loadAssessmentFromLocalStorage();
+      if (saved.data) {
+        setDataState(saved.data);
+        const restoredStep = typeof saved.step === "number" && saved.step >= 1 && saved.step <= 5
+          ? saved.step
+          : 1;
+        setCurrentStep(restoredStep as WizardStep);
+      }
+      setInitialized(true);
     }
   }, [initialized]);
 

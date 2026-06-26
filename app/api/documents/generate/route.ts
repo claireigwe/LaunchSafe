@@ -26,9 +26,8 @@ export async function POST(request: Request) {
 
     await DocumentService.checkGenerationLimit(user.id);
 
-    const docResponse = await DocumentService.generateAndSave(
-      user.id, activeBusinessId, docType, context || "", templateSlug
-    );
+    const { title, content } = await DocumentService.generate(docType, context || "", activeBusinessId, templateSlug);
+    const docResponse = await DocumentService.save(user.id, activeBusinessId, docType, title, content);
 
     return NextResponse.json<ApiResponse>(
       { success: true, data: { document: docResponse } },

@@ -23,7 +23,7 @@ import { SuggestedTasksWidget } from "../tasks/suggested-tasks-widget";
 import { TaskCreateModal } from "../tasks/task-create-modal";
 import { DocumentUploadModal } from "@/features/documents/components/document-upload-modal";
 import { useTasks } from "../../hooks/use-tasks-query";
-import { reconcileTaskStatuses, createTask } from "../../api/tasks-api";
+import { createTask } from "../../api/tasks-api";
 import { getActiveBusinessId } from "@/lib/stores/app-store";
 import { type UploadDocumentInput } from "@/features/documents/api/documents-api";
 
@@ -120,14 +120,6 @@ export function DashboardPage() {
     .catch(() => setAiInsightError("Failed to get AI insight"))
     .finally(() => setAiInsightLoading(false));
   }, [savedTasks]);
-
-  async function refreshDashboard() {
-    await reconcileTaskStatuses();
-  }
-
-  useEffect(() => {
-    refreshDashboard();
-  }, []);
 
   const [computedScore, setComputedScore] = useState<any>(null);
 

@@ -1,10 +1,6 @@
 export type ComplianceTaskStatus =
   | "not_started"
-  | "in_progress"
-  | "awaiting_submission"
-  | "submitted"
-  | "approved"
-  | "due_soon"
+  | "pending"
   | "overdue"
   | "completed";
 

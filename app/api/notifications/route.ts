@@ -43,9 +43,6 @@ export async function GET(request: Request) {
       actionLabel: null,
       createdAt: row.created_at,
       readAt: row.read_at,
-      deliveryChannel: "in_app",
-      emailSent: false,
-      pushSent: false,
     }));
 
     return NextResponse.json<ApiResponse>({ success: true, data: notifications });
@@ -73,8 +70,6 @@ export async function POST(request: Request) {
     const TYPE_MAP: Record<string, string> = {
       task: "deadline_reminder",
       deadline: "deadline_reminder",
-      deadline_reminder: "deadline_reminder",
-      compliance_overdue: "compliance_overdue",
       document: "regulatory_update",
       billing: "payment_success",
       system: "deadline_reminder",

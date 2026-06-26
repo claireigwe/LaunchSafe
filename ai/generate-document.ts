@@ -196,7 +196,13 @@ The document must be specific to ${countryName} regulations and ${stateName} sta
   }`;
 
   // 8. Call DeepSeek
-  const content = await callDeepSeek(systemPrompt, userPrompt);
+  const content = await callDeepSeek({
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+    temperature: 0.2,
+  });
 
   return {
     title: `${business.name} - ${docLabel.toUpperCase()}`,

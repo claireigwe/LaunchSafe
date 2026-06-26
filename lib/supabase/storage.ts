@@ -29,6 +29,32 @@ export async function uploadFile(
   }
 }
 
+export async function getUploadUrl(
+  userId: string,
+  documentId: string,
+  fileName: string,
+  contentType: string
+): Promise<{ uploadUrl: string; storagePath: string; token: string } | null> {
+  try {
+    const supabase = createAdminClient();
+    const storagePath = `${userId}/${documentId}/${fileName}`;
+
+    const { data, error } = await supabase.storage
+      .from(BUCKET)
+      .createSignedUploadUrl(storagePath);
+
+    if (error || !data) {
+      console.error("[Storage] Upload URL error:", error?.message);
+      return null;
+    }
+
+    return { uploadUrl: data.signedUrl, storagePath, token: data.token };
+  } catch (err) {
+    console.error("[Storage] Upload URL exception:", err);
+    return null;
+  }
+}
+
 export async function getFileUrl(storagePath: string): Promise<string | null> {
   try {
     const supabase = createAdminClient();

@@ -1,8 +1,4 @@
-export type AssessmentStatus =
-  | "draft"
-  | "processing"
-  | "completed"
-  | "failed";
+export type AssessmentStatus = "completed";
 
 export type ConfidenceLevel = "verified" | "estimated" | "community_reported";
 
@@ -83,7 +79,6 @@ export interface AssessmentRequirement {
   requirementType: string;
   officialCost: number | null;
   estimatedCost: number | null;
-  communityReportedCost: number | null;
   deadline: string | null;
   frequency: string;
   confidenceLevel: ConfidenceLevel;

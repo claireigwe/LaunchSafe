@@ -1,0 +1,17 @@
+.subCardWrap { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04); border-radius: 24px; overflow: hidden; padding: 20px 24px; }
+.subCard { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+@media (max-width: 600px) { .subCard { grid-template-columns: 1fr; } }
+.subRow { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 16px; background: rgba(255, 255, 255, 0.4); border-radius: 16px; border: 1px solid var(--color-role-light-outlineVariant); }
+.subLabel { font-family: var(--font-label-label-medium-fontFamily); font-size: 11px; font-weight: 600; color: var(--color-role-light-primary); text-transform: uppercase; letter-spacing: 0.5px; }
+.subValue { font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; font-weight: 500; color: var(--color-role-light-onSurface); text-align: left; line-height: 1.4; word-break: break-word; }
+.statusBadge { font-family: var(--font-label-label-small-fontFamily); font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 8px; }
+.statusActive { background: var(--color-role-light-successContainer); color: var(--color-role-light-onSuccessContainer); }
+.statusTrialing { background: var(--color-role-light-primaryContainer); color: var(--color-role-light-onPrimaryContainer); }
+.statusWarning { background: var(--color-role-light-warningContainer); color: var(--color-role-light-onWarningContainer); }
+.statusMuted { background: var(--color-role-light-surfaceContainer); color: var(--color-role-light-onSurfaceVariant); }
+.statusError { background: var(--color-role-light-errorContainer); color: var(--color-role-light-onErrorContainer); }
+.featuresList { background: var(--color-role-light-surfaceContainerLowest); border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 16px; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.featureRow { display: flex; align-items: center; gap: 10px; font-family: var(--font-label-label-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurface); }
+.checkIcon { color: var(--color-role-light-primary); flex-shrink: 0; }
+@media (max-width: 640px) { .featuresList { grid-template-columns: 1fr; } }

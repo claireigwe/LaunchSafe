@@ -7,7 +7,7 @@ import { TaskCard } from "../tasks/task-card";
 import { TaskCreateModal } from "../tasks/task-create-modal";
 import { TaskDetailModal } from "../tasks/task-detail-modal";
 import { useTasks } from "../../hooks/use-tasks-query";
-import { createTask, updateTask, deleteTask, reconcileTaskStatuses } from "../../api/tasks-api";
+import { createTask, updateTask, deleteTask } from "../../api/tasks-api";
 import { SetupOverlay } from "@/features/billing/components/setup-overlay";
 import { useHasBusiness } from "@/features/businesses/hooks/use-has-business";
 import { BusinessRequiredOverlay } from "@/features/businesses/components/business-required-overlay";
@@ -28,7 +28,6 @@ export function CalendarPage() {
   const hasBusiness = useHasBusiness();
 
   useEffect(() => {
-    reconcileTaskStatuses().catch(() => {});
     trackEvent("Calendar Viewed");
   }, []);
 

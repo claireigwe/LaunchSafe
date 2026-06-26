@@ -1,23 +1,16 @@
-.categoryContainer {
-  margin-bottom: 64px;
-}
-
-.categoryContainer:last-child {
-  margin-bottom: 0;
-}
-
-.categoryTitle {
-  font-family: var(--font-headline-headline-medium-fontFamily);
-  font-weight: 600;
-  font-size: 28px;
-  color: var(--color-role-light-onSurface);
-  margin-bottom: 24px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid var(--color-role-light-outlineVariant);
-}
-
-.accordionList {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+.categoryContainer { margin-bottom: 64px; }
+.categoryContainer:last-child { margin-bottom: 0; }
+.categoryTitle { font-family: var(--font-headline-headline-medium-fontFamily); font-weight: 600; font-size: 28px; color: var(--color-role-light-onSurface); margin-bottom: 24px; padding-bottom: 12px; border-bottom: 2px solid var(--color-role-light-outlineVariant); }
+.accordionList { display: flex; flex-direction: column; gap: 16px; }
+.accordion { border: none; border-radius: 16px; background-color: #ffffff; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04); transition: all 0.2s ease; }
+.accordion:hover { background-color: #ffffff; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06); }
+.open { background-color: #ffffff; }
+.trigger { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 24px; background: none; border: none; cursor: pointer; text-align: left; gap: 16px; }
+.question { font-family: var(--font-headline-headline-small-fontFamily); font-size: 18px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0; }
+.icon { color: var(--color-role-light-onSurfaceVariant); transition: transform 0.2s ease; flex-shrink: 0; }
+.iconOpen { transform: rotate(180deg); color: var(--color-role-light-secondary); }
+.content { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.3s ease; }
+.open .content { grid-template-rows: 1fr; }
+.answerWrapper { overflow: hidden; }
+.answerParagraph { font-family: var(--font-body-body-medium-fontFamily); font-size: 16px; line-height: 1.6; color: var(--color-role-light-onSurfaceVariant); padding: 0 24px 24px; margin: 0; }
+.answerParagraph + .answerParagraph { margin-top: 12px; }

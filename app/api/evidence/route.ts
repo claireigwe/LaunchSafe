@@ -30,7 +30,7 @@ export async function DELETE(request: Request) {
     }
 
     await EvidenceService.remove(user.id, id);
-    return NextResponse.json<ApiResponse>({ success: true, data: { deleted: true } });
+    return NextResponse.json<ApiResponse>({ success: true, data: { archived: true } });
   } catch {
     return NextResponse.json<ApiResponse>(
       { success: false, error: { message: "Unauthorized" } },

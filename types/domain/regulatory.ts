@@ -101,7 +101,7 @@ export interface RegulatoryUpdate {
   summary: string;
   source: string;
   sourceUrl: string | null;
-  effectiveDate: string;
+  effectiveDate: string | null;
   affectedIndustries: string[];
   affectedRequirements: string[];
   impactLevel: "low" | "medium" | "high";

@@ -1,16 +1,19 @@
 import { createAdminClient } from "@/lib/supabase/server";
-import { uploadFile, getFileUrl } from "@/lib/supabase/storage";
+import { getFileUrl } from "@/lib/supabase/storage";
 import type { EvidenceRecord } from "../api/evidence-api";
 
 export class EvidenceService {
-  static async list(userId: string): Promise<EvidenceRecord[]> {
+  static async list(userId: string, includeArchived = false): Promise<EvidenceRecord[]> {
     const supabase = createAdminClient() as any;
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("evidence")
       .select("*")
-      .eq("user_id", userId)
-      .order("uploaded_at", { ascending: false });
+      .eq("user_id", userId);
+
+    if (!includeArchived) query = query.eq("is_archived", false);
+
+    const { data, error } = await query.order("uploaded_at", { ascending: false });
 
     if (error) throw error;
 
@@ -37,34 +40,31 @@ export class EvidenceService {
     );
   }
 
-  static async upload(
-    userId: string,
-    businessId: string,
-    complianceTaskId: string,
-    title: string,
-    description: string,
-    file: File
-  ): Promise<EvidenceRecord> {
+  static async saveDirect(params: {
+    userId: string;
+    businessId: string;
+    complianceTaskId: string;
+    title: string;
+    description: string;
+    evidenceId: string;
+    storagePath: string;
+    fileType: string;
+    fileSize: number;
+  }): Promise<EvidenceRecord> {
     const supabase = createAdminClient() as any;
-    const evidenceId = crypto.randomUUID();
-
-    const buffer = await file.arrayBuffer();
-    const storagePath = await uploadFile(userId, evidenceId, file.name, buffer, file.type);
-
-    if (!storagePath) throw new Error("Failed to upload file to storage");
 
     const { data: ev, error: insertError } = await supabase
       .from("evidence")
       .insert({
-        id: evidenceId,
-        user_id: userId,
-        business_id: businessId,
-        compliance_task_id: complianceTaskId,
-        title,
-        description,
-        file_url: storagePath,
-        file_type: file.type,
-        file_size_bytes: file.size,
+        id: params.evidenceId,
+        user_id: params.userId,
+        business_id: params.businessId,
+        compliance_task_id: params.complianceTaskId,
+        title: params.title,
+        description: params.description,
+        file_url: params.storagePath,
+        file_type: params.fileType,
+        file_size_bytes: params.fileSize,
         is_archived: false,
       })
       .select()
@@ -72,7 +72,7 @@ export class EvidenceService {
 
     if (insertError || !ev) throw new Error("Failed to create evidence record");
 
-    const signedUrl = await getFileUrl(storagePath);
+    const signedUrl = await getFileUrl(params.storagePath);
 
     return {
       id: ev.id,
@@ -82,7 +82,7 @@ export class EvidenceService {
       requirementId: ev.requirement_id,
       documentTitle: ev.title,
       description: ev.description || "",
-      fileUrl: signedUrl || storagePath,
+      fileUrl: signedUrl || params.storagePath,
       fileType: ev.file_type,
       fileSizeBytes: ev.file_size_bytes,
       isArchived: ev.is_archived,
@@ -98,31 +98,17 @@ export class EvidenceService {
   ): Promise<EvidenceRecord> {
     const supabase = createAdminClient() as any;
 
-    let resolvedBusinessId = businessId;
-
-    const { data: existingTask } = await supabase
-      .from("compliance_tasks")
-      .select("business_id")
-      .eq("id", complianceTaskId)
-      .maybeSingle();
-
-    if (!existingTask) {
-      throw new Error("Compliance task not found. Create the task before linking evidence.");
-    }
-
-    if (!resolvedBusinessId) {
-      resolvedBusinessId = existingTask.business_id;
-    }
-
+    // Single query: grab doc metadata, verify ownership, and insert in one go
     const { data: doc, error: docError } = await supabase
       .from("compliance_documents")
-      .select("*")
+      .select("id, title, content, requirement_id, storage_path, business_id")
       .eq("id", documentId)
       .eq("user_id", userId)
       .single();
 
     if (docError || !doc) throw new Error("Document not found or access denied");
 
+    const resolvedBusinessId = businessId || doc.business_id;
     const evidenceId = crypto.randomUUID();
     const fileUrlToSave = doc.storage_path || `generated_doc:${doc.id}`;
 
@@ -147,9 +133,6 @@ export class EvidenceService {
 
     if (insertError || !ev) throw new Error(insertError?.message || "Failed to link document as evidence");
 
-    const isStoragePath = ev.file_url && !ev.file_url.startsWith("http") && !ev.file_url.startsWith("generated_doc:");
-    const signedUrl = isStoragePath ? await getFileUrl(ev.file_url) : null;
-
     return {
       id: ev.id,
       documentId: ev.document_id,
@@ -158,7 +141,7 @@ export class EvidenceService {
       requirementId: ev.requirement_id,
       documentTitle: ev.title,
       description: ev.description || "",
-      fileUrl: signedUrl || ev.file_url,
+      fileUrl: ev.file_url,
       fileType: ev.file_type,
       fileSizeBytes: ev.file_size_bytes,
       isArchived: ev.is_archived,
@@ -171,7 +154,7 @@ export class EvidenceService {
 
     const { error } = await supabase
       .from("evidence")
-      .delete()
+      .update({ is_archived: true })
       .eq("id", evidenceId)
       .eq("user_id", userId);
 

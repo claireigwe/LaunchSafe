@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Bell, ExternalLink, AlertTriangle } from "lucide-react";
 import { getRegulatoryUpdates } from "../api/regulatory-updates-api";
 import { trackEvent } from "@/lib/analytics/track";
+import { formatDate } from "@/lib/utils/time";
 import type { RegulatoryUpdate } from "@/types/domain/regulatory";
 import styles from "./regulatory-updates-page.module.css";
 
@@ -37,9 +38,11 @@ export function RegulatoryUpdatesPage() {
               <p className={styles.cardSummary}>{u.summary}</p>
               <div className={styles.cardMeta}>
                 <span className={styles.source}>Source: {u.source}</span>
-                <span className={styles.date}>
-                  Effective {new Date(u.effectiveDate).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" })}
-                </span>
+                {u.effectiveDate && (
+                  <span className={styles.date}>
+                    Effective {formatDate(u.effectiveDate, { day: "numeric", month: "long", year: "numeric" })}
+                  </span>
+                )}
               </div>
               {u.sourceUrl && (
                 <Link href={u.sourceUrl} target="_blank" className={styles.sourceLink}>

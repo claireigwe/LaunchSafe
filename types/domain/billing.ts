@@ -1,14 +1,12 @@
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
 export type PaymentType = "assessment" | "subscription";
 export type SubscriptionStatus =
-  | "trial"
   | "active"
   | "expired"
-  | "cancelled"
-  | "suspended";
+  | "cancelled";
 
 /** The slug identifier for a subscription plan tier. */
-export type SubscriptionPlanSlug = "free" | "pro" | "business" | "enterprise";
+export type SubscriptionPlanSlug = "starter" | "growth" | "enterprise";
 
 export type AssessmentPurchaseStatus =
   | "pending"
@@ -82,11 +80,8 @@ export interface SubscriptionPlan {
   slug: SubscriptionPlanSlug;
   priceMonthly: number;
   priceYearly: number;
-  currency: string;
   features: string[];
   businessLimit: number;
-  assessmentLimit: number;
-  isActive: boolean;
 }
 
 export interface Subscription {

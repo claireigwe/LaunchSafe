@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { TrendingUp, TrendingDown, Minus, CheckCircle, XCircle, Info } from "lucide-react";
-import { loadTasks } from "@/features/compliance/api/tasks-api";
+import { useTasks } from "@/features/compliance/hooks/use-tasks-query";
 import { useDocuments } from "@/features/documents/hooks/use-documents-query";
 import type { HealthTrendPoint } from "../types/reporting.types";
 import styles from "./health-trend-chart.module.css";
@@ -24,13 +24,13 @@ export function HealthTrendChart({ data }: Props) {
   const periodChange = current.score - previous.score;
   const hasRealData = chartData.length > 0;
 
-  const tasks = loadTasks();
+  const { data: tasks = [] } = useTasks();
   const completedTasks = tasks.filter((t) => t.status === "completed").length;
   const overdueTasks = tasks.filter((t) => t.status === "overdue").length;
   const missedDeadlines = tasks.filter((t) => t.status === "overdue" && t.dueDate).length;
   const { data: documents = [] } = useDocuments();
   const docsUploaded = documents.length;
-  const pendingTasks = tasks.filter((t) => t.status === "pending" || t.status === "in_progress" || t.status === "awaiting_submission" || t.status === "submitted" || t.status === "due_soon").length;
+  const pendingTasks = tasks.filter((t) => t.status === "pending").length;
 
 
 
@@ -143,9 +143,9 @@ export function HealthTrendChart({ data }: Props) {
                 />
                 {hovered === i && (
                   <>
-                    <line x1={p.x} y1={pt.top} x2={p.x} y2={pt.top + ch} stroke="var(--color-role-light-outline)" strokeWidth="0.5" strokeDasharray="3 3" />
-                    <rect x={p.x - 24} y={p.y - 26} width={48} height={20} rx={5} fill="var(--color-palette-neutral-10)" opacity="0.9" />
-                    <text x={p.x} y={p.y - 13} textAnchor="middle" fill="#fff" fontSize="10" fontWeight="600" fontFamily="var(--font-label-label-medium-fontFamily)">
+                    <line x1={p.x} y1={pt.top} x2={p.x} y2={pt.top + ch} stroke="var(--color-role-light-outlineVariant)" strokeWidth="1" strokeDasharray="4 3" />
+                    <rect x={p.x - 12} y={p.y - 26} width={24} height={20} rx={5} className={styles.chartTooltip} strokeWidth={1} />
+                    <text x={p.x} y={p.y - 13} textAnchor="middle" className={styles.chartTooltipText}>
                       {p.score}%
                     </text>
                   </>

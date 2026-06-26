@@ -10,7 +10,6 @@ export interface Business {
   stateId: string | null;
   lgaId: string | null;
   status: BusinessStatus;
-  launchDate: string | null;
   employeeCount: number | null;
   website: string | null;
   createdAt: string;
@@ -24,7 +23,6 @@ export interface CreateBusinessInput {
   countryId: string;
   stateId?: string;
   lgaId?: string;
-  launchDate?: string;
   employeeCount?: number;
   website?: string;
 }

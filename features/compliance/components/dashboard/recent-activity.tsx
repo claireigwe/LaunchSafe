@@ -1,4 +1,5 @@
 import { Clock } from "lucide-react";
+import { formatDate } from "@/lib/utils/time";
 import type { ActivityEntry } from "@/features/activity/api/activity-api";
 import styles from "./recent-activity.module.css";
 
@@ -21,7 +22,7 @@ export function RecentActivity({ activities }: Props) {
               <div className={styles.itemBody}>
                 <p className={styles.itemTitle}>{a.title}</p>
                 <p className={styles.itemDesc}>{a.description}</p>
-                <span className={styles.itemTime}>{new Date(a.timestamp).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}</span>
+                <span className={styles.itemTime}>{formatDate(a.timestamp, { day: "numeric", month: "short" })}</span>
               </div>
             </li>
           ))}

@@ -1,5 +1,5 @@
 export type TaskPriority = "low" | "medium" | "high" | "critical";
-export type TaskStatus = "pending" | "in_progress" | "awaiting_submission" | "submitted" | "approved" | "due_soon" | "overdue" | "completed";
+export type TaskStatus = "pending" | "overdue" | "completed";
 export type TaskSource = "manual" | "suggested";
 
 export interface ComplianceTaskItem {

@@ -1,0 +1,6 @@
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
+.confirmModal { background: var(--color-role-light-surfaceBright); border-radius: 20px; padding: 32px 24px; max-width: 420px; width: 100%; text-align: center; }
+.warnIcon { color: var(--color-role-light-error); margin: 0 auto 16px; }
+.confirmTitle { font-family: var(--font-headline-headline-small-fontFamily); font-size: 20px; font-weight: 600; color: var(--color-role-light-onSurface); margin: 0 0 8px; }
+.confirmText { font-family: var(--font-body-body-medium-fontFamily); font-size: 14px; color: var(--color-role-light-onSurfaceVariant); margin: 0 0 24px; line-height: 1.5; }
+.confirmActions { display: flex; gap: 12px; justify-content: center; }

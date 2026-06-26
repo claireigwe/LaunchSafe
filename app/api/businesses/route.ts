@@ -34,7 +34,8 @@ export async function POST(request: Request) {
     }
 
     // Check subscription and plan limit
-    const { limit } = await BusinessService.checkSubscription(user.id);
+    const planSlug = await BusinessService.validateSubscription(user.id);
+    const limit = await BusinessService.getBusinessLimit(planSlug);
     await BusinessService.checkBusinessLimit(user.id, limit);
 
     // Handle duplicate name — rejoin existing business

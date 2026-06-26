@@ -42,7 +42,6 @@ export function useDashboard() {
             stateId: target.state || null,
             lgaId: null,
             status: "active",
-            launchDate: null,
             employeeCount: null,
             website: null,
             createdAt: target.createdAt,

@@ -1,10 +1,7 @@
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
-const DEEPSEEK_API = "https://api.deepseek.com/v1/chat/completions";
+import { callDeepSeek, type DeepSeekMessage } from "@/ai/deepseek";
+import { COMPLIANCE_SYSTEM_PROMPT } from "@/lib/ai/prompts";
 
-export interface ChatMessage {
-  role: "system" | "user" | "assistant";
-  content: string;
-}
+export type ChatMessage = DeepSeekMessage;
 
 export interface DeepSeekResponse {
   success: boolean;
@@ -12,17 +9,7 @@ export interface DeepSeekResponse {
   error?: string;
 }
 
-const SYSTEM_PROMPT = `You are a compliance assistant for LaunchSafe, a compliance intelligence platform for African businesses.
-
-RULES:
-- NEVER invent regulations, compliance obligations, agencies, deadlines, costs, or penalties.
-- NEVER present assumptions as facts.
-- When information cannot be verified, clearly state: "I cannot verify this information. Please check with the relevant regulatory agency."
-- Always prefer information from the provided context over your training data.
-- If the user asks about specific costs, deadlines, or requirements, always include: "Verify this with the relevant agency before acting."
-- Keep responses concise and actionable.
-- Do not act as a legal advisor. Recommend users consult professionals for legal advice.
-- Structure responses with clear sections when helpful.
+const SYSTEM_PROMPT = COMPLIANCE_SYSTEM_PROMPT + `
 
 YOUR CAPABILITIES:
 - Explain compliance requirements in plain language
@@ -35,14 +22,6 @@ export async function chatWithDeepSeek(
   messages: ChatMessage[],
   context?: string
 ): Promise<DeepSeekResponse> {
-  if (!DEEPSEEK_API_KEY) {
-    return {
-      success: false,
-      content: "",
-      error: "DeepSeek API key not configured",
-    };
-  }
-
   const systemMessage: ChatMessage = {
     role: "system",
     content: context
@@ -51,34 +30,13 @@ export async function chatWithDeepSeek(
   };
 
   try {
-    const res = await fetch(DEEPSEEK_API, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "deepseek-chat",
-        messages: [systemMessage, ...messages],
-        temperature: 0.3,
-        max_tokens: 1000,
-      }),
+    const content = await callDeepSeek({
+      messages: [systemMessage, ...messages],
+      temperature: 0.3,
+      max_tokens: 1000,
     });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      return {
-        success: false,
-        content: "",
-        error: data.error?.message || "DeepSeek API error",
-      };
-    }
-
-    return {
-      success: true,
-      content: data.choices[0].message.content,
-    };
+    return { success: true, content };
   } catch (error) {
     return {
       success: false,

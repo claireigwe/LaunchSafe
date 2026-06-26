@@ -1,21 +1,5 @@
 import { createNotification } from "./notifications-api";
-import { loadTasks } from "@/features/compliance/api/tasks-api";
-import { fetchProfileAndPrefs } from "@/features/settings/api/settings-api";
 import type { ComplianceTaskItem } from "@/features/compliance/types/tasks.types";
-
-async function fireEmail(type: string, data?: Record<string, unknown>): Promise<void> {
-  try {
-    const pData = await fetchProfileAndPrefs();
-    const email = pData?.profile?.email;
-    if (!email) return;
-
-    fetch("/api/notifications/send-email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ to: email, type, data }),
-    }).catch(() => {});
-  } catch {}
-}
 
 export function triggerTaskCreated(task: ComplianceTaskItem): void {
   createNotification(
@@ -36,7 +20,6 @@ export function triggerTaskCompleted(title: string): void {
     "info",
     "/compliance"
   );
-  fireEmail("task_completed", { title });
 }
 
 export function triggerTaskOverdue(title: string): void {
@@ -48,7 +31,6 @@ export function triggerTaskOverdue(title: string): void {
     "/compliance",
     "View Task"
   );
-  fireEmail("task_overdue", { title });
 }
 
 export function triggerDocumentUploaded(title: string): void {
@@ -70,7 +52,6 @@ export function triggerSubscriptionActivated(planName: string): void {
     "info",
     "/dashboard"
   );
-  fireEmail("subscription_activated", { planName });
 }
 
 export function triggerSubscriptionRenewal(planName: string): void {
@@ -81,7 +62,6 @@ export function triggerSubscriptionRenewal(planName: string): void {
     "info",
     "/settings/billing"
   );
-  fireEmail("subscription_renewed", { planName });
 }
 
 export function triggerPaymentFailed(): void {
@@ -93,7 +73,6 @@ export function triggerPaymentFailed(): void {
     "/settings/billing",
     "Update Payment Method"
   );
-  fireEmail("payment_failed");
 }
 
 export function triggerWelcome(): void {
@@ -105,66 +84,7 @@ export function triggerWelcome(): void {
     "/compliance",
     "Create Task"
   );
-  fireEmail("welcome");
 }
 
-export async function syncDeadlineNotifications(): Promise<void> {
-  const tasks = loadTasks();
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-
-  for (const t of tasks) {
-    if (t.status === "completed") continue;
-    if (!t.dueDate) continue;
-
-    const due = new Date(t.dueDate);
-    due.setHours(0, 0, 0, 0);
-    const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (t.status === "overdue") {
-      const existing = await loadNotificationsForTask(t.id, "overdue");
-      if (existing.length > 0) continue;
-      triggerTaskOverdue(t.title);
-      markNotified(t.id, "overdue");
-    } else if (diffDays <= 0) {
-      const existing = await loadNotificationsForTask(t.id, "due_today");
-      if (existing.length > 0) continue;
-      createNotification("Due Today", `${t.title} is due today.`, "deadline", "critical", "/compliance", "View Task");
-      fireEmail("deadline_today", { title: t.title });
-      markNotified(t.id, "due_today");
-    } else if (diffDays === 1) {
-      const existing = await loadNotificationsForTask(t.id, "due_tomorrow");
-      if (existing.length > 0) continue;
-      createNotification("Due Tomorrow", `${t.title} is due tomorrow.`, "deadline", "critical", "/compliance", "View Task");
-      fireEmail("deadline_due_soon", { title: t.title, days: 1 });
-      markNotified(t.id, "due_tomorrow");
-    } else if (diffDays <= 3) {
-      const existing = await loadNotificationsForTask(t.id, "due_soon");
-      if (existing.length > 0) continue;
-      createNotification("Due Soon", `${t.title} is due in ${diffDays} days.`, "deadline", "warning", "/compliance", "View Task");
-      fireEmail("deadline_due_soon", { title: t.title, days: diffDays });
-      markNotified(t.id, "due_soon");
-    } else if (diffDays <= 7) {
-      const existing = await loadNotificationsForTask(t.id, "deadline_approaching");
-      if (existing.length > 0) continue;
-      createNotification("Deadline Approaching", `${t.title} is due in ${diffDays} days.`, "deadline", "warning", "/compliance", "View Task");
-      fireEmail("deadline_approaching", { title: t.title, days: diffDays });
-      markNotified(t.id, "deadline_approaching");
-    }
-  }
-}
-
-async function loadNotificationsForTask(taskId: string, typeLabel: string): Promise<any[]> {
-  const DEDUP_KEY = `launchsafe-notif-${taskId}-${typeLabel}`;
-  try {
-    const sent = localStorage.getItem(DEDUP_KEY);
-    if (sent) return [{ taskId }];
-  } catch {}
-  return [];
-}
-
-function markNotified(taskId: string, typeLabel: string): void {
-  try {
-    localStorage.setItem(`launchsafe-notif-${taskId}-${typeLabel}`, "1");
-  } catch {}
-}
+// Email notifications for task deadlines are handled server-side by the cron job at /api/cron/reminders.
+// Transactional emails (subscription activated, payment failed) are handled by the Paystack webhook handler.

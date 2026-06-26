@@ -9,7 +9,6 @@ import { TaskCreateModal } from "./task-create-modal";
 import { TaskDetailModal } from "./task-detail-modal";
 import { SuggestedTasksWidget } from "./suggested-tasks-widget";
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from "../../hooks/use-tasks-query";
-import { reconcileTaskStatuses } from "../../api/tasks-api";
 import { getActiveBusinessId } from "@/lib/stores/app-store";
 import { SetupOverlay } from "@/features/billing/components/setup-overlay";
 import { isInSetupMode } from "@/features/billing/api/setup-check";
@@ -19,13 +18,12 @@ import { BusinessRequiredOverlay } from "@/features/businesses/components/busine
 import type { ComplianceTaskItem, CreateTaskInput, UpdateTaskInput } from "../../types/tasks.types";
 import styles from "./task-list-page.module.css";
 
-type FilterKey = "all" | "pending" | "in_progress" | "completed" | "overdue";
+type FilterKey = "all" | "pending" | "completed" | "overdue";
 type SourceFilter = "all" | "manual" | "suggested";
 
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "all", label: "All" },
   { key: "pending", label: "Pending" },
-  { key: "in_progress", label: "In Progress" },
   { key: "completed", label: "Completed" },
   { key: "overdue", label: "Overdue" },
 ];
@@ -43,16 +41,14 @@ export function TaskListPage() {
   const hasBusiness = useHasBusiness();
 
   useEffect(() => {
-    reconcileTaskStatuses().catch(() => {});
     trackEvent("Compliance Tasks Viewed");
   }, []);
 
   const filtered = useMemo(() => {
     let result = [...tasks];
     if (filter === "overdue") result = result.filter((t) => t.status === "overdue");
-    else if (filter === "pending") result = result.filter((t) => t.status === "pending" || t.status === "due_soon");
-    else if (filter === "in_progress") result = result.filter((t) => t.status === "in_progress" || t.status === "awaiting_submission");
-    else if (filter === "completed") result = result.filter((t) => t.status === "completed" || t.status === "approved");
+    else if (filter === "pending") result = result.filter((t) => t.status === "pending");
+    else if (filter === "completed") result = result.filter((t) => t.status === "completed");
     if (sourceFilter === "manual") result = result.filter((t) => t.source === "manual");
     else if (sourceFilter === "suggested") result = result.filter((t) => t.source === "suggested");
     if (search.trim()) {

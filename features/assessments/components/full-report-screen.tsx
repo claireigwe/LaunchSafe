@@ -166,11 +166,6 @@ export function FullReportScreen() {
                   <span className={styles.metaItem}>
                     <strong>Frequency:</strong> {req.frequency}
                   </span>
-                  {req.deadline && (
-                    <span className={styles.metaItem}>
-                      <strong>Deadline:</strong> {req.deadline}
-                    </span>
-                  )}
                 </div>
               </div>
             ))}
